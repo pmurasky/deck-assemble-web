@@ -1,4 +1,4 @@
-import { Card } from '@/types/card';
+import type { Card } from '@/types/card';
 
 const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
 
@@ -86,7 +86,7 @@ export async function fetchSetPrintings(setCode: string, { query = '', page = 0,
   url.searchParams.set('page', String(page));
   url.searchParams.set('size', String(size));
 
-  const res = await fetch(url, { next: { revalidate: 300 } });
+  const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) {
     throw new Error(`Set printings returned ${res.status}`);
   }
