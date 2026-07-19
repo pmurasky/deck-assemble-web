@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getCards } from '@/lib/api/cards';
+import { useDeckStore } from '@/lib/store/deck-store';
 import { CardSearchBar } from '@/components/cards/CardSearchBar';
 import { CardFilterPanel, CardFilters } from '@/components/cards/CardFilterPanel';
 import { CardTile } from '@/components/cards/CardTile';
@@ -22,6 +23,8 @@ export default function CardBrowserPage() {
     queryKey: ['cards', searchTerm, filters.colors],
     queryFn: () => getCards({ q: searchTerm }), // passing filters next iteration
   });
+
+  const { addCard } = useDeckStore();
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -72,7 +75,7 @@ export default function CardBrowserPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {data?.cards.map(card => (
-                <CardTile key={card.id} card={card} />
+                <CardTile key={card.id} card={card} onAddToDeck={addCard} />
               ))}
             </div>
           )}

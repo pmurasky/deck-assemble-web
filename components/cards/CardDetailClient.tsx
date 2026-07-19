@@ -3,6 +3,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getCardById } from '@/lib/api/cards';
+import { useDeckStore } from '@/lib/store/deck-store';
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ManaCost } from './ManaCost';
@@ -14,6 +15,8 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
     queryKey: ['card', cardId],
     queryFn: () => getCardById(cardId),
   });
+
+  const { addCard } = useDeckStore();
 
   if (isLoading) {
     return <div className="container mx-auto py-8 px-4"><LoadingSkeleton /></div>;
@@ -85,7 +88,10 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
           </div>
 
           <div className="flex gap-4 mt-auto pt-8">
-            <button className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]">
+            <button 
+              onClick={() => addCard(card)}
+              className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]"
+            >
               ADD TO DECK
             </button>
             <button className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 rounded-xl border border-zinc-700 transition-colors">
