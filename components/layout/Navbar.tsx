@@ -18,7 +18,7 @@ export function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-10 w-10 overflow-hidden rounded-lg shadow-md border border-green-500/20">
-            <Image src="/logo.png" alt="Deck Assemble Logo" width={40} height={40} className="object-cover" />
+            <img src="/logo.png" alt="Deck Assemble Logo" className="w-full h-full object-cover" />
           </div>
           <span className="text-lg font-bold tracking-tight text-white">
             Deck Assemble <span className="text-xs font-semibold text-green-500">Marvel MTG</span>

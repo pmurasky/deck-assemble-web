@@ -33,7 +33,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md bg-zinc-900/80 backdrop-blur-md border border-purple-500/30 rounded-2xl p-8 shadow-2xl shadow-purple-900/20">
         <div className="flex flex-col items-center mb-8">
           <div className="w-16 h-16 flex items-center justify-center mb-4 overflow-hidden rounded-xl shadow-md border border-purple-500/50">
-            <Image src="/logo.png" alt="Deck Assemble Logo" width={64} height={64} className="object-cover" />
+            <img src="/logo.png" alt="Deck Assemble Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl font-extrabold text-white text-center">Join the Team</h1>
           <p className="text-zinc-400 text-center mt-2">Create your Deck Assemble account</p>
