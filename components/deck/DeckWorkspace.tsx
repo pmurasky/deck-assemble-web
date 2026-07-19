@@ -49,7 +49,7 @@ export function DeckWorkspace() {
                 <li key={card.id} className="flex items-center justify-between group hover:bg-zinc-800/50 p-2 rounded-lg transition-colors">
                   <div className="flex items-center gap-3 overflow-hidden">
                     <span className="text-zinc-500 font-mono text-xs w-6 text-right">x{quantity}</span>
-                    <span className="text-zinc-200 font-medium truncate group-hover:text-red-400 transition-colors">
+                    <span className="text-zinc-200 font-medium truncate group-hover:text-green-400 transition-colors">
                       {card.name}
                     </span>
                   </div>

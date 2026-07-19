@@ -20,10 +20,10 @@ export function CardTile({
   className = '',
 }: CardTileProps) {
   return (
-    <div className={`group relative flex flex-column justify-between overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/90 p-4 transition-all duration-200 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-950/20 ${className}`}>
+    <div className={`group relative flex flex-column justify-between overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/90 p-4 transition-all duration-200 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-950/20 ${className}`}>
       <div className="space-y-2">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-bold text-zinc-100 text-sm group-hover:text-red-400 transition-colors">
+          <h3 className="font-bold text-zinc-100 text-sm group-hover:text-green-400 transition-colors">
             {card.name}
           </h3>
           <ManaCost manaCost={card.manaCost} />
@@ -60,7 +60,7 @@ export function CardTile({
           {onAddToDeck && (
             <button
               onClick={() => onAddToDeck(card)}
-              className="rounded-md bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-500 transition-colors shadow-xs"
+              className="rounded-md bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-500 transition-colors shadow-xs"
             >
               + Deck
             </button>

@@ -28,7 +28,7 @@ export default function CardBrowserPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-green-500 to-purple-500 bg-clip-text text-transparent">
           CARD CATALOG
         </h1>
         <div className="text-sm text-muted-foreground">

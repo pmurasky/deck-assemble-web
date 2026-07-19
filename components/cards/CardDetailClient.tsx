@@ -39,7 +39,7 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
         {/* Placeholder for Card Image since we don't have Scryfall URLs yet */}
         <div className="flex justify-center">
           <div className="w-full max-w-md aspect-[2.5/3.5] rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl flex items-center justify-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 to-blue-500/20 mix-blend-overlay"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-blue-500/20 mix-blend-overlay"></div>
             <span className="text-zinc-600 font-bold text-xl uppercase tracking-widest relative z-10 group-hover:scale-110 transition-transform">
               Card Image
             </span>
@@ -90,7 +90,7 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
           <div className="flex gap-4 mt-auto pt-8">
             <button 
               onClick={() => addCard(card)}
-              className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]"
+              className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]"
             >
               ADD TO DECK
             </button>

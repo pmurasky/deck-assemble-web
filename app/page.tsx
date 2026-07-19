@@ -60,17 +60,17 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden border-b border-zinc-800/80 bg-radial from-red-950/40 via-zinc-950 to-zinc-950 py-20 lg:py-28">
+      <section className="relative overflow-hidden border-b border-zinc-800/80 bg-radial from-green-950/40 via-zinc-950 to-zinc-950 py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl space-y-6 text-center sm:text-left">
-            <div className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-950/40 px-3.5 py-1 text-xs font-semibold text-red-400 backdrop-blur-sm">
-              <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-950/40 px-3.5 py-1 text-xs font-semibold text-green-400 backdrop-blur-sm">
+              <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
               Marvel Magic: The Gathering Deck Intelligence
             </div>
 
             <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-6xl">
               Master Magic. Build Legal Decks. <br />
-              <span className="bg-gradient-to-r from-red-500 via-amber-400 to-red-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-green-500 via-purple-500 to-green-400 bg-clip-text text-transparent">
                 Assemble Your Heroes.
               </span>
             </h1>
@@ -82,7 +82,7 @@ export default function Home() {
             <div className="flex flex-wrap items-center gap-4 pt-2 justify-center sm:justify-start">
               <Link
                 href="/decks/create"
-                className="rounded-xl bg-gradient-to-r from-red-600 to-amber-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-red-950/50 hover:brightness-110 transition-all"
+                className="rounded-xl bg-gradient-to-r from-green-600 to-purple-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-green-950/50 hover:brightness-110 transition-all"
               >
                 Build Commander Deck
               </Link>
@@ -111,7 +111,7 @@ export default function Home() {
               <h2 className="text-2xl font-bold text-white tracking-tight">Marvel Hero Commander Showcase</h2>
               <p className="text-sm text-zinc-400">Discover hero cards and build around legendary leaders.</p>
             </div>
-            <Link href="/cards" className="text-xs font-bold text-red-400 hover:text-red-300">
+            <Link href="/cards" className="text-xs font-bold text-green-400 hover:text-green-300">
               View All Supported Cards →
             </Link>
           </div>
@@ -136,7 +136,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/60 p-6 space-y-3">
-              <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-red-950/80 text-red-400 font-bold border border-red-800/50">
+              <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-green-950/80 text-green-400 font-bold border border-green-800/50">
                 1
               </div>
               <h3 className="font-bold text-zinc-100">Search Cards</h3>
