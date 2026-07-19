@@ -1,62 +1,11 @@
 import Link from 'next/link';
 import { CardTile } from '@/components/cards/CardTile';
-import { Card } from '@/types/card';
+import { fetchCards } from '@/lib/api/catalog';
 
-const sampleMarvelCards: Card[] = [
-  {
-    id: 'spidey-hero',
-    oracleId: 'spidey-o-1',
-    name: 'Spider-Man, Neighborhood Hero',
-    manaCost: '{1}{U}{R}',
-    manaValue: 3,
-    colors: ['U', 'R'],
-    colorIdentity: ['U', 'R'],
-    typeLine: 'Legendary Creature — Hero Human',
-    oracleText: 'Reach, Haste\nWhenever Spider-Man deals combat damage to a player, draw a card.',
-    power: '3',
-    toughness: '3',
-    setCode: 'MARVEL',
-    setName: 'Marvel Super Heroes MTG',
-    rarity: 'mythic',
-    legalities: { commander: 'legal' },
-  },
-  {
-    id: 'ironman-hero',
-    oracleId: 'ironman-o-1',
-    name: 'Iron Man, Tech Innovator',
-    manaCost: '{2}{U}{R}{W}',
-    manaValue: 5,
-    colors: ['U', 'R', 'W'],
-    colorIdentity: ['U', 'R', 'W'],
-    typeLine: 'Legendary Artifact Creature — Hero Engineer',
-    oracleText: 'Flying, Ward {2}\nArtifact spells you cast cost {1} less to cast.',
-    power: '4',
-    toughness: '5',
-    setCode: 'MARVEL',
-    setName: 'Marvel Super Heroes MTG',
-    rarity: 'mythic',
-    legalities: { commander: 'legal' },
-  },
-  {
-    id: 'wolverine-hero',
-    oracleId: 'wolverine-o-1',
-    name: 'Wolverine, Mutant Berserker',
-    manaCost: '{1}{R}{G}',
-    manaValue: 3,
-    colors: ['R', 'G'],
-    colorIdentity: ['R', 'G'],
-    typeLine: 'Legendary Creature — Hero Mutant',
-    oracleText: 'Trample, Indestructible\nWhenever Wolverine is dealt damage, put two +1/+1 counters on it.',
-    power: '3',
-    toughness: '2',
-    setCode: 'MARVEL',
-    setName: 'Marvel Super Heroes MTG',
-    rarity: 'rare',
-    legalities: { commander: 'legal' },
-  },
-];
 
-export default function Home() {
+
+export default async function Home() {
+  const { cards: sampleMarvelCards } = await fetchCards({ size: 3 });
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
