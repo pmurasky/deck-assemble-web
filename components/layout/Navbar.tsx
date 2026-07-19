@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { LogOut, User } from 'lucide-react';
+import { isAdmin } from '@/lib/utils/permissions';
 
 export function Navbar() {
   const { user, isLoading } = useUser();
@@ -35,6 +36,11 @@ export function Navbar() {
           <Link href="/learn" className="hover:text-green-400 transition-colors">
             Learn MTG
           </Link>
+          {isAdmin(user) && (
+            <Link href="/admin/imports" className="hover:text-purple-400 transition-colors font-semibold text-purple-500">
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-3">
