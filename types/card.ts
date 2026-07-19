@@ -1,5 +1,6 @@
 export interface Card {
   id: string;
+  printingId?: number;
   oracleId: string;
   name: string;
   imageUrl?: string;

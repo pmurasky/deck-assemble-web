@@ -4,6 +4,7 @@ const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
 
 interface ApiCard {
   id: number;
+  printingId?: number;
   oracleId: string;
   name: string;
   manaCost?: string;
@@ -30,6 +31,7 @@ interface ApiPage {
 export function toCard(api: ApiCard): Card {
   return {
     id: String(api.id),
+    printingId: api.printingId,
     oracleId: api.oracleId,
     name: api.name,
     imageUrl: api.imageUrl,
