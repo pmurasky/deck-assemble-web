@@ -34,7 +34,7 @@ export function Navbar() {
 
         <div className="flex items-center gap-3">
           <Link
-            href="/decks/create"
+            href="/deck-builder"
             className="rounded-lg bg-green-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-green-500 shadow-sm transition-all"
           >
             Build Deck
