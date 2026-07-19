@@ -2,9 +2,22 @@
 
 import React, { useMemo } from 'react';
 import { useDeckStore, DeckCard } from '@/lib/store/deck-store';
+import { useDecksListStore } from '@/lib/store/useDecksListStore';
+import { Save } from 'lucide-react';
 
 export function DeckWorkspace() {
-  const { cards, addCard, removeCard } = useDeckStore();
+  const { id, cards, commander, metadata, addCard, removeCard } = useDeckStore();
+  const { saveDeck } = useDecksListStore();
+
+  const handleSaveDeck = () => {
+    saveDeck({
+      id,
+      cards,
+      commander,
+      metadata
+    });
+    alert('Deck saved successfully!');
+  };
 
   const groupedCards = useMemo(() => {
     return cards.reduce((acc, deckCard) => {
@@ -32,10 +45,25 @@ export function DeckWorkspace() {
   return (
     <div className="bg-zinc-900/80 rounded-xl border border-zinc-800 p-6 flex flex-col h-full overflow-hidden">
       <div className="flex justify-between items-end mb-6 pb-4 border-b border-zinc-800">
-        <h2 className="text-2xl font-bold text-zinc-100">Deck List</h2>
-        <span className="text-sm font-semibold text-zinc-400 bg-zinc-800 px-3 py-1 rounded-full">
-          {totalCards} Cards
-        </span>
+        <div>
+          <h2 className="text-2xl font-bold text-zinc-100">{metadata.name}</h2>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-sm font-semibold text-zinc-400 bg-zinc-800 px-3 py-1 rounded-full">
+              {totalCards} Cards
+            </span>
+            <span className="text-sm font-semibold text-zinc-400 bg-zinc-800 px-3 py-1 rounded-full">
+              {metadata.format}
+            </span>
+          </div>
+        </div>
+        
+        <button
+          onClick={handleSaveDeck}
+          className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition-colors"
+        >
+          <Save className="w-4 h-4" />
+          Save Deck
+        </button>
       </div>
 
       <div className="overflow-y-auto pr-2 space-y-6 flex-1 custom-scrollbar">

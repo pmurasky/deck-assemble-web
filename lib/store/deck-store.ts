@@ -12,6 +12,7 @@ export interface DeckMetadata {
 }
 
 interface DeckState {
+  id: string;
   cards: DeckCard[];
   commander?: Card;
   metadata: DeckMetadata;
@@ -22,9 +23,11 @@ interface DeckState {
   setCommander: (card: Card) => void;
   updateMetadata: (metadata: Partial<DeckMetadata>) => void;
   clearDeck: () => void;
+  loadDeck: (id: string, cards: DeckCard[], commander: Card | undefined, metadata: DeckMetadata) => void;
 }
 
 export const useDeckStore = create<DeckState>((set) => ({
+  id: crypto.randomUUID(),
   cards: [],
   metadata: {
     name: 'New Deck',
@@ -72,5 +75,7 @@ export const useDeckStore = create<DeckState>((set) => ({
     metadata: { ...state.metadata, ...metadata } 
   })),
   
-  clearDeck: () => set({ cards: [], commander: undefined }),
+  clearDeck: () => set({ id: crypto.randomUUID(), cards: [], commander: undefined }),
+  
+  loadDeck: (id, cards, commander, metadata) => set({ id, cards, commander, metadata }),
 }));
