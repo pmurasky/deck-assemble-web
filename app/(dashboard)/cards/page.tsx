@@ -8,7 +8,7 @@ import { CardSearchBar } from '@/components/cards/CardSearchBar';
 import { CardTile } from '@/components/cards/CardTile';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton';
-import { getSetPrintings } from '@/lib/api/cards';
+import { getLatestImport, getSetPrintings } from '@/lib/api/cards';
 import { useCollectionStore } from '@/lib/store/useCollectionStore';
 import { useDeckStore } from '@/lib/store/deck-store';
 
@@ -23,6 +23,12 @@ export default function CardBrowserPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['cards', searchTerm, filters.colors],
     queryFn: () => getSetPrintings('msh', { q: searchTerm }),
+  });
+
+  const { data: latestImport } = useQuery({
+    queryKey: ['latestImport'],
+    queryFn: getLatestImport,
+    staleTime: 300_000,
   });
 
   const { addCard } = useDeckStore();
@@ -41,7 +47,19 @@ export default function CardBrowserPage() {
         <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-green-500 to-purple-500 bg-clip-text text-transparent">
           CARD CATALOG
         </h1>
-        <div className="text-sm text-muted-foreground">{data?.total || 0} Cards Found</div>
+        <div className="text-sm text-muted-foreground text-right">
+          <div>{data?.total || 0} Cards Found</div>
+          {latestImport && (
+            <div className="text-xs">
+              Card data last synced:{' '}
+              {new Date(latestImport.completedAt).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">

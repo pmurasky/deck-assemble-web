@@ -42,6 +42,24 @@ export async function getCardById(cardId: string): Promise<Card> {
   return json.data;
 }
 
+export interface LatestImport {
+  query: string;
+  recordsRead: number;
+  completedAt: string;
+}
+
+export async function getLatestImport(): Promise<LatestImport | null> {
+  const res = await fetch('/api/v1/card-imports/latest');
+  if (!res.ok) {
+    throw new Error('Failed to fetch import status');
+  }
+  const json: ApiResponse<LatestImport | null> = await res.json();
+  if (json.error) {
+    throw new Error(json.error.message);
+  }
+  return json.data ?? null;
+}
+
 export async function getSetPrintings(setCode: string, { page = 1, limit = 500, q = '' }: GetCardsParams = {}): Promise<{ cards: Card[], total: number }> {
   const url = new URL(`/api/v1/sets/${setCode}/printings`, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
   url.searchParams.append('page', page.toString());
