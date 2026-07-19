@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/useAuthStore';
-import { ShieldAlert, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -29,8 +30,8 @@ export default function LoginPage() {
     <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md bg-zinc-900/80 backdrop-blur-md border border-green-500/30 rounded-2xl p-8 shadow-2xl shadow-green-900/20">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 bg-green-950 border-2 border-green-500 rounded-2xl flex items-center justify-center mb-4 transform rotate-12">
-            <ShieldAlert className="w-8 h-8 text-green-400 -rotate-12" />
+          <div className="w-16 h-16 flex items-center justify-center mb-4 overflow-hidden rounded-xl shadow-md border border-green-500/50">
+            <Image src="/logo.png" alt="Deck Assemble Logo" width={64} height={64} className="object-cover" />
           </div>
           <h1 className="text-3xl font-extrabold text-white text-center">Welcome Back</h1>
           <p className="text-zinc-400 text-center mt-2">Log in to your Deck Assemble account</p>
