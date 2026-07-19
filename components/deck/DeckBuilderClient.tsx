@@ -7,7 +7,6 @@ import { DeckWorkspace } from '@/components/deck/DeckWorkspace';
 import { DeckStats } from '@/components/deck/DeckStats';
 import { FormatValidator } from '@/components/deck/FormatValidator';
 import { CardTile } from '@/components/cards/CardTile';
-import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { useDeckStore } from '@/lib/store/deck-store';
 import { Card } from '@/types/card';
@@ -64,12 +63,14 @@ export function DeckBuilderClient() {
         <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 mt-4">
           {isLoading ? (
             <div className="grid grid-cols-2 gap-4">
-               <LoadingSkeleton count={4} />
+               {[...Array(4)].map((_, i) => (
+                 <div key={i} className="h-80 bg-black/40 border border-primary/10 rounded-xl animate-pulse"></div>
+               ))}
             </div>
           ) : cards.length === 0 ? (
             <EmptyState 
               title="No cards found" 
-              message="Try adjusting your search query."
+              description="Try adjusting your search query."
             />
           ) : (
             <div className="grid grid-cols-2 gap-4">

@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 interface CardSearchBarProps {
   onSearch: (value: string) => void;
   defaultValue?: string;
+  placeholder?: string;
   className?: string;
 }
 
-export function CardSearchBar({ onSearch, defaultValue = '', className = '' }: CardSearchBarProps) {
+export function CardSearchBar({ onSearch, defaultValue = '', placeholder = 'Search Marvel heroes...', className = '' }: CardSearchBarProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSearch(e.target.value);
   };
@@ -20,7 +21,7 @@ export function CardSearchBar({ onSearch, defaultValue = '', className = '' }: C
       </div>
       <Input
         type="search"
-        placeholder="Search Marvel heroes..."
+        placeholder={placeholder}
         defaultValue={defaultValue}
         onChange={handleChange}
         className="pl-10 h-12 bg-black/40 border-primary/20 backdrop-blur-md focus-visible:ring-primary/50 text-base"

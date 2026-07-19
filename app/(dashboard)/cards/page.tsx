@@ -9,7 +9,6 @@ import { CardFilterPanel, CardFilters } from '@/components/cards/CardFilterPanel
 import { CardTile } from '@/components/cards/CardTile';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton';
-import { useDebounce } from '@/hooks/use-debounce'; // Wait, we don't have this yet, I'll just skip debounce for now to avoid complexity or I can create it. Let's not use it in the initial version to pass test quickly.
 
 export default function CardBrowserPage() {
   const [searchTerm, setSearchTerm] = useState('');

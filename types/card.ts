@@ -9,6 +9,7 @@ export interface Card {
   colorIdentity: string[];
   typeLine: string;
   oracleText?: string;
+  flavorText?: string;
   power?: string;
   toughness?: string;
   loyalty?: string;
