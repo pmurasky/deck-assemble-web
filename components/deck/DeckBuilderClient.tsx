@@ -31,7 +31,7 @@ export function DeckBuilderClient() {
       try {
         const res = await fetch(`/api/v1/cards?q=${searchQuery}`);
         const data = await res.json();
-        setCards(data.data || []);
+        setCards(data.data?.cards || []);
       } catch (err) {
         console.error(err);
       } finally {
