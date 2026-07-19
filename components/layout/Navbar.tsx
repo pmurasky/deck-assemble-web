@@ -1,18 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { useAuthStore } from '@/lib/store/useAuthStore';
+import { useUser } from '@auth0/nextjs-auth0/client';
 import { LogOut, User } from 'lucide-react';
 
 export function Navbar() {
-  const { user, isAuthenticated, logout } = useAuthStore();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { user, isLoading } = useUser();
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
@@ -51,23 +45,23 @@ export function Navbar() {
             Build Deck
           </Link>
           
-          {mounted && isAuthenticated ? (
+          {!isLoading && user ? (
             <div className="flex items-center gap-4 ml-2 border-l border-zinc-800 pl-4">
               <span className="text-sm font-medium text-zinc-300 flex items-center gap-2">
                 <div className="w-6 h-6 bg-purple-900/50 rounded-full flex items-center justify-center border border-purple-500/50">
                   <User className="w-3 h-3 text-purple-400" />
                 </div>
-                {user?.name}
+                {user.name}
               </span>
-              <button
-                onClick={logout}
+              <a
+                href="/auth/logout"
                 className="text-zinc-500 hover:text-red-400 transition-colors p-1 rounded-md"
                 title="Log out"
               >
                 <LogOut className="w-4 h-4" />
-              </button>
+              </a>
             </div>
-          ) : mounted ? (
+          ) : !isLoading ? (
             <div className="flex items-center gap-3 ml-2 border-l border-zinc-800 pl-4">
               <Link
                 href="/login"
