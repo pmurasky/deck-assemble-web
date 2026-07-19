@@ -12,6 +12,7 @@ vi.mock('@tanstack/react-query', async () => {
         id: 'spidey-hero',
         name: 'Spider-Man, Neighborhood Hero',
         typeLine: 'Legendary Creature — Hero Human',
+        imageUrl: 'https://cards.scryfall.io/normal/front/a/b/card.jpg',
         manaCost: '{1}{U}{R}',
         oracleText: 'Reach, Haste',
         power: '3',
@@ -31,5 +32,9 @@ describe('CardDetailClient', () => {
     expect(screen.getByText('Spider-Man, Neighborhood Hero')).toBeDefined();
     expect(screen.getByText('Reach, Haste')).toBeDefined();
     expect(screen.getByText('3/3')).toBeDefined();
+    expect(screen.getByRole('img', { name: 'Spider-Man, Neighborhood Hero' })).toHaveAttribute(
+      'src',
+      'https://cards.scryfall.io/normal/front/a/b/card.jpg',
+    );
   });
 });

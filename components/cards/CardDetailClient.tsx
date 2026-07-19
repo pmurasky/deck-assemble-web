@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getCardById } from '@/lib/api/cards';
 import { useDeckStore } from '@/lib/store/deck-store';
@@ -48,14 +48,21 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
-        {/* Placeholder for Card Image since we don't have Scryfall URLs yet */}
         <div className="flex justify-center">
-          <div className="w-full max-w-md aspect-[2.5/3.5] rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl flex items-center justify-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-blue-500/20 mix-blend-overlay"></div>
-            <span className="text-zinc-600 font-bold text-xl uppercase tracking-widest relative z-10 group-hover:scale-110 transition-transform">
-              Card Image
-            </span>
-          </div>
+          {card.imageUrl ? (
+            <img 
+              src={card.imageUrl} 
+              alt={card.name} 
+              className="w-full max-w-md aspect-[2.5/3.5] rounded-2xl shadow-2xl object-cover"
+            />
+          ) : (
+            <div className="w-full max-w-md aspect-[2.5/3.5] rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl flex items-center justify-center relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-blue-500/20 mix-blend-overlay"></div>
+              <span className="text-zinc-600 font-bold text-xl uppercase tracking-widest relative z-10 group-hover:scale-110 transition-transform">
+                Card Image
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col space-y-6">
@@ -81,7 +88,7 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
             
             {card.flavorText && (
               <div className="italic text-zinc-500 border-l-2 border-zinc-700 pl-4 mt-4">
-                "{card.flavorText}"
+                &quot;{card.flavorText}&quot;
               </div>
             )}
             
@@ -101,12 +108,14 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
 
           <div className="flex gap-4 mt-auto pt-8">
             <button 
+              type="button"
               onClick={() => addCard(card)}
               className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]"
             >
               ADD TO DECK
             </button>
             <button 
+              type="button"
               onClick={() => addToCollection(card)}
               className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 rounded-xl border border-zinc-700 transition-colors flex items-center justify-center gap-2"
             >
