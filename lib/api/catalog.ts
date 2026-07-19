@@ -79,3 +79,18 @@ export async function fetchCardById(cardId: string): Promise<Card | null> {
   }
   return toCard(await res.json());
 }
+
+export async function fetchSetPrintings(setCode: string, { query = '', page = 0, size = 24 }: { query?: string; page?: number; size?: number } = {}) {
+  const url = new URL(`/api/v1/sets/${setCode}/printings`, API_BASE_URL);
+  url.searchParams.set('query', query);
+  url.searchParams.set('page', String(page));
+  url.searchParams.set('size', String(size));
+
+  const res = await fetch(url, { next: { revalidate: 300 } });
+  if (!res.ok) {
+    throw new Error(`Set printings returned ${res.status}`);
+  }
+
+  const apiPage: ApiPage = await res.json();
+  return { cards: apiPage.content.map(toCard), total: apiPage.totalElements };
+}

@@ -1,31 +1,33 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getCards } from '@/lib/api/cards';
-import { useDeckStore } from '@/lib/store/deck-store';
-import { useCollectionStore } from '@/lib/store/useCollectionStore';
+import { useEffect, useState } from 'react';
+import type { CardFilters } from '@/components/cards/CardFilterPanel';
+import { CardFilterPanel } from '@/components/cards/CardFilterPanel';
 import { CardSearchBar } from '@/components/cards/CardSearchBar';
-import { CardFilterPanel, CardFilters } from '@/components/cards/CardFilterPanel';
 import { CardTile } from '@/components/cards/CardTile';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton';
+import { getSetPrintings } from '@/lib/api/cards';
+import { useCollectionStore } from '@/lib/store/useCollectionStore';
+import { useDeckStore } from '@/lib/store/deck-store';
 
 export default function CardBrowserPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<CardFilters>({
     colors: [],
     types: [],
-    manaValue: 0
+    manaValue: 0,
   });
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['cards', searchTerm, filters.colors],
-    queryFn: () => getCards({ q: searchTerm }), // passing filters next iteration
+    queryFn: () => getSetPrintings('msh', { q: searchTerm }),
   });
 
   const { addCard } = useDeckStore();
-  const { addCard: addToCollection, items: collectionItems, fetchCollection, collectionId } = useCollectionStore();
+  const { addCard: addToCollection, items: collectionItems, fetchCollection, collectionId } =
+    useCollectionStore();
 
   useEffect(() => {
     if (!collectionId) {
@@ -39,57 +41,45 @@ export default function CardBrowserPage() {
         <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-green-500 to-purple-500 bg-clip-text text-transparent">
           CARD CATALOG
         </h1>
-        <div className="text-sm text-muted-foreground">
-          {data?.total || 0} Cards Found
-        </div>
+        <div className="text-sm text-muted-foreground">{data?.total || 0} Cards Found</div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        {/* Sidebar */}
         <div className="hidden md:flex flex-col space-y-6">
-          <CardSearchBar 
-            onSearch={setSearchTerm} 
-            defaultValue={searchTerm} 
-          />
-          <CardFilterPanel 
-            filters={filters} 
-            onFilterChange={setFilters} 
-          />
+          <CardSearchBar onSearch={setSearchTerm} defaultValue={searchTerm} />
+          <CardFilterPanel filters={filters} onFilterChange={setFilters} />
         </div>
 
-        {/* Main Content */}
         <div className="col-span-1 md:col-span-3">
-          {/* Mobile Search (visible only on small screens) */}
           <div className="md:hidden mb-6">
-            <CardSearchBar 
-              onSearch={setSearchTerm} 
-              defaultValue={searchTerm} 
-            />
+            <CardSearchBar onSearch={setSearchTerm} defaultValue={searchTerm} />
           </div>
 
           {isLoading ? (
             <LoadingSkeleton />
           ) : error ? (
-            <EmptyState 
-              title="Error loading cards" 
-              description={(error as Error).message} 
+            <EmptyState
+              title="Error loading cards"
+              description={error instanceof Error ? error.message : 'Unable to load cards.'}
             />
           ) : data?.cards.length === 0 ? (
-            <EmptyState 
-              title="No heroes found" 
-              description="Try adjusting your search terms or filters to find what you're looking for." 
+            <EmptyState
+              title="No heroes found"
+              description="Try adjusting your search terms or filters to find what you're looking for."
             />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {data?.cards.map(card => {
-                const ownedQuantity = collectionItems.find(item => 
-                  card.printingId ? item.cardPrintingId === card.printingId : item.card.id === card.id
+              {data?.cards.map((card) => {
+                const ownedQuantity = collectionItems.find((item) =>
+                  card.printingId
+                    ? item.cardPrintingId === card.printingId
+                    : item.card.id === card.id
                 )?.quantity || 0;
                 return (
-                  <CardTile 
-                    key={card.id} 
-                    card={card} 
-                    onAddToDeck={addCard} 
+                  <CardTile
+                    key={card.printingId || card.id}
+                    card={card}
+                    onAddToDeck={addCard}
                     onAddToCollection={addToCollection}
                     ownedQuantity={ownedQuantity}
                   />
