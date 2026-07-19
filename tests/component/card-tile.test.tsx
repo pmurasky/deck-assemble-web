@@ -26,4 +26,13 @@ describe('CardTile Component', () => {
     expect(screen.getByText('Legendary Creature — Hero')).toBeInTheDocument();
     expect(screen.getByText('Owned: 2')).toBeInTheDocument();
   });
+
+  it('renders the Scryfall card image when available', () => {
+    render(<CardTile card={{ ...sampleCard, imageUrl: 'https://cards.scryfall.io/normal/front/a/b/card.jpg' }} />);
+
+    expect(screen.getByRole('img', { name: sampleCard.name })).toHaveAttribute(
+      'src',
+      'https://cards.scryfall.io/normal/front/a/b/card.jpg',
+    );
+  });
 });
