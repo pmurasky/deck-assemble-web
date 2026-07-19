@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { toCard } from '@/lib/api/catalog';
 import type { Card } from '@/types/card';
 
 interface ApiResponse<T> {
@@ -15,7 +16,7 @@ interface ApiCollectionCard {
   cardPrintingId: number;
   regularQuantity: number;
   foilQuantity: number;
-  card: Card;
+  card: Parameters<typeof toCard>[0];
 }
 
 function errorMessage(error: unknown) {
@@ -29,7 +30,7 @@ async function responseData<T>(response: Response, message: string): Promise<T> 
 
 function toItem(item: ApiCollectionCard): CollectionItem {
   return { id: item.id, cardPrintingId: item.cardPrintingId, quantity: item.regularQuantity,
-    foilQuantity: item.foilQuantity, card: { ...item.card, printingId: item.cardPrintingId } };
+    foilQuantity: item.foilQuantity, card: { ...toCard(item.card), printingId: item.cardPrintingId } };
 }
 
 export interface CollectionItem {
