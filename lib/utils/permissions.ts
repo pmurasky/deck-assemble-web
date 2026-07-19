@@ -14,11 +14,16 @@ export function isAdmin(user: any): boolean {
     return true;
   }
 
+  // Auth0 permissions array
+  if (Array.isArray(user.permissions) && (user.permissions.includes('admin') || user.permissions.includes('read:admin'))) {
+    return true;
+  }
+
   // Check custom namespaces
   for (const key of Object.keys(user)) {
-    if (key.includes('role') || key.includes('roles')) {
+    if (key.toLowerCase().includes('role') || key.toLowerCase().includes('permission')) {
       const value = user[key];
-      if (Array.isArray(value) && value.includes('admin')) {
+      if (Array.isArray(value) && (value.includes('admin') || value.includes('read:admin'))) {
         return true;
       }
       if (typeof value === 'string' && value === 'admin') {
