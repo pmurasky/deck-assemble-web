@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { CardSearchBar } from '@/components/cards/CardSearchBar';
-import { CardFilterPanel } from '@/components/cards/CardFilterPanel';
+import { CardFilterPanel, CardFilters } from '@/components/cards/CardFilterPanel';
 import { DeckWorkspace } from '@/components/deck/DeckWorkspace';
 import { DeckStats } from '@/components/deck/DeckStats';
 import { FormatValidator } from '@/components/deck/FormatValidator';
@@ -16,6 +16,11 @@ export function DeckBuilderClient() {
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState<CardFilters>({
+    colors: [],
+    types: [],
+    manaValue: 0
+  });
   
   const { addCard } = useDeckStore();
 
@@ -53,7 +58,7 @@ export function DeckBuilderClient() {
             placeholder="Search cards to add..." 
           />
           {/* We would wire this up properly later, for now just a UI placeholder */}
-          <CardFilterPanel onFilterChange={() => {}} />
+          <CardFilterPanel filters={filters} onFilterChange={setFilters} />
         </div>
         
         <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 mt-4">
