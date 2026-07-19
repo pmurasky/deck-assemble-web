@@ -1,12 +1,13 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-600 to-purple-600 font-extrabold text-white shadow-md">
-            DA
+        <Link href="/" className="flex items-center gap-3">
+          <div className="flex h-10 w-10 overflow-hidden rounded-lg shadow-md border border-green-500/20">
+            <Image src="/logo.png" alt="Deck Assemble Logo" width={40} height={40} className="object-cover" />
           </div>
           <span className="text-lg font-bold tracking-tight text-white">
             Deck Assemble <span className="text-xs font-semibold text-green-500">Marvel MTG</span>
