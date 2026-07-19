@@ -22,7 +22,7 @@ interface ApiCardSummary {
 
 interface ApiPage {
   content: ApiCardSummary[];
-  page: { totalElements: number };
+  totalElements: number;
 }
 
 function toCard(summary: ApiCardSummary): Card {
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     data: {
       cards: apiPage.content.map(toCard),
-      total: apiPage.page.totalElements,
+      total: apiPage.totalElements,
     },
   });
 }
