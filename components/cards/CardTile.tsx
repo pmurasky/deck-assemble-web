@@ -44,9 +44,13 @@ export function CardTile({
       </div>
 
       <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-3">
-        <span className="text-xs font-semibold text-zinc-400 bg-zinc-800/80 px-2 py-1 rounded-md">
-          Owned: {ownedQuantity}
-        </span>
+        {ownedQuantity > 0 ? (
+          <span className="text-xs font-semibold text-green-400 bg-green-950/50 border border-green-900/50 px-2 py-1 rounded-md">
+            Owned: {ownedQuantity}
+          </span>
+        ) : (
+          <span />
+        )}
 
         <div className="flex gap-1.5">
           {onAddToCollection && (

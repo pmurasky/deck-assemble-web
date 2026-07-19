@@ -4,6 +4,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getCardById } from '@/lib/api/cards';
 import { useDeckStore } from '@/lib/store/deck-store';
+import { useCollectionStore } from '@/lib/store/useCollectionStore';
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ManaCost } from './ManaCost';
@@ -17,6 +18,9 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
   });
 
   const { addCard } = useDeckStore();
+  const { addCard: addToCollection, items: collectionItems } = useCollectionStore();
+  
+  const ownedQuantity = card ? collectionItems.find(item => item.card.id === card.id)?.quantity || 0 : 0;
 
   if (isLoading) {
     return <div className="container mx-auto py-8 px-4"><LoadingSkeleton /></div>;
@@ -94,8 +98,16 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
             >
               ADD TO DECK
             </button>
-            <button className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 rounded-xl border border-zinc-700 transition-colors">
+            <button 
+              onClick={() => addToCollection(card)}
+              className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 rounded-xl border border-zinc-700 transition-colors flex items-center justify-center gap-2"
+            >
               + COLLECTION
+              {ownedQuantity > 0 && (
+                <span className="text-xs font-semibold bg-zinc-950 px-2 py-1 rounded-md text-zinc-400">
+                  Owned: {ownedQuantity}
+                </span>
+              )}
             </button>
           </div>
         </div>

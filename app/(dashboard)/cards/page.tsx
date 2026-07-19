@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getCards } from '@/lib/api/cards';
 import { useDeckStore } from '@/lib/store/deck-store';
+import { useCollectionStore } from '@/lib/store/useCollectionStore';
 import { CardSearchBar } from '@/components/cards/CardSearchBar';
 import { CardFilterPanel, CardFilters } from '@/components/cards/CardFilterPanel';
 import { CardTile } from '@/components/cards/CardTile';
@@ -24,6 +25,7 @@ export default function CardBrowserPage() {
   });
 
   const { addCard } = useDeckStore();
+  const { addCard: addToCollection, items: collectionItems } = useCollectionStore();
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -73,9 +75,18 @@ export default function CardBrowserPage() {
             />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {data?.cards.map(card => (
-                <CardTile key={card.id} card={card} onAddToDeck={addCard} />
-              ))}
+              {data?.cards.map(card => {
+                const ownedQuantity = collectionItems.find(item => item.card.id === card.id)?.quantity || 0;
+                return (
+                  <CardTile 
+                    key={card.id} 
+                    card={card} 
+                    onAddToDeck={addCard} 
+                    onAddToCollection={addToCollection}
+                    ownedQuantity={ownedQuantity}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
