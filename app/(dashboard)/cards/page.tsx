@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getCards } from '@/lib/api/cards';
 import { useDeckStore } from '@/lib/store/deck-store';
@@ -25,7 +25,13 @@ export default function CardBrowserPage() {
   });
 
   const { addCard } = useDeckStore();
-  const { addCard: addToCollection, items: collectionItems } = useCollectionStore();
+  const { addCard: addToCollection, items: collectionItems, fetchCollection, collectionId } = useCollectionStore();
+
+  useEffect(() => {
+    if (!collectionId) {
+      fetchCollection();
+    }
+  }, [fetchCollection, collectionId]);
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -76,7 +82,9 @@ export default function CardBrowserPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {data?.cards.map(card => {
-                const ownedQuantity = collectionItems.find(item => item.card.id === card.id)?.quantity || 0;
+                const ownedQuantity = collectionItems.find(item => 
+                  card.printingId ? item.cardPrintingId === card.printingId : item.card.id === card.id
+                )?.quantity || 0;
                 return (
                   <CardTile 
                     key={card.id} 

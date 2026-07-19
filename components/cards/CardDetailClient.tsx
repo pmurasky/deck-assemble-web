@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getCardById } from '@/lib/api/cards';
 import { useDeckStore } from '@/lib/store/deck-store';
@@ -18,9 +18,17 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
   });
 
   const { addCard } = useDeckStore();
-  const { addCard: addToCollection, items: collectionItems } = useCollectionStore();
+  const { addCard: addToCollection, items: collectionItems, fetchCollection, collectionId } = useCollectionStore();
   
-  const ownedQuantity = card ? collectionItems.find(item => item.card.id === card.id)?.quantity || 0 : 0;
+  useEffect(() => {
+    if (!collectionId) {
+      fetchCollection();
+    }
+  }, [fetchCollection, collectionId]);
+
+  const ownedQuantity = card ? collectionItems.find(item => 
+    card.printingId ? item.cardPrintingId === card.printingId : item.card.id === card.id
+  )?.quantity || 0 : 0;
 
   if (isLoading) {
     return <div className="container mx-auto py-8 px-4"><LoadingSkeleton /></div>;
