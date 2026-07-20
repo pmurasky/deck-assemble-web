@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { useCollectionStore } from '@/lib/store/useCollectionStore';
 import { CardTile } from '@/components/cards/CardTile';
-import { PackageOpen, Search, AlertCircle, Loader2 } from 'lucide-react';
+import { PackageOpen, Search, AlertCircle, Loader2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 export function CollectionClient() {
-  const { items, updateQuantity, getTotalCards, fetchCollection, isLoading, error } = useCollectionStore();
+  const { items, updateQuantity, removeCard, getTotalCards, fetchCollection, isLoading, error } = useCollectionStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
@@ -21,6 +21,17 @@ export function CollectionClient() {
     setUpdatingId(collectionCardId);
     try {
       await updateQuantity(collectionCardId, newQuantity);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleRemove = async (e: React.MouseEvent, collectionCardId: number) => {
+    e.preventDefault();
+    if (updatingId !== null) return;
+    setUpdatingId(collectionCardId);
+    try {
+      await removeCard(collectionCardId);
     } finally {
       setUpdatingId(null);
     }
@@ -103,6 +114,14 @@ export function CollectionClient() {
                   className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-zinc-700 text-zinc-300 transition-colors disabled:opacity-50"
                 >
                   +
+                </button>
+                <button
+                  onClick={(e) => handleRemove(e, id)}
+                  disabled={updatingId === id}
+                  title="Remove from collection"
+                  className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-red-900/70 text-zinc-400 hover:text-red-400 transition-colors disabled:opacity-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
