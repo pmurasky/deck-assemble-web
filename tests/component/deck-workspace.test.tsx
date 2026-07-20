@@ -10,7 +10,8 @@ vi.mock('@/lib/store/deck-store', () => ({
 
 describe('DeckWorkspace Component', () => {
   it('renders empty state when no cards', () => {
-    (useDeckStore as any).mockReturnValue({
+    vi.mocked(useDeckStore).mockReturnValue({
+      metadata: { name: 'Test Deck', format: 'Commander' },
       cards: [],
       removeCard: vi.fn(),
       addCard: vi.fn(),
@@ -21,12 +22,16 @@ describe('DeckWorkspace Component', () => {
   });
 
   it('renders grouped cards', () => {
-    (useDeckStore as any).mockReturnValue({
+    vi.mocked(useDeckStore).mockReturnValue({
+      metadata: { name: 'Test Deck', format: 'Commander' },
       cards: [
         {
+          deckCardId: 1,
+          cardPrintingId: 1,
           card: { id: '1', name: 'Goblin Guide', typeLine: 'Creature — Goblin' },
-          quantity: 2
-        }
+          quantity: 2,
+          deckSection: 'MAIN_DECK',
+        },
       ],
       removeCard: vi.fn(),
       addCard: vi.fn(),

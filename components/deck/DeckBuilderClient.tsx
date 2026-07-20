@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { CardSearchBar } from '@/components/cards/CardSearchBar';
 import { CardFilterPanel, CardFilters } from '@/components/cards/CardFilterPanel';
 import { DeckWorkspace } from '@/components/deck/DeckWorkspace';
@@ -9,7 +9,7 @@ import { FormatValidator } from '@/components/deck/FormatValidator';
 import { CardTile } from '@/components/cards/CardTile';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { useDeckStore } from '@/lib/store/deck-store';
-import { Card } from '@/types/card';
+import type { Card } from '@/types/card';
 
 export function DeckBuilderClient() {
   const [cards, setCards] = useState<Card[]>([]);
@@ -64,7 +64,7 @@ export function DeckBuilderClient() {
           {isLoading ? (
             <div className="grid grid-cols-2 gap-4">
                {[...Array(4)].map((_, i) => (
-                 <div key={i} className="h-80 bg-black/40 border border-primary/10 rounded-xl animate-pulse"></div>
+                <div key={i} className="h-80 bg-black/40 border border-primary/10 rounded-xl animate-pulse" />
                ))}
             </div>
           ) : cards.length === 0 ? (
@@ -75,10 +75,11 @@ export function DeckBuilderClient() {
           ) : (
             <div className="grid grid-cols-2 gap-4">
               {cards.map((card) => (
-                <div key={card.id} className="relative group">
+                <div key={card.printingId ?? card.id} className="relative group">
                   <CardTile card={card} />
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
-                    <button 
+                    <button
+                      type="button"
                       onClick={() => addCard(card)}
                       className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all"
                     >

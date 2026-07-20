@@ -2,7 +2,7 @@ import type { Card } from '@/types/card';
 
 const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
 
-interface ApiCard {
+export interface ApiCard {
   id: number;
   printingId?: number;
   oracleId: string;

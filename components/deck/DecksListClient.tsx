@@ -1,27 +1,27 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useDecksListStore } from '@/lib/store/useDecksListStore';
+import { useState, useEffect } from 'react';
+import { useDecksListStore, type SavedDeck } from '@/lib/store/useDecksListStore';
 import { useDeckStore } from '@/lib/store/deck-store';
 import { BookOpen, Edit2, Trash2, Plus } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export function DecksListClient() {
-  const { decks, deleteDeck } = useDecksListStore();
-  const { loadDeck, clearDeck } = useDeckStore();
+  const { decks, deleteDeck, fetchDecks, isLoading, error } = useDecksListStore();
+  const { loadDeck, clearDeck, fetchDeckCards } = useDeckStore();
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
-  // Hydration fix for local storage
   useEffect(() => {
     setMounted(true);
-  }, []);
+    fetchDecks();
+  }, [fetchDecks]);
 
   if (!mounted) return null;
 
-  const handleEditDeck = (deck: any) => {
+  const handleEditDeck = async (deck: SavedDeck) => {
     loadDeck(deck.id, deck.cards, deck.commander, deck.metadata);
+    await fetchDeckCards(deck.id);
     router.push('/deck-builder');
   };
 
@@ -41,6 +41,7 @@ export function DecksListClient() {
 
         <div>
           <button
+            type="button"
             onClick={handleNewDeck}
             className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-colors"
           >
@@ -51,12 +52,17 @@ export function DecksListClient() {
       </div>
 
       {/* Grid */}
-      {decks.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center py-24 border-2 border-dashed border-zinc-800 rounded-2xl bg-zinc-900/20">
+          <p className="text-zinc-500 font-medium">Loading decks...</p>
+        </div>
+      ) : decks.length === 0 ? (
         <div className="text-center py-24 border-2 border-dashed border-zinc-800 rounded-2xl bg-zinc-900/20">
           <BookOpen className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-zinc-300">You don't have any saved decks</h3>
           <p className="text-zinc-500 mt-2 mb-6">Head over to the Deck Builder to start brewing your first deck.</p>
           <button 
+            type="button"
             onClick={handleNewDeck}
             className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors"
           >
@@ -66,7 +72,7 @@ export function DecksListClient() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {decks.map((deck) => {
-            const totalCards = deck.cards.reduce((sum, item) => sum + item.quantity, 0);
+            const totalCards = deck.cardCount ?? deck.cards.reduce((sum, item) => sum + item.quantity, 0);
             return (
               <div key={deck.id} className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6 relative group hover:border-purple-500/50 transition-colors">
                 <div className="flex justify-between items-start mb-4">
@@ -79,10 +85,10 @@ export function DecksListClient() {
                   </div>
                 </div>
 
-                {deck.commander ? (
+                {deck.commanderName || deck.commander ? (
                   <div className="mb-6 pb-6 border-b border-zinc-800/50">
                     <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Commander</p>
-                    <p className="text-sm font-medium text-green-400">{deck.commander.name}</p>
+                    <p className="text-sm font-medium text-green-400">{deck.commanderName || deck.commander?.name}</p>
                   </div>
                 ) : (
                   <div className="mb-6 pb-6 border-b border-zinc-800/50">
@@ -121,6 +127,7 @@ export function DecksListClient() {
           })}
         </div>
       )}
+      {error && <p className="text-sm text-red-400">{error}</p>}
     </div>
   );
 }
