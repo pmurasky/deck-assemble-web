@@ -48,7 +48,12 @@ export default function CardBrowserPage() {
           CARD CATALOG
         </h1>
         <div className="text-sm text-muted-foreground text-right">
-          <div>{data?.total || 0} Cards Found</div>
+          <div>
+            {data?.cards 
+              ? data.cards.filter(card => filters.colors.length === 0 || filters.colors.some(c => card.colors?.includes(c))).length 
+              : 0} 
+            {' '}Cards Found
+          </div>
           {latestImport && (
             <div className="text-xs">
               Card data last synced:{' '}
@@ -87,22 +92,28 @@ export default function CardBrowserPage() {
             />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {data?.cards.map((card) => {
-                const ownedQuantity = collectionItems.find((item) =>
-                  card.printingId
-                    ? item.cardPrintingId === card.printingId
-                    : item.card.id === card.id
-                )?.quantity || 0;
-                return (
-                  <CardTile
-                    key={card.printingId || card.id}
-                    card={card}
-                    onAddToDeck={addCard}
-                    onAddToCollection={addToCollection}
-                    ownedQuantity={ownedQuantity}
-                  />
-                );
-              })}
+              {data?.cards
+                .filter((card) => {
+                  if (filters.colors.length === 0) return true;
+                  // Allow card if it contains ANY of the selected colors
+                  return filters.colors.some((c) => card.colors?.includes(c));
+                })
+                .map((card) => {
+                  const ownedQuantity = collectionItems.find((item) =>
+                    card.printingId
+                      ? item.cardPrintingId === card.printingId
+                      : item.card.id === card.id
+                  )?.quantity || 0;
+                  return (
+                    <CardTile
+                      key={card.printingId || card.id}
+                      card={card}
+                      onAddToDeck={addCard}
+                      onAddToCollection={addToCollection}
+                      ownedQuantity={ownedQuantity}
+                    />
+                  );
+                })}
             </div>
           )}
         </div>
