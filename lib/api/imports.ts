@@ -36,6 +36,14 @@ export async function fetchLatestImport(): Promise<LatestImport | null> {
   return res.json() as Promise<LatestImport>;
 }
 
+export interface ImportResult {
+  runId: number;
+  recordsRead: number;
+  recordsCreated: number;
+  recordsUpdated: number;
+  recordsFailed: number;
+}
+
 export async function fetchImportRuns(): Promise<ImportRun[]> {
   const token = await auth0.getAccessToken();
   const res = await fetch(new URL('/api/v1/admin/card-imports', API_BASE_URL), {
@@ -46,4 +54,18 @@ export async function fetchImportRuns(): Promise<ImportRun[]> {
     throw new Error(`Import history returned ${res.status}`);
   }
   return res.json() as Promise<ImportRun[]>;
+}
+
+export async function triggerImport(query: string): Promise<ImportResult> {
+  const token = await auth0.getAccessToken();
+  const url = new URL('/api/v1/admin/card-imports', API_BASE_URL);
+  url.searchParams.set('query', query);
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token.token}` },
+  });
+  if (!res.ok) {
+    throw new Error(`Import trigger returned ${res.status}`);
+  }
+  return res.json() as Promise<ImportResult>;
 }

@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { fetchImportRuns } from '@/lib/api/imports';
+import { NextRequest, NextResponse } from 'next/server';
+import { fetchImportRuns, triggerImport } from '@/lib/api/imports';
 
 export async function GET() {
   try {
@@ -7,6 +7,17 @@ export async function GET() {
     return NextResponse.json({ data: runs });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch import history';
+    return NextResponse.json({ error: { message } }, { status: 502 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const query = request.nextUrl.searchParams.get('query') ?? '';
+    const result = await triggerImport(query);
+    return NextResponse.json({ data: result });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to trigger import';
     return NextResponse.json({ error: { message } }, { status: 502 });
   }
 }
