@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useDeckStore } from '@/lib/store/deck-store';
 import { MOCK_CARDS } from '@/lib/mock-data/cards';
 import { CardTile } from '@/components/cards/CardTile';
@@ -9,13 +9,6 @@ import Link from 'next/link';
 
 export function RecommendationsClient() {
   const { cards, commander, addCard } = useDeckStore();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
 
   if (!commander && cards.length === 0) {
     return (
@@ -53,7 +46,6 @@ export function RecommendationsClient() {
 
   // 3. Simple sorting/scoring (Mock synergy)
   // - Prioritize cards that share types with the commander
-  // - Then randomize slightly so it feels fresh
   if (commander) {
     const commanderTypes = commander.typeLine.toLowerCase().split(/[ —-]+/);
     
@@ -61,16 +53,17 @@ export function RecommendationsClient() {
       const aTypes = a.typeLine.toLowerCase();
       const bTypes = b.typeLine.toLowerCase();
       
-      let aScore = commanderTypes.some(t => aTypes.includes(t)) ? 1 : 0;
-      let bScore = commanderTypes.some(t => bTypes.includes(t)) ? 1 : 0;
+      const aScore = commanderTypes.some(t => aTypes.includes(t)) ? 1 : 0;
+      const bScore = commanderTypes.some(t => bTypes.includes(t)) ? 1 : 0;
       
-      // Random jitter
-      aScore += Math.random() * 0.5;
-      bScore += Math.random() * 0.5;
+      if (bScore !== aScore) {
+        return bScore - aScore;
+      }
       
-      return bScore - aScore;
+      return a.id.localeCompare(b.id);
     });
   }
+
 
   // Limit to top 20 recommendations
   const topRecommendations = recommendations.slice(0, 20);

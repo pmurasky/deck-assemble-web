@@ -13,7 +13,7 @@ export function ObjectiveSection() {
         <p className="text-zinc-300 leading-relaxed">
           In Magic: The Gathering, you play the role of a powerful wizard (called a Planeswalker) battling other Planeswalkers. 
           Your deck of cards represents your arsenal of spells, creatures, and artifacts. The core objective is simple: 
-          reduce your opponent's life total from its starting value to 0.
+          reduce your opponent&apos;s life total from its starting value to 0.
         </p>
       </div>
 
@@ -44,7 +44,7 @@ export function ObjectiveSection() {
             <h3 className="font-bold text-lg text-zinc-100">The Graveyard</h3>
           </div>
           <p className="text-sm text-zinc-400">
-            When creatures die, or when you cast spells that resolve, they go to your Graveyard (your discard pile). Many decks interact with the graveyard, so it's often a resource rather than a dead zone!
+            When creatures die, or when you cast spells that resolve, they go to your Graveyard (your discard pile). Many decks interact with the graveyard, so it&apos;s often a resource rather than a dead zone!
           </p>
         </div>
 
@@ -54,7 +54,7 @@ export function ObjectiveSection() {
             <h3 className="font-bold text-lg text-zinc-100">The Stack</h3>
           </div>
           <p className="text-sm text-zinc-400">
-            When you cast a spell, it doesn't happen instantly. It goes on "The Stack." Your opponents have a chance to respond with their own instant-speed spells before yours resolves. Last in, first out!
+            When you cast a spell, it doesn&apos;t happen instantly. It goes on &quot;The Stack.&quot; Your opponents have a chance to respond with their own instant-speed spells before yours resolves. Last in, first out!
           </p>
         </div>
       </div>

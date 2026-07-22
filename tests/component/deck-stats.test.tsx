@@ -10,9 +10,9 @@ vi.mock('@/lib/store/deck-store', () => ({
 
 describe('DeckStats Component', () => {
   it('renders correctly with no cards', () => {
-    (useDeckStore as any).mockReturnValue({
+    vi.mocked(useDeckStore).mockReturnValue({
       cards: [],
-    });
+    } as ReturnType<typeof useDeckStore>);
     
     render(<DeckStats />);
     expect(screen.getByText(/Mana Curve/i)).toBeDefined();
@@ -20,7 +20,7 @@ describe('DeckStats Component', () => {
   });
 
   it('calculates stats based on cards', () => {
-    (useDeckStore as any).mockReturnValue({
+    vi.mocked(useDeckStore).mockReturnValue({
       cards: [
         {
           card: { id: '1', name: 'Goblin Guide', manaValue: 1, colorIdentity: ['R'], typeLine: 'Creature' },

@@ -20,7 +20,7 @@ describe('API Route: /api/v1/cards', () => {
     expect(res.status).toBe(200);
     
     const data = await res.json();
-    expect(data.data.cards.some((c: any) => c.name.includes('Spider-Man'))).toBe(true);
+    expect(data.data.cards.some((c: { name: string }) => c.name.includes('Spider-Man'))).toBe(true);
   });
 
   it('should filter cards by type parameter (case-insensitive substring match)', async () => {
@@ -30,7 +30,7 @@ describe('API Route: /api/v1/cards', () => {
 
     const data = await res.json();
     expect(data.data.cards.length).toBeGreaterThan(0);
-    expect(data.data.cards.every((c: any) => c.typeLine.toLowerCase().includes('artifact'))).toBe(true);
+    expect(data.data.cards.every((c: { typeLine: string }) => c.typeLine.toLowerCase().includes('artifact'))).toBe(true);
   });
 
   it('should combine query and type parameters (AND logic)', async () => {

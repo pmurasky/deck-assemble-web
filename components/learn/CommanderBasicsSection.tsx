@@ -17,7 +17,7 @@ export function CommanderBasicsSection() {
 
       <div className="prose prose-invert max-w-none mb-6">
         <p className="text-zinc-300 leading-relaxed">
-          Commander (also known as EDH) is a casual, multiplayer format. Instead of standard 60-card decks with 4 copies of each card, Commander is a "singleton" format led by a legendary creature.
+          Commander (also known as EDH) is a casual, multiplayer format. Instead of standard 60-card decks with 4 copies of each card, Commander is a &quot;singleton&quot; format led by a legendary creature.
         </p>
       </div>
 
@@ -28,7 +28,7 @@ export function CommanderBasicsSection() {
           </div>
           <h3 className="font-bold text-zinc-100">The Commander</h3>
           <p className="text-sm text-zinc-400">
-            Your deck is led by a Legendary Creature. It starts the game in the "Command Zone" and can be cast from there. If it dies, it goes back to the Command Zone, costing 2 more mana each subsequent time you cast it.
+            Your deck is led by a Legendary Creature. It starts the game in the &quot;Command Zone&quot; and can be cast from there. If it dies, it goes back to the Command Zone, costing 2 more mana each subsequent time you cast it.
           </p>
         </div>
 

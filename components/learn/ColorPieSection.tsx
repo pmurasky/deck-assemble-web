@@ -58,7 +58,7 @@ export function ColorPieSection() {
     <section id="colors" className="scroll-mt-32 space-y-6">
       <div className="border-b border-zinc-800 pb-4">
         <h2 className="text-3xl font-extrabold text-white">The 5 Colors of Mana</h2>
-        <p className="text-zinc-400 mt-2 text-lg">The foundational system that dictates the game's mechanics and lore.</p>
+        <p className="text-zinc-400 mt-2 text-lg">The foundational system that dictates the game&apos;s mechanics and lore.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
