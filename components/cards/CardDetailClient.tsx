@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getCardById } from '@/lib/api/cards';
 import { useDeckStore } from '@/lib/store/deck-store';
 import { useCollectionStore } from '@/lib/store/useCollectionStore';
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton';
 import { EmptyState } from '@/components/feedback/EmptyState';
+import { AddToCollectionModal } from '@/components/collection/AddToCollectionModal';
 import { ManaCost } from './ManaCost';
 import { ColorIdentityBadge } from './ColorIdentityBadge';
 import { LegalityBadge } from './LegalityBadge';
@@ -18,7 +19,8 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
   });
 
   const { addCard } = useDeckStore();
-  const { addCard: addToCollection, items: collectionItems, fetchCollection, collectionId } = useCollectionStore();
+  const { addCard: addToCollectionStore, items: collectionItems, fetchCollection, collectionId } = useCollectionStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   useEffect(() => {
     if (!collectionId) {
@@ -26,9 +28,13 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
     }
   }, [fetchCollection, collectionId]);
 
-  const ownedQuantity = card ? collectionItems.find(item => 
-    card.printingId ? item.cardPrintingId === card.printingId : item.card.id === card.id
-  )?.quantity || 0 : 0;
+  const ownedItem = card
+    ? collectionItems.find((item) =>
+        card.printingId ? item.cardPrintingId === card.printingId : item.card.id === card.id
+      )
+    : null;
+
+  const totalOwned = ownedItem ? ownedItem.regularQuantity + ownedItem.foilQuantity : 0;
 
   if (isLoading) {
     return <div className="container mx-auto py-8 px-4"><LoadingSkeleton /></div>;
@@ -116,19 +122,29 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
             </button>
             <button 
               type="button"
-              onClick={() => addToCollection(card)}
+              onClick={() => setIsModalOpen(true)}
               className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 rounded-xl border border-zinc-700 transition-colors flex items-center justify-center gap-2"
             >
               + COLLECTION
-              {ownedQuantity > 0 && (
+              {totalOwned > 0 && (
                 <span className="text-xs font-semibold bg-zinc-950 px-2 py-1 rounded-md text-zinc-400">
-                  Owned: {ownedQuantity}
+                  Owned: {totalOwned}
                 </span>
               )}
             </button>
           </div>
         </div>
       </div>
+
+      <AddToCollectionModal
+        card={card}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={async (reg, foil) => {
+          await addToCollectionStore(card, reg, foil);
+        }}
+      />
     </div>
   );
 }
+

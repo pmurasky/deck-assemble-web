@@ -1,6 +1,11 @@
+'use client';
+
+import { useState } from 'react';
 import { ManaCost } from './ManaCost';
 import { ColorIdentityBadge } from './ColorIdentityBadge';
 import { LegalityBadge } from './LegalityBadge';
+import { AddToCollectionModal } from '@/components/collection/AddToCollectionModal';
+import { useCollectionStore } from '@/lib/store/useCollectionStore';
 import type { Card } from '@/types/card';
 
 interface CardTileProps {
@@ -18,71 +23,89 @@ export function CardTile({
   onAddToCollection,
   className = '',
 }: CardTileProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { addCard: addCardToStore } = useCollectionStore();
+
+  const handleConfirmAdd = async (regularQuantity: number, foilQuantity: number) => {
+    await addCardToStore(card, regularQuantity, foilQuantity);
+    if (onAddToCollection) {
+      onAddToCollection(card);
+    }
+  };
+
   return (
-    <div className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/90 p-4 transition-all duration-200 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-950/20 ${className}`}>
-      {card.imageUrl ? (
-        <div className="relative w-full aspect-[2.5/3.5] rounded-lg overflow-hidden mb-3">
-          <img 
-            src={card.imageUrl} 
-            alt={card.name} 
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-bold text-zinc-100 text-sm group-hover:text-green-400 transition-colors">
-              {card.name}
-            </h3>
-            <ManaCost manaCost={card.manaCost} />
+    <>
+      <div className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/90 p-4 transition-all duration-200 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-950/20 ${className}`}>
+        {card.imageUrl ? (
+          <div className="relative w-full aspect-[2.5/3.5] rounded-lg overflow-hidden mb-3">
+            <img 
+              src={card.imageUrl} 
+              alt={card.name} 
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
           </div>
-
-          <p className="text-xs text-zinc-400 italic">{card.typeLine}</p>
-
-          {card.oracleText && (
-            <p className="text-xs text-zinc-300 line-clamp-3 bg-zinc-950/50 p-2 rounded-md border border-zinc-800/80">
-              {card.oracleText}
-            </p>
-          )}
-
-          <div className="flex items-center justify-between gap-2 pt-1">
-            <ColorIdentityBadge colors={card.colorIdentity} />
-            <LegalityBadge format="Commander" status={card.legalities.commander || 'not_legal'} />
-          </div>
-        </div>
-      )}
-
-      <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-3">
-        {ownedQuantity > 0 ? (
-          <span className="text-xs font-semibold text-green-400 bg-green-950/50 border border-green-900/50 px-2 py-1 rounded-md">
-            Owned: {ownedQuantity}
-          </span>
         ) : (
-          <span />
+          <div className="space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="font-bold text-zinc-100 text-sm group-hover:text-green-400 transition-colors">
+                {card.name}
+              </h3>
+              <ManaCost manaCost={card.manaCost} />
+            </div>
+
+            <p className="text-xs text-zinc-400 italic">{card.typeLine}</p>
+
+            {card.oracleText && (
+              <p className="text-xs text-zinc-300 line-clamp-3 bg-zinc-950/50 p-2 rounded-md border border-zinc-800/80">
+                {card.oracleText}
+              </p>
+            )}
+
+            <div className="flex items-center justify-between gap-2 pt-1">
+              <ColorIdentityBadge colors={card.colorIdentity} />
+              <LegalityBadge format="Commander" status={card.legalities.commander || 'not_legal'} />
+            </div>
+          </div>
         )}
 
-        <div className="flex gap-1.5">
-          {onAddToCollection && (
+        <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-3">
+          {ownedQuantity > 0 ? (
+            <span className="text-xs font-semibold text-green-400 bg-green-950/50 border border-green-900/50 px-2 py-1 rounded-md">
+              Owned: {ownedQuantity}
+            </span>
+          ) : (
+            <span />
+          )}
+
+          <div className="flex gap-1.5">
             <button
               type="button"
-              onClick={() => onAddToCollection(card)}
+              onClick={() => setIsModalOpen(true)}
               className="rounded-md bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-200 hover:bg-zinc-700 transition-colors"
             >
               + Collection
             </button>
-          )}
-          {onAddToDeck && (
-            <button
-              type="button"
-              onClick={() => onAddToDeck(card)}
-              className="rounded-md bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-500 transition-colors shadow-xs"
-            >
-              + Deck
-            </button>
-          )}
+            {onAddToDeck && (
+              <button
+                type="button"
+                onClick={() => onAddToDeck(card)}
+                className="rounded-md bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-500 transition-colors shadow-xs"
+              >
+                + Deck
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      <AddToCollectionModal
+        card={card}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleConfirmAdd}
+      />
+    </>
   );
 }
+
