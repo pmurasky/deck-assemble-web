@@ -39,7 +39,7 @@ describe('API Route: /api/v1/admin/card-imports', () => {
       vi.spyOn(importsApi, 'fetchImportRuns').mockRejectedValue(new Error('Import history returned 403'));
 
       const res = await GET();
-      expect(res.status).toBe(502);
+      expect(res.status).toBe(403);
 
       const json = await res.json();
       expect(json).toEqual({ error: { message: 'Import history returned 403' } });
@@ -80,7 +80,7 @@ describe('API Route: /api/v1/admin/card-imports', () => {
 
       const req = new NextRequest('http://localhost/api/v1/admin/card-imports?query=e%3Amar');
       const res = await POST(req);
-      expect(res.status).toBe(502);
+      expect(res.status).toBe(403);
 
       const json = await res.json();
       expect(json).toEqual({ error: { message: 'Import trigger returned 403' } });

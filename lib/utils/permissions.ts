@@ -4,6 +4,8 @@
  */
 export function isAdmin(user: Record<string, unknown> | null | undefined): boolean {
   if (!user) return false;
+  console.log('[DEBUG] Auth0 user claims:', user);
+
 
 
   // Sometimes roles are at the top level
