@@ -22,7 +22,15 @@ async function getImportRuns(): Promise<ImportRun[]> {
   return json.data;
 }
 
-async function triggerImportRun(query: string): Promise<void> {
+interface ImportResult {
+  runId: number;
+  recordsRead: number;
+  recordsCreated: number;
+  recordsUpdated: number;
+  recordsFailed: number;
+}
+
+async function triggerImportRun(query: string): Promise<ImportResult> {
   const params = new URLSearchParams();
   if (query) {
     params.set('query', query);
@@ -34,6 +42,11 @@ async function triggerImportRun(query: string): Promise<void> {
     const errorJson = await res.json().catch(() => ({}));
     throw new Error(errorJson.error?.message || 'Failed to trigger import');
   }
+  const json: ApiResponse<ImportResult> = await res.json();
+  if (json.error || !json.data) {
+    throw new Error(json.error?.message || 'Failed to trigger import');
+  }
+  return json.data;
 }
 
 function formatRelativeDate(value: string | null) {
@@ -66,12 +79,13 @@ function formatRelativeDate(value: string | null) {
 export default function AdminImportsPage() {
   const { user, isLoading: isUserLoading } = useUser();
   const [queryInput, setQueryInput] = useState('');
+  const [lastResult, setLastResult] = useState<ImportResult | null>(null);
+  const [lastQuery, setLastQuery] = useState<string>('');
   const queryClient = useQueryClient();
 
   const { data: runs, isLoading: isRunsLoading, error } = useQuery({
     queryKey: ['importRuns'],
     queryFn: getImportRuns,
-    // Auto-refresh every 5 seconds if we have runs and the latest one is still running
     refetchInterval: (query) => {
       const currentRuns = query.state.data as ImportRun[] | undefined;
       const isRunning = currentRuns?.some(r => r.status === 'RUNNING' || r.status === 'PENDING');
@@ -81,14 +95,16 @@ export default function AdminImportsPage() {
 
   const importMutation = useMutation({
     mutationFn: triggerImportRun,
-    onSuccess: () => {
-      setQueryInput('');
+    onSuccess: (data, variables) => {
+      setLastResult(data);
+      setLastQuery(variables);
       queryClient.invalidateQueries({ queryKey: ['importRuns'] });
     },
     onError: (err: Error) => {
       alert(`Error triggering import: ${err.message}`);
     }
   });
+
 
   // Role Gating
   if (isUserLoading) {
@@ -111,39 +127,95 @@ export default function AdminImportsPage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-green-500 to-purple-500 bg-clip-text text-transparent">
-          CARD IMPORTS
-        </h1>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-green-500 to-purple-500 bg-clip-text text-transparent">
+            CARD IMPORTS
+          </h1>
+          <p className="text-xs text-zinc-400 mt-1">
+            Import cards from Scryfall using search queries (e.g. <code className="text-green-400 bg-zinc-900 px-1 py-0.5 rounded">e:mar,spe,spm,pspm,msh,msc,lmar</code>).
+          </p>
+        </div>
 
         <form 
           onSubmit={(e) => {
             e.preventDefault();
+            if (!queryInput.trim()) return;
             importMutation.mutate(queryInput);
           }}
-          className="flex gap-2"
+          className="flex gap-2 w-full md:w-auto"
         >
           <input 
             type="text" 
-            placeholder="Query (e.g. set=m20)" 
+            placeholder="Scryfall query (e.g. e:mar)" 
             value={queryInput}
             onChange={(e) => setQueryInput(e.target.value)}
-            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-green-500"
+            disabled={importMutation.isPending}
+            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-green-500 flex-1 md:w-80 disabled:opacity-50"
           />
           <button 
             type="submit"
-            disabled={importMutation.isPending}
-            className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors disabled:opacity-50"
+            disabled={importMutation.isPending || !queryInput.trim()}
+            className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             {importMutation.isPending ? (
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              <>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                Importing...
+              </>
             ) : (
-              <Play className="w-4 h-4" />
+              <>
+                <Play className="w-4 h-4" />
+                Run Import
+              </>
             )}
-            Run Import
           </button>
         </form>
       </div>
+
+      {importMutation.isPending && (
+        <div className="mb-6 rounded-xl border border-green-500/30 bg-green-950/20 p-4 text-green-300 flex items-center gap-3 animate-pulse">
+          <span className="w-5 h-5 border-2 border-green-500/30 border-t-green-400 rounded-full animate-spin"></span>
+          <div>
+            <p className="font-semibold text-sm">Importing cards from Scryfall...</p>
+            <p className="text-xs text-green-400/80">This request is synchronous and may take up to 2 minutes depending on query size.</p>
+          </div>
+        </div>
+      )}
+
+      {lastResult && (
+        <div className="mb-6 rounded-xl border border-purple-500/30 bg-purple-950/20 p-4 text-white relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-400"></span>
+              <h3 className="font-bold text-sm text-purple-300">Import Completed Successfully</h3>
+              {lastQuery && <span className="text-xs font-mono text-zinc-400">({lastQuery})</span>}
+            </div>
+            <p className="text-xs text-zinc-400 mt-1">Run ID: #{lastResult.runId} • Total Records Read: {lastResult.recordsRead}</p>
+          </div>
+          <div className="flex gap-4 text-xs font-medium bg-zinc-900/80 px-4 py-2 rounded-lg border border-zinc-800">
+            <div>
+              <span className="text-zinc-400">Created: </span>
+              <span className="text-green-400 font-bold">{lastResult.recordsCreated}</span>
+            </div>
+            <div>
+              <span className="text-zinc-400">Updated: </span>
+              <span className="text-blue-400 font-bold">{lastResult.recordsUpdated}</span>
+            </div>
+            <div>
+              <span className="text-zinc-400">Failed: </span>
+              <span className={lastResult.recordsFailed > 0 ? "text-red-400 font-bold" : "text-zinc-500"}>{lastResult.recordsFailed}</span>
+            </div>
+          </div>
+          <button 
+            onClick={() => setLastResult(null)}
+            className="absolute top-2 right-2 text-zinc-500 hover:text-zinc-300 text-xs px-2 py-1"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
 
       {isRunsLoading ? (
         <LoadingSkeleton />
