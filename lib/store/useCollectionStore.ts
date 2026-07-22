@@ -29,14 +29,21 @@ async function responseData<T>(response: Response, message: string): Promise<T> 
 }
 
 function toItem(item: ApiCollectionCard): CollectionItem {
-  return { id: item.id, cardPrintingId: item.cardPrintingId, quantity: item.regularQuantity,
-    foilQuantity: item.foilQuantity, card: { ...toCard(item.card), printingId: item.cardPrintingId } };
+  return {
+    id: item.id,
+    cardPrintingId: item.cardPrintingId,
+    quantity: item.regularQuantity,
+    regularQuantity: item.regularQuantity,
+    foilQuantity: item.foilQuantity,
+    card: { ...toCard(item.card), printingId: item.cardPrintingId },
+  };
 }
 
 export interface CollectionItem {
   id: number; // collectionCardId
   cardPrintingId: number;
-  quantity: number;
+  quantity: number; // alias for regularQuantity
+  regularQuantity: number;
   foilQuantity: number;
   card: Card;
 }
@@ -47,10 +54,12 @@ interface CollectionState {
   isLoading: boolean;
   error: string | null;
   fetchCollection: () => Promise<void>;
-  addCard: (card: Card) => Promise<void>;
+  addCard: (card: Card, regularQuantity?: number, foilQuantity?: number) => Promise<void>;
   removeCard: (collectionCardId: number) => Promise<void>;
   updateQuantity: (collectionCardId: number, quantity: number) => Promise<void>;
+  updateQuantities: (collectionCardId: number, regularQuantity: number, foilQuantity: number) => Promise<void>;
   getTotalCards: () => number;
+  getTotalFoilCards: () => number;
 }
 
 export const useCollectionStore = create<CollectionState>()((set, get) => ({
@@ -83,9 +92,20 @@ export const useCollectionStore = create<CollectionState>()((set, get) => ({
     }
   },
 
-  addCard: async (card: Card) => {
+  addCard: async (card: Card, regularQuantity = 1, foilQuantity = 0) => {
     if (!card.printingId) {
       set({ error: 'This card has no printable version to add.' });
+      return;
+    }
+
+    if (
+      regularQuantity < 0 ||
+      regularQuantity > 9999 ||
+      foilQuantity < 0 ||
+      foilQuantity > 9999 ||
+      (regularQuantity === 0 && foilQuantity === 0)
+    ) {
+      set({ error: 'Quantities must be between 0 and 9999, and at least one must be greater than 0.' });
       return;
     }
     
@@ -105,37 +125,26 @@ export const useCollectionStore = create<CollectionState>()((set, get) => ({
         set({ collectionId: colId });
       }
 
-      const existingItem = get().items.find(item => item.cardPrintingId === card.printingId);
+      const addRes = await fetch(`/api/v1/collections/${colId}/cards`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cardPrintingId: card.printingId,
+          regularQuantity,
+          foilQuantity,
+        })
+      });
+      if (!addRes.ok) throw new Error('Failed to add card to collection');
+      const newItem = await responseData<ApiCollectionCard>(addRes, 'Failed to add card');
+      const itemFormatted = toItem(newItem);
       
-      if (existingItem) {
-        const newQuantity = existingItem.quantity + 1;
-        const updateRes = await fetch(`/api/v1/collections/${colId}/cards/${existingItem.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ regularQuantity: newQuantity, foilQuantity: existingItem.foilQuantity })
-        });
-        await responseData<ApiCollectionCard>(updateRes, 'Failed to update card quantity');
-        
-        set(state => ({
-          items: state.items.map(item => 
-            item.id === existingItem.id ? { ...item, quantity: newQuantity } : item
-          ),
-          isLoading: false
-        }));
-      } else {
-        const addRes = await fetch(`/api/v1/collections/${colId}/cards`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cardPrintingId: card.printingId, regularQuantity: 1, foilQuantity: 0 })
-        });
-        if (!addRes.ok) throw new Error('Failed to add card to collection');
-        const newItem = await responseData<ApiCollectionCard>(addRes, 'Failed to add card');
-        
-        set(state => ({
-          items: [...state.items, toItem(newItem)],
-          isLoading: false
-        }));
-      }
+      set(state => {
+        const exists = state.items.some(i => i.id === itemFormatted.id);
+        const updatedItems = exists
+          ? state.items.map(i => (i.id === itemFormatted.id ? itemFormatted : i))
+          : [...state.items, itemFormatted];
+        return { items: updatedItems, isLoading: false };
+      });
     } catch (error: unknown) {
       set({ error: errorMessage(error), isLoading: false });
     }
@@ -162,10 +171,16 @@ export const useCollectionStore = create<CollectionState>()((set, get) => ({
   },
 
   updateQuantity: async (collectionCardId: number, quantity: number) => {
+    const item = get().items.find(i => i.id === collectionCardId);
+    const foilQty = item ? item.foilQuantity : 0;
+    await get().updateQuantities(collectionCardId, quantity, foilQty);
+  },
+
+  updateQuantities: async (collectionCardId: number, regularQuantity: number, foilQuantity: number) => {
     const colId = get().collectionId;
     if (!colId) return;
     
-    if (quantity <= 0) {
+    if (regularQuantity <= 0 && foilQuantity <= 0) {
       await get().removeCard(collectionCardId);
       return;
     }
@@ -178,13 +193,15 @@ export const useCollectionStore = create<CollectionState>()((set, get) => ({
       const res = await fetch(`/api/v1/collections/${colId}/cards/${collectionCardId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ regularQuantity: quantity, foilQuantity: existingItem.foilQuantity })
+        body: JSON.stringify({ regularQuantity, foilQuantity })
       });
       if (!res.ok) throw new Error('Failed to update quantity');
+      const updatedApiCard = await responseData<ApiCollectionCard>(res, 'Failed to update quantity');
+      const updatedItem = toItem(updatedApiCard);
       
       set(state => ({
         items: state.items.map(item => 
-          item.id === collectionCardId ? { ...item, quantity } : item
+          item.id === collectionCardId ? updatedItem : item
         ),
         isLoading: false
       }));
@@ -194,6 +211,11 @@ export const useCollectionStore = create<CollectionState>()((set, get) => ({
   },
 
   getTotalCards: () => {
-    return get().items.reduce((total, item) => total + item.quantity, 0);
+    return get().items.reduce((total, item) => total + item.regularQuantity + item.foilQuantity, 0);
+  },
+
+  getTotalFoilCards: () => {
+    return get().items.reduce((total, item) => total + item.foilQuantity, 0);
   }
 }));
+
