@@ -5,22 +5,33 @@ interface GetCardsParams {
   page?: number;
   limit?: number;
   q?: string;
+  type?: string;
+  setCode?: string;
+  colorIdentity?: string;
 }
 
-export async function getCards({ page = 1, limit = 50, q = '' }: GetCardsParams = {}): Promise<{ cards: Card[], total: number }> {
+export async function getCards({
+  page = 1,
+  limit = 50,
+  q = '',
+  type = '',
+  setCode = '',
+  colorIdentity = '',
+}: GetCardsParams = {}): Promise<{ cards: Card[]; total: number }> {
   const url = new URL('/api/v1/cards', typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
   url.searchParams.append('page', page.toString());
   url.searchParams.append('limit', limit.toString());
-  if (q) {
-    url.searchParams.append('q', q);
-  }
+  if (q) url.searchParams.append('q', q);
+  if (type) url.searchParams.append('type', type);
+  if (setCode) url.searchParams.append('setCode', setCode);
+  if (colorIdentity) url.searchParams.append('colorIdentity', colorIdentity);
 
   const res = await fetch(url.pathname + url.search);
   if (!res.ok) {
     throw new Error('Failed to fetch cards');
   }
 
-  const json: ApiResponse<{ cards: Card[], total: number }> = await res.json();
+  const json: ApiResponse<{ cards: Card[]; total: number }> = await res.json();
   if (json.error || !json.data) {
     throw new Error(json.error?.message || 'Unknown error fetching cards');
   }
@@ -60,23 +71,27 @@ export async function getLatestImport(): Promise<LatestImport | null> {
   return json.data ?? null;
 }
 
-export async function getSetPrintings(setCode: string, { page = 1, limit = 500, q = '' }: GetCardsParams = {}): Promise<{ cards: Card[], total: number }> {
+export async function getSetPrintings(
+  setCode: string,
+  { page = 1, limit = 500, q = '', type = '', colorIdentity = '' }: GetCardsParams = {}
+): Promise<{ cards: Card[]; total: number }> {
   const url = new URL(`/api/v1/sets/${setCode}/printings`, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
   url.searchParams.append('page', page.toString());
   url.searchParams.append('limit', limit.toString());
-  if (q) {
-    url.searchParams.append('q', q);
-  }
+  if (q) url.searchParams.append('q', q);
+  if (type) url.searchParams.append('type', type);
+  if (colorIdentity) url.searchParams.append('colorIdentity', colorIdentity);
 
   const res = await fetch(url.pathname + url.search);
   if (!res.ok) {
     throw new Error('Failed to fetch set printings');
   }
 
-  const json: ApiResponse<{ cards: Card[], total: number }> = await res.json();
+  const json: ApiResponse<{ cards: Card[]; total: number }> = await res.json();
   if (json.error || !json.data) {
     throw new Error(json.error?.message || 'Unknown error fetching set printings');
   }
 
   return json.data;
 }
+

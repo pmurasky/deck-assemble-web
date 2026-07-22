@@ -12,6 +12,17 @@ interface CardFilterPanelProps {
   className?: string;
 }
 
+const CARD_TYPES = [
+  'Creature',
+  'Instant',
+  'Sorcery',
+  'Artifact',
+  'Enchantment',
+  'Planeswalker',
+  'Land',
+  'Battle',
+];
+
 export function CardFilterPanel({ filters, onFilterChange, className = '' }: CardFilterPanelProps) {
   const handleColorToggle = (color: string) => {
     const newColors = filters.colors.includes(color)
@@ -19,6 +30,14 @@ export function CardFilterPanel({ filters, onFilterChange, className = '' }: Car
       : [...filters.colors, color];
     
     onFilterChange({ ...filters, colors: newColors });
+  };
+
+  const handleTypeToggle = (type: string) => {
+    const newTypes = filters.types.includes(type)
+      ? filters.types.filter(t => t !== type)
+      : [...filters.types, type];
+
+    onFilterChange({ ...filters, types: newTypes });
   };
 
   return (
@@ -50,8 +69,19 @@ export function CardFilterPanel({ filters, onFilterChange, className = '' }: Car
 
         <div>
           <h4 className="font-medium mb-2 text-sm text-muted-foreground">Card Type</h4>
-          {/* Implement type filters similarly */}
-          <div className="text-sm text-muted-foreground italic">Coming soon...</div>
+          <div className="flex flex-col space-y-2">
+            {CARD_TYPES.map(type => (
+              <label key={type} className="flex items-center space-x-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={filters.types.includes(type)}
+                  onChange={() => handleTypeToggle(type)}
+                  className="rounded border-primary/50 text-primary focus:ring-primary bg-transparent"
+                />
+                <span className="text-sm">{type}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         <div>
@@ -63,3 +93,4 @@ export function CardFilterPanel({ filters, onFilterChange, className = '' }: Car
     </div>
   );
 }
+

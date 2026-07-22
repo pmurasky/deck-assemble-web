@@ -20,9 +20,11 @@ export default function CardBrowserPage() {
     manaValue: 0,
   });
 
+  const typeQuery = filters.types.join(' ');
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['cards', searchTerm, filters.colors],
-    queryFn: () => getSetPrintings('msh', { q: searchTerm }),
+    queryKey: ['cards', searchTerm, filters.colors, filters.types],
+    queryFn: () => getSetPrintings('msh', { q: searchTerm, type: typeQuery }),
   });
 
   const { data: latestImport } = useQuery({
@@ -41,6 +43,12 @@ export default function CardBrowserPage() {
     }
   }, [fetchCollection, collectionId]);
 
+  const filteredCards = data?.cards.filter((card) => {
+    const matchesColor = filters.colors.length === 0 || filters.colors.some((c) => card.colors?.includes(c));
+    const matchesType = filters.types.length === 0 || filters.types.some((t) => card.typeLine.toLowerCase().includes(t.toLowerCase()));
+    return matchesColor && matchesType;
+  }) ?? [];
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex items-center justify-between mb-8">
@@ -49,10 +57,7 @@ export default function CardBrowserPage() {
         </h1>
         <div className="text-sm text-muted-foreground text-right">
           <div>
-            {data?.cards 
-              ? data.cards.filter(card => filters.colors.length === 0 || filters.colors.some(c => card.colors?.includes(c))).length 
-              : 0} 
-            {' '}Cards Found
+            {filteredCards.length}{' '}Cards Found
           </div>
           {latestImport && (
             <div className="text-xs">
@@ -85,37 +90,32 @@ export default function CardBrowserPage() {
               title="Error loading cards"
               description={error instanceof Error ? error.message : 'Unable to load cards.'}
             />
-          ) : data?.cards.length === 0 ? (
+          ) : filteredCards.length === 0 ? (
             <EmptyState
               title="No heroes found"
               description="Try adjusting your search terms or filters to find what you're looking for."
             />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {data?.cards
-                .filter((card) => {
-                  if (filters.colors.length === 0) return true;
-                  // Allow card if it contains ANY of the selected colors
-                  return filters.colors.some((c) => card.colors?.includes(c));
-                })
-                .map((card) => {
-                  const ownedQuantity = collectionItems.find((item) =>
-                    card.printingId
-                      ? item.cardPrintingId === card.printingId
-                      : item.card.id === card.id
-                  )?.quantity || 0;
-                  return (
-                    <CardTile
-                      key={card.printingId || card.id}
-                      card={card}
-                      onAddToDeck={addCard}
-                      onAddToCollection={addToCollection}
-                      ownedQuantity={ownedQuantity}
-                    />
-                  );
-                })}
+              {filteredCards.map((card) => {
+                const ownedQuantity = collectionItems.find((item) =>
+                  card.printingId
+                    ? item.cardPrintingId === card.printingId
+                    : item.card.id === card.id
+                )?.quantity || 0;
+                return (
+                  <CardTile
+                    key={card.printingId || card.id}
+                    card={card}
+                    onAddToDeck={addCard}
+                    onAddToCollection={addToCollection}
+                    ownedQuantity={ownedQuantity}
+                  />
+                );
+              })}
             </div>
           )}
+
         </div>
       </div>
     </div>
