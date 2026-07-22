@@ -6,7 +6,19 @@ export function isAdmin(user: Record<string, unknown> | null | undefined): boole
   if (!user) return false;
   console.log('[DEBUG] Auth0 user claims:', user);
 
+  // Email fallback check (e.g. peter.murasky)
+  const email = typeof user.email === 'string' ? user.email.toLowerCase() : '';
+  const nickname = typeof user.nickname === 'string' ? user.nickname.toLowerCase() : '';
+  const name = typeof user.name === 'string' ? user.name.toLowerCase() : '';
 
+  if (
+    email.includes('peter.murasky') ||
+    nickname.includes('peter.murasky') ||
+    name.includes('peter murasky') ||
+    email.endsWith('@deckassemble.app')
+  ) {
+    return true;
+  }
 
   // Sometimes roles are at the top level
   if (Array.isArray(user.roles) && user.roles.includes('admin')) {
@@ -37,3 +49,4 @@ export function isAdmin(user: Record<string, unknown> | null | undefined): boole
 
   return false;
 }
+
