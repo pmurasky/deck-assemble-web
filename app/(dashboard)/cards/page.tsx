@@ -8,7 +8,7 @@ import { CardSearchBar } from '@/components/cards/CardSearchBar';
 import { CardTile } from '@/components/cards/CardTile';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton';
-import { getLatestImport, getSetPrintings } from '@/lib/api/cards';
+import { getCards, getLatestImport } from '@/lib/api/cards';
 import { useCollectionStore } from '@/lib/store/useCollectionStore';
 import { useDeckStore } from '@/lib/store/deck-store';
 
@@ -24,7 +24,7 @@ export default function CardBrowserPage() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['cards', searchTerm, filters.colors, filters.types],
-    queryFn: () => getSetPrintings('msh', { q: searchTerm, type: typeQuery }),
+    queryFn: () => getCards({ q: searchTerm, type: typeQuery }),
   });
 
   const { data: latestImport } = useQuery({
