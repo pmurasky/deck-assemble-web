@@ -13,7 +13,13 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const query = request.nextUrl.searchParams.get('query') ?? '';
+    const query = request.nextUrl.searchParams.get('query')?.trim() ?? '';
+    if (!query) {
+      return NextResponse.json(
+        { error: { message: 'Query parameter is required' } },
+        { status: 400 }
+      );
+    }
     const result = await triggerImport(query);
     return NextResponse.json({ data: result });
   } catch (error) {
@@ -21,3 +27,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: { message } }, { status: 502 });
   }
 }
+
