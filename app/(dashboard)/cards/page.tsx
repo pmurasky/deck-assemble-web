@@ -98,18 +98,21 @@ export default function CardBrowserPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCards.map((card) => {
-                const ownedQuantity = collectionItems.find((item) =>
+                const item = collectionItems.find((i) =>
                   card.printingId
-                    ? item.cardPrintingId === card.printingId
-                    : item.card.id === card.id
-                )?.quantity || 0;
+                    ? i.cardPrintingId === card.printingId
+                    : i.card.id === card.id
+                );
+                const regularOwnedQuantity = item?.regularQuantity || 0;
+                const foilOwnedQuantity = item?.foilQuantity || 0;
                 return (
                   <CardTile
                     key={card.printingId || card.id}
                     card={card}
                     onAddToDeck={addCard}
                     onAddToCollection={addToCollection}
-                    ownedQuantity={ownedQuantity}
+                    regularOwnedQuantity={regularOwnedQuantity}
+                    foilOwnedQuantity={foilOwnedQuantity}
                   />
                 );
               })}

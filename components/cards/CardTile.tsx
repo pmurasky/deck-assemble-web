@@ -11,6 +11,8 @@ import type { Card } from '@/types/card';
 interface CardTileProps {
   card: Card;
   ownedQuantity?: number;
+  regularOwnedQuantity?: number;
+  foilOwnedQuantity?: number;
   onAddToDeck?: (card: Card) => void;
   onAddToCollection?: (card: Card, regularQuantity?: number, foilQuantity?: number) => void;
   className?: string;
@@ -18,7 +20,9 @@ interface CardTileProps {
 
 export function CardTile({
   card,
-  ownedQuantity = 0,
+  ownedQuantity,
+  regularOwnedQuantity,
+  foilOwnedQuantity,
   onAddToDeck,
   onAddToCollection,
   className = '',
@@ -71,13 +75,29 @@ export function CardTile({
         )}
 
         <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-3">
-          {ownedQuantity > 0 ? (
-            <span className="text-xs font-semibold text-green-400 bg-green-950/50 border border-green-900/50 px-2 py-1 rounded-md">
-              Owned: {ownedQuantity}
-            </span>
-          ) : (
-            <span />
-          )}
+          {(() => {
+            const regCount = regularOwnedQuantity ?? (ownedQuantity ?? 0);
+            const foilCount = foilOwnedQuantity ?? 0;
+            const hasReg = regCount > 0;
+            const hasFoil = foilCount > 0;
+
+            if (!hasReg && !hasFoil) return <span />;
+
+            return (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {hasReg && (
+                  <span className="text-xs font-semibold text-green-400 bg-green-950/50 border border-green-900/50 px-2 py-1 rounded-md">
+                    Owned: {regCount}
+                  </span>
+                )}
+                {hasFoil && (
+                  <span className="text-xs font-bold text-amber-300 bg-amber-950/50 border border-amber-900/50 px-2 py-1 rounded-md flex items-center gap-1 shadow-[0_0_10px_rgba(245,158,11,0.15)]">
+                    Foil: {foilCount}
+                  </span>
+                )}
+              </div>
+            );
+          })()}
 
           <div className="flex gap-1.5">
             <button

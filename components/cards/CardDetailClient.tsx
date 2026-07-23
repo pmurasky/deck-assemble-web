@@ -123,12 +123,17 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
             <button 
               type="button"
               onClick={() => setIsModalOpen(true)}
-              className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 rounded-xl border border-zinc-700 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 rounded-xl border border-zinc-700 transition-colors flex items-center justify-center gap-2 flex-wrap"
             >
               + COLLECTION
-              {totalOwned > 0 && (
-                <span className="text-xs font-semibold bg-zinc-950 px-2 py-1 rounded-md text-zinc-400">
-                  Owned: {totalOwned}
+              {(ownedItem?.regularQuantity || 0) > 0 && (
+                <span className="text-xs font-semibold bg-zinc-950 px-2 py-1 rounded-md text-green-400">
+                  Owned: {ownedItem?.regularQuantity}
+                </span>
+              )}
+              {(ownedItem?.foilQuantity || 0) > 0 && (
+                <span className="text-xs font-bold bg-zinc-950 px-2 py-1 rounded-md text-amber-300">
+                  Foil: {ownedItem?.foilQuantity}
                 </span>
               )}
             </button>
