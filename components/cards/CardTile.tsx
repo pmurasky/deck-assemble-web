@@ -12,7 +12,7 @@ interface CardTileProps {
   card: Card;
   ownedQuantity?: number;
   onAddToDeck?: (card: Card) => void;
-  onAddToCollection?: (card: Card) => void;
+  onAddToCollection?: (card: Card, regularQuantity?: number, foilQuantity?: number) => void;
   className?: string;
 }
 
@@ -27,9 +27,10 @@ export function CardTile({
   const { addCard: addCardToStore } = useCollectionStore();
 
   const handleConfirmAdd = async (regularQuantity: number, foilQuantity: number) => {
-    await addCardToStore(card, regularQuantity, foilQuantity);
     if (onAddToCollection) {
-      onAddToCollection(card);
+      await onAddToCollection(card, regularQuantity, foilQuantity);
+    } else {
+      await addCardToStore(card, regularQuantity, foilQuantity);
     }
   };
 
