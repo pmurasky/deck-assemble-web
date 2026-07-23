@@ -1,105 +1,175 @@
 'use client';
 
-import React from 'react';
-import { useDeckStore } from '@/lib/store/deck-store';
-import { MOCK_CARDS } from '@/lib/mock-data/cards';
-import { CardTile } from '@/components/cards/CardTile';
-import { Zap, AlertCircle } from 'lucide-react';
-import Link from 'next/link';
+import React, { useState } from 'react';
+import { MOCK_COMMANDERS, createMockGeneratedDeck, extractWishlistFromDeck } from '@/lib/mock-data/builder';
+import { CommanderSuggestion, DeckBuildConfig, GeneratedDeck, WishlistItem } from '@/types/builder';
+import { CommanderSuggestionsGrid } from './CommanderSuggestionsGrid';
+import { CommanderBuildConfigModal } from './CommanderBuildConfigModal';
+import { GeneratedDeckView } from './GeneratedDeckView';
+import { WishlistPanel } from './WishlistPanel';
+import { DeckComparisonModal } from './DeckComparisonModal';
+import { Sparkles } from 'lucide-react';
 
 export function RecommendationsClient() {
-  const { cards, commander, addCard } = useDeckStore();
+  const [selectedCommander, setSelectedCommander] = useState<CommanderSuggestion | null>(null);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [activeDeck, setActiveDeck] = useState<GeneratedDeck | null>(null);
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
+  const [currentView, setCurrentView] = useState<'suggestions' | 'generated_deck' | 'wishlist'>('suggestions');
+  const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
+  const [comparisonDecks, setComparisonDecks] = useState<GeneratedDeck[]>([]);
 
-  if (!commander && cards.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-zinc-800 rounded-2xl bg-zinc-900/20">
-        <AlertCircle className="w-16 h-16 text-zinc-600 mb-4" />
-        <h3 className="text-xl font-bold text-zinc-300">No active deck</h3>
-        <p className="text-zinc-500 mt-2 mb-6 max-w-md text-center">
-          You need an active deck to get recommendations. Head over to the Deck Builder to start brewing, or select a Commander to see what synergizes well with it.
-        </p>
-        <Link 
-          href="/deck-builder"
-          className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors"
-        >
-          Go to Deck Builder
-        </Link>
-      </div>
+  // Step 1: User clicks "Build Deck" on a Commander tile
+  const handleSelectCommander = (commander: CommanderSuggestion) => {
+    setSelectedCommander(commander);
+    setIsConfigModalOpen(true);
+  };
+
+  // Step 2: User submits Build Config Modal
+  const handleGenerateDeck = (config: DeckBuildConfig) => {
+    if (!selectedCommander) return;
+    const generated = createMockGeneratedDeck(selectedCommander);
+    generated.powerLevel = config.powerLevel;
+    if (config.ownedOnly) {
+      generated.ownedPercentage = 100;
+      generated.wishlistTotalCost = 0;
+      generated.cards = generated.cards.map((c) => ({ ...c, ownership: 'owned', estimatedPrice: 0 }));
+    }
+
+    setActiveDeck(generated);
+    setWishlistItems(extractWishlistFromDeck(generated));
+    setIsConfigModalOpen(false);
+    setCurrentView('generated_deck');
+
+    // Add to comparison list
+    setComparisonDecks((prev) => {
+      if (prev.some((d) => d.id === generated.id)) return prev;
+      return [...prev, generated];
+    });
+  };
+
+  // Step 3: Handle card acquisition from Wishlist Panel
+  const handleMarkAcquired = (cardId: string) => {
+    setWishlistItems((prev) =>
+      prev.map((item) => (item.card.id === cardId ? { ...item, acquired: true } : item))
     );
-  }
 
-  // Recommendation Algorithm
-  // 1. Omit cards already in the deck
-  const deckCardIds = new Set(cards.map(c => c.card.id));
-  let recommendations = MOCK_CARDS.filter(card => !deckCardIds.has(card.id));
+    if (activeDeck) {
+      const updatedCards = activeDeck.cards.map((c) =>
+        c.card.id === cardId ? { ...c, ownership: 'owned' as const } : c
+      );
+      const totalOwned = updatedCards.filter((c) => c.ownership === 'owned').length;
+      const newOwnedPct = Math.round((totalOwned / updatedCards.length) * 100);
+      const newWishlistCost = updatedCards
+        .filter((c) => c.ownership === 'wishlist')
+        .reduce((sum, c) => sum + (c.estimatedPrice || 0), 0);
 
-  // 2. Filter by Commander's color identity if a commander is selected
-  if (commander && commander.colorIdentity.length > 0) {
-    const commanderColors = new Set(commander.colorIdentity);
-    recommendations = recommendations.filter(card => {
-      // A card can be included if ALL of its colors are in the commander's color identity.
-      // Colorless cards (length 0) can go in any deck.
-      if (card.colorIdentity.length === 0) return true;
-      return card.colorIdentity.every(color => commanderColors.has(color));
-    });
-  }
-
-  // 3. Simple sorting/scoring (Mock synergy)
-  // - Prioritize cards that share types with the commander
-  if (commander) {
-    const commanderTypes = commander.typeLine.toLowerCase().split(/[ —-]+/);
-    
-    recommendations.sort((a, b) => {
-      const aTypes = a.typeLine.toLowerCase();
-      const bTypes = b.typeLine.toLowerCase();
-      
-      const aScore = commanderTypes.some(t => aTypes.includes(t)) ? 1 : 0;
-      const bScore = commanderTypes.some(t => bTypes.includes(t)) ? 1 : 0;
-      
-      if (bScore !== aScore) {
-        return bScore - aScore;
-      }
-      
-      return a.id.localeCompare(b.id);
-    });
-  }
-
-
-  // Limit to top 20 recommendations
-  const topRecommendations = recommendations.slice(0, 20);
+      setActiveDeck({
+        ...activeDeck,
+        cards: updatedCards,
+        ownedPercentage: newOwnedPct,
+        wishlistTotalCost: newWishlistCost,
+      });
+    }
+  };
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+    <div className="space-y-8" data-testid="recommendations-client">
+      {/* Top Banner Navigation Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-white flex items-center gap-3">
-            <Zap className="text-yellow-400 w-8 h-8 fill-yellow-400" />
-            Recommendations
+          <h1 className="text-3xl font-black text-slate-100 flex items-center gap-3">
+            <Sparkles className="w-8 h-8 text-violet-400 fill-violet-400/20" />
+            <span>Commander Auto Deck Builder</span>
           </h1>
-          <p className="text-zinc-400 mt-2">
-            AI-powered suggestions based on your active deck 
-            {commander ? (
-              <span> and your Commander <strong className="text-green-400">{commander.name}</strong></span>
-            ) : ''}.
+          <p className="text-sm text-slate-400 mt-1">
+            Discover recommendations, configure build preferences, and generate synergistic EDH decks.
           </p>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900 border border-slate-800">
+          <button
+            type="button"
+            onClick={() => setCurrentView('suggestions')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              currentView === 'suggestions'
+                ? 'bg-violet-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            1. Suggestions
+          </button>
+
+          <button
+            type="button"
+            disabled={!activeDeck}
+            onClick={() => setCurrentView('generated_deck')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              currentView === 'generated_deck'
+                ? 'bg-violet-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-slate-200 disabled:opacity-40'
+            }`}
+          >
+            2. Generated Deck
+          </button>
+
+          <button
+            type="button"
+            disabled={!activeDeck}
+            onClick={() => setCurrentView('wishlist')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              currentView === 'wishlist'
+                ? 'bg-amber-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-slate-200 disabled:opacity-40'
+            }`}
+          >
+            3. Wishlist Panel
+          </button>
         </div>
       </div>
 
-      {topRecommendations.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-zinc-500">No recommendations found. Try expanding your search or choosing a different Commander.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {topRecommendations.map(card => (
-            <CardTile 
-              key={card.id} 
-              card={card} 
-              onAddToDeck={addCard} 
-            />
-          ))}
-        </div>
+      {/* Screen 1: Commander Suggestions Grid */}
+      {currentView === 'suggestions' && (
+        <CommanderSuggestionsGrid
+          commanders={MOCK_COMMANDERS}
+          onSelectCommander={handleSelectCommander}
+        />
       )}
+
+      {/* Screen 3: Generated Deck View */}
+      {currentView === 'generated_deck' && activeDeck && (
+        <GeneratedDeckView
+          deck={activeDeck}
+          onUpdateDeck={setActiveDeck}
+          onOpenWishlist={() => setCurrentView('wishlist')}
+          onOpenCompare={() => setIsCompareModalOpen(true)}
+        />
+      )}
+
+      {/* Screen 4: Wishlist Panel */}
+      {currentView === 'wishlist' && (
+        <WishlistPanel
+          items={wishlistItems}
+          onMarkAcquired={handleMarkAcquired}
+          onBackToDeck={() => setCurrentView('generated_deck')}
+        />
+      )}
+
+      {/* Screen 2: Build Config Modal */}
+      <CommanderBuildConfigModal
+        commander={selectedCommander}
+        isOpen={isConfigModalOpen}
+        onClose={() => setIsConfigModalOpen(false)}
+        onGenerate={handleGenerateDeck}
+      />
+
+      {/* Cross-Cutting: Deck Comparison Modal */}
+      <DeckComparisonModal
+        decks={comparisonDecks}
+        isOpen={isCompareModalOpen}
+        onClose={() => setIsCompareModalOpen(false)}
+      />
     </div>
   );
 }
