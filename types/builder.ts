@@ -17,16 +17,35 @@ export interface CommanderSuggestion {
 
 export interface DeckBuildConfig {
   commanderId: string;
+  secondaryCommanderId?: string | null;
   ownedOnly: boolean;
   budgetLimit?: number;
   powerLevel: number; // 1 - 10
   playStyles: string[]; // e.g. ['Aggro', 'Combo']
 }
 
+export interface GenerateBuildRequest {
+  commanderCardId: number | string;
+  secondaryCommanderCardId?: number | string | null;
+  desiredPowerLevel?: number;
+  playStyle?: string;
+  useOwnedCardsOnly?: boolean;
+  budgetLimit?: number;
+}
+
+export type DeckRoleSection =
+  | 'Commander'
+  | 'Lands'
+  | 'Ramp'
+  | 'Draw'
+  | 'Removal'
+  | 'Board Wipes'
+  | 'Theme/Synergy';
+
 export interface DeckCardRow {
   card: Card;
   quantity: number;
-  section: 'Commander' | 'Lands' | 'Ramp' | 'Card Draw' | 'Targeted Removal' | 'Board Wipes' | 'Synergy';
+  section: DeckRoleSection;
   ownership: OwnershipStatus;
   estimatedPrice: number;
   synergyScore: number; // 1 - 100
@@ -48,10 +67,14 @@ export interface GeneratedDeck {
   cards: DeckCardRow[];
   totalCards: number;
   ownedPercentage: number;
+  ownedCardsCount: number;
+  wishlistCardsCount: number;
+  unfillableSlotsCount: number;
   wishlistTotalCost: number;
   averageManaValue: number;
   legalityWarnings: LegalityWarning[];
   powerLevel: number;
+  buildScore: number; // e.g. 92
 }
 
 export interface WishlistItem {

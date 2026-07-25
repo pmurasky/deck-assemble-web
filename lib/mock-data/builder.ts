@@ -54,8 +54,11 @@ export const MOCK_COMMANDERS: CommanderSuggestion[] = [
 
 export function createMockGeneratedDeck(commander: CommanderSuggestion): GeneratedDeck {
   const isKrenko = commander.id === 'cmd-2';
-
   const solRing = MOCK_CARDS.find((c) => c.name.toLowerCase().includes('sol ring')) || MOCK_CARDS[0];
+
+  const cardsCount = 100;
+  const ownedCardsCount = Math.round((commander.ownershipCoverage / 100) * cardsCount);
+  const wishlistCardsCount = cardsCount - ownedCardsCount;
 
   return {
     id: `generated-${commander.id}`,
@@ -63,9 +66,13 @@ export function createMockGeneratedDeck(commander: CommanderSuggestion): Generat
     commander,
     totalCards: 100,
     ownedPercentage: commander.ownershipCoverage,
+    ownedCardsCount,
+    wishlistCardsCount,
+    unfillableSlotsCount: 0,
     wishlistTotalCost: commander.estimatedCostToComplete,
     averageManaValue: isKrenko ? 2.45 : 3.12,
     powerLevel: 7,
+    buildScore: isKrenko ? 94 : 91,
     legalityWarnings: [
       {
         severity: 'warning',
@@ -99,7 +106,7 @@ export function createMockGeneratedDeck(commander: CommanderSuggestion): Generat
           legalities: { commander: 'legal' },
         },
         quantity: 1,
-        section: 'Synergy',
+        section: 'Theme/Synergy',
         ownership: 'wishlist',
         estimatedPrice: isKrenko ? 3.5 : 38.5,
         synergyScore: 99,
