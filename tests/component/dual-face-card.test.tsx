@@ -78,7 +78,7 @@ describe('Dual-Faced Card Component Behavior', () => {
   it('allows flipping card image in CardTile grid view', () => {
     render(<CardTile card={mockDualFaceCard} />);
 
-    const flipBtn = screen.getByRole('button', { name: /Flip card/i });
+    const flipBtn = screen.getByRole('button', { name: /Show Insectile Aberration/i });
     expect(flipBtn).toBeInTheDocument();
 
     fireEvent.click(flipBtn);
