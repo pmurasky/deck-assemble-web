@@ -28,7 +28,7 @@ export const CommanderBuildConfigModal: React.FC<CommanderBuildConfigModalProps>
   onClose,
   onGenerate,
 }) => {
-  const [ownedOnly, setOwnedOnly] = useState(false);
+  const [ownedOnly, setOwnedOnly] = useState(true);
   const [budgetLimit, setBudgetLimit] = useState<number | undefined>(undefined);
   const [powerLevel, setPowerLevel] = useState<number>(7);
   const [selectedPlayStyles, setSelectedPlayStyles] = useState<string[]>(['Midrange']);

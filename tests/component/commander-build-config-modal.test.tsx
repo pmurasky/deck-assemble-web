@@ -42,7 +42,7 @@ describe('CommanderBuildConfigModal Component', () => {
     expect(screen.getByText('Combo')).toBeInTheDocument();
   });
 
-  it('collects user configuration and triggers onGenerate', () => {
+  it('collects user configuration and triggers onGenerate with ownedOnly enabled by default', () => {
     const handleGenerate = vi.fn();
     render(
       <CommanderBuildConfigModal
@@ -53,9 +53,9 @@ describe('CommanderBuildConfigModal Component', () => {
       />
     );
 
-    // Toggle Owned cards only
-    const ownedOnlyToggle = screen.getByLabelText(/Owned cards only/i);
-    fireEvent.click(ownedOnlyToggle);
+    // Owned cards only toggle should be checked by default
+    const ownedOnlyToggle = screen.getByLabelText(/Owned cards only/i) as HTMLInputElement;
+    expect(ownedOnlyToggle.checked).toBe(true);
 
     // Select 'Control' play style chip
     const controlChip = screen.getByText('Control');

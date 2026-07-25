@@ -50,6 +50,19 @@ export const CommanderSuggestionsGrid: React.FC<CommanderSuggestionsGridProps> =
 
   return (
     <div className="space-y-6" data-testid="commander-suggestions-grid">
+      {/* What can I build title section */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-violet-400" />
+            <span>What can I build?</span>
+          </h2>
+          <p className="text-xs text-slate-400 mt-1">
+            Commanders ranked by your collection coverage, missing staples count, and estimated cost to complete.
+          </p>
+        </div>
+      </div>
+
       {/* Filter Toolbar */}
       <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
