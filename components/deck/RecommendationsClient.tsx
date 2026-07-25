@@ -11,13 +11,16 @@ import { DeckComparisonModal } from './DeckComparisonModal';
 import { Sparkles } from 'lucide-react';
 
 export function RecommendationsClient() {
-  const [selectedCommander, setSelectedCommander] = useState<CommanderSuggestion | null>(null);
+  const [selectedCommander, setSelectedCommander] = useState<CommanderSuggestion | null>(MOCK_COMMANDERS[0]);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-  const [activeDeck, setActiveDeck] = useState<GeneratedDeck | null>(null);
-  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
+
+  // Initialize with a default generated deck so tabs 2 and 3 are immediately accessible & previewable
+  const initialDeck = createMockGeneratedDeck(MOCK_COMMANDERS[0]);
+  const [activeDeck, setActiveDeck] = useState<GeneratedDeck | null>(initialDeck);
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>(() => extractWishlistFromDeck(initialDeck));
   const [currentView, setCurrentView] = useState<'suggestions' | 'generated_deck' | 'wishlist'>('suggestions');
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
-  const [comparisonDecks, setComparisonDecks] = useState<GeneratedDeck[]>([]);
+  const [comparisonDecks, setComparisonDecks] = useState<GeneratedDeck[]>([initialDeck]);
 
   // Step 1: User clicks "Build Deck" on a Commander tile
   const handleSelectCommander = (commander: CommanderSuggestion) => {
@@ -46,6 +49,16 @@ export function RecommendationsClient() {
       if (prev.some((d) => d.id === generated.id)) return prev;
       return [...prev, generated];
     });
+  };
+
+  // Switch tabs safely, ensuring an active deck exists
+  const navigateToView = (view: 'suggestions' | 'generated_deck' | 'wishlist') => {
+    if (!activeDeck && (view === 'generated_deck' || view === 'wishlist')) {
+      const demoDeck = createMockGeneratedDeck(MOCK_COMMANDERS[0]);
+      setActiveDeck(demoDeck);
+      setWishlistItems(extractWishlistFromDeck(demoDeck));
+    }
+    setCurrentView(view);
   };
 
   // Step 3: Handle card acquisition from Wishlist Panel
@@ -91,7 +104,7 @@ export function RecommendationsClient() {
         <div className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900 border border-slate-800">
           <button
             type="button"
-            onClick={() => setCurrentView('suggestions')}
+            onClick={() => navigateToView('suggestions')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
               currentView === 'suggestions'
                 ? 'bg-violet-600 text-white shadow-md'
@@ -103,12 +116,11 @@ export function RecommendationsClient() {
 
           <button
             type="button"
-            disabled={!activeDeck}
-            onClick={() => setCurrentView('generated_deck')}
+            onClick={() => navigateToView('generated_deck')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
               currentView === 'generated_deck'
                 ? 'bg-violet-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-slate-200 disabled:opacity-40'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             2. Generated Deck
@@ -116,12 +128,11 @@ export function RecommendationsClient() {
 
           <button
             type="button"
-            disabled={!activeDeck}
-            onClick={() => setCurrentView('wishlist')}
+            onClick={() => navigateToView('wishlist')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
               currentView === 'wishlist'
                 ? 'bg-amber-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-slate-200 disabled:opacity-40'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             3. Wishlist Panel
