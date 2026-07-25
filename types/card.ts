@@ -1,3 +1,15 @@
+export interface CardFace {
+  name: string;
+  manaCost?: string;
+  typeLine?: string;
+  oracleText?: string;
+  flavorText?: string;
+  power?: string;
+  toughness?: string;
+  loyalty?: string;
+  imageUrl?: string;
+}
+
 export interface Card {
   id: string;
   printingId?: number;
@@ -18,6 +30,7 @@ export interface Card {
   setName: string;
   rarity: string;
   legalities: Record<string, string>;
+  faces?: CardFace[];
 }
 
 export interface CollectionCard {

@@ -1,4 +1,4 @@
-import type { Card } from '@/types/card';
+import type { Card, CardFace } from '@/types/card';
 import { MOCK_CARDS } from '@/lib/mock-data/cards';
 
 const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
@@ -22,6 +22,7 @@ export interface ApiCard {
   setName?: string;
   rarity?: string;
   flavorText?: string;
+  faces?: CardFace[];
 }
 
 interface ApiPage {
@@ -60,6 +61,7 @@ export function toCard(api: ApiCard): Card {
     setName: api.setName ?? '',
     rarity: api.rarity ?? '',
     legalities: {},
+    faces: api.faces ?? [],
   };
 }
 
