@@ -19,9 +19,13 @@ const mockDeck: GeneratedDeck = {
   },
   totalCards: 100,
   ownedPercentage: 74,
+  ownedCardsCount: 74,
+  wishlistCardsCount: 26,
+  unfillableSlotsCount: 0,
   wishlistTotalCost: 38.40,
   averageManaValue: 3.12,
   powerLevel: 7,
+  buildScore: 91,
   legalityWarnings: [
     {
       severity: 'warning',
@@ -68,7 +72,7 @@ const mockDeck: GeneratedDeck = {
         legalities: { commander: 'legal' },
       },
       quantity: 1,
-      section: 'Synergy',
+      section: 'Theme/Synergy',
       ownership: 'wishlist',
       estimatedPrice: 36.90,
       synergyScore: 99,
@@ -78,16 +82,28 @@ const mockDeck: GeneratedDeck = {
 };
 
 describe('GeneratedDeckView Component', () => {
-  it('renders header stats, sections, and ownership badges', () => {
+  it('renders header stats, build score, sections, and ownership badges', () => {
     render(<GeneratedDeckView deck={mockDeck} onUpdateDeck={() => {}} onOpenWishlist={() => {}} />);
 
     expect(screen.getByText("Atraxa's Proliferate Engine")).toBeInTheDocument();
-    expect(screen.getByText('74% Owned')).toBeInTheDocument();
-    expect(screen.getByText('$38.40')).toBeInTheDocument();
+    expect(screen.getByText(/91 \/ 100/i)).toBeInTheDocument();
+    expect(screen.getByText(/74%/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/38\.40/i).length).toBeGreaterThan(0);
     expect(screen.getByText('Sol Ring')).toBeInTheDocument();
     expect(screen.getByText('Doubling Season')).toBeInTheDocument();
     expect(screen.getByTestId('ownership-badge-owned')).toBeInTheDocument();
     expect(screen.getByTestId('ownership-badge-wishlist')).toBeInTheDocument();
+  });
+
+  it('allows syncing ownership for a card row', () => {
+    const handleUpdate = vi.fn();
+    render(<GeneratedDeckView deck={mockDeck} onUpdateDeck={handleUpdate} onOpenWishlist={() => {}} />);
+
+    const syncBtns = screen.getAllByRole('button', { name: /Sync ownership/i });
+    expect(syncBtns.length).toBeGreaterThan(0);
+    fireEvent.click(syncBtns[0]);
+
+    expect(handleUpdate).toHaveBeenCalled();
   });
 
   it('allows removing a card row', () => {

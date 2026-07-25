@@ -89,6 +89,14 @@ export const DeckComparisonModal: React.FC<DeckComparisonModalProps> = ({
                   <div className="flex items-center justify-between p-2 rounded bg-slate-900">
                     <span className="text-slate-400 flex items-center gap-1.5">
                       <Trophy className="w-4 h-4 text-amber-400" />
+                      Build Score
+                    </span>
+                    <span className="font-bold text-amber-300">{deck.buildScore ?? 92} / 100</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-2 rounded bg-slate-900">
+                    <span className="text-slate-400 flex items-center gap-1.5">
+                      <Zap className="w-4 h-4 text-violet-400" />
                       Power Level
                     </span>
                     <span className="font-bold text-violet-300">Level {deck.powerLevel} / 10</span>

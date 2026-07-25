@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Sliders, Shield, Zap, RefreshCw } from 'lucide-react';
+import { X, Sparkles, Sliders, Zap, RefreshCw } from 'lucide-react';
 import { CommanderSuggestion, DeckBuildConfig } from '@/types/builder';
 
 interface CommanderBuildConfigModalProps {

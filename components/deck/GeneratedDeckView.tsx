@@ -13,8 +13,11 @@ import {
   BarChart2,
   Sparkles,
   GitCompare,
+  RefreshCw,
+  Trophy,
+  AlertCircle,
 } from 'lucide-react';
-import { GeneratedDeck, DeckCardRow } from '@/types/builder';
+import { GeneratedDeck, DeckCardRow, DeckRoleSection } from '@/types/builder';
 import { OwnershipBadge } from './OwnershipBadge';
 
 interface GeneratedDeckViewProps {
@@ -24,15 +27,15 @@ interface GeneratedDeckViewProps {
   onOpenCompare?: () => void;
 }
 
-const SECTIONS = [
-  'Commander',
-  'Ramp',
-  'Card Draw',
-  'Targeted Removal',
-  'Board Wipes',
-  'Synergy',
-  'Lands',
-] as const;
+const SECTIONS: { key: DeckRoleSection; label: string; legacyKeys: string[] }[] = [
+  { key: 'Commander', label: 'Commander', legacyKeys: ['Commander'] },
+  { key: 'Lands', label: 'Lands', legacyKeys: ['Lands'] },
+  { key: 'Ramp', label: 'Ramp', legacyKeys: ['Ramp'] },
+  { key: 'Draw', label: 'Draw', legacyKeys: ['Draw', 'Card Draw'] },
+  { key: 'Removal', label: 'Removal', legacyKeys: ['Removal', 'Targeted Removal'] },
+  { key: 'Board Wipes', label: 'Board Wipes', legacyKeys: ['Board Wipes'] },
+  { key: 'Theme/Synergy', label: 'Theme/Synergy', legacyKeys: ['Theme/Synergy', 'Synergy'] },
+];
 
 export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
   deck,
@@ -43,9 +46,11 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
   const [swappingCard, setSwappingCard] = useState<DeckCardRow | null>(null);
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
 
-  // Group cards by section
-  const groupedCards = SECTIONS.reduce((acc, section) => {
-    acc[section] = deck.cards.filter((c) => c.section === section);
+  // Group cards by section with fallback matching
+  const groupedCards = SECTIONS.reduce((acc, sectionInfo) => {
+    acc[sectionInfo.label] = deck.cards.filter((c) =>
+      sectionInfo.legacyKeys.includes(c.section)
+    );
     return acc;
   }, {} as Record<string, DeckCardRow[]>);
 
@@ -59,28 +64,63 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
 
   const maxCurveCount = Math.max(...manaCurve.map((m) => m.count), 1);
 
+  const calculateDeckMetrics = (cards: DeckCardRow[]) => {
+    const totalCards = cards.length;
+    const ownedCards = cards.filter((c) => c.ownership === 'owned');
+    const wishlistCards = cards.filter((c) => c.ownership === 'wishlist');
+    const ownedCount = ownedCards.length;
+    const wishlistCount = wishlistCards.length;
+    const ownedPercentage = totalCards > 0 ? Math.round((ownedCount / totalCards) * 100) : 0;
+    const wishlistTotalCost = wishlistCards.reduce((sum, c) => sum + (c.estimatedPrice || 0), 0);
+
+    return {
+      totalCards,
+      ownedPercentage,
+      ownedCardsCount: ownedCount,
+      wishlistCardsCount: wishlistCount,
+      wishlistTotalCost,
+    };
+  };
+
+  const handleSyncOwnership = (cardId: string) => {
+    const updatedCards = deck.cards.map((c) => {
+      if (c.card.id === cardId) {
+        const nextStatus = c.ownership === 'owned' ? ('wishlist' as const) : ('owned' as const);
+        return { ...c, ownership: nextStatus };
+      }
+      return c;
+    });
+
+    const metrics = calculateDeckMetrics(updatedCards);
+    onUpdateDeck({
+      ...deck,
+      cards: updatedCards,
+      ...metrics,
+    });
+  };
+
   const handleRemoveCard = (cardId: string) => {
     const updatedCards = deck.cards.filter((c) => c.card.id !== cardId);
-    const totalOwned = updatedCards.filter((c) => c.ownership === 'owned').length;
-    const newOwnedPct = updatedCards.length ? Math.round((totalOwned / updatedCards.length) * 100) : 0;
-    const newWishlistCost = updatedCards
-      .filter((c) => c.ownership === 'wishlist')
-      .reduce((sum, c) => sum + (c.estimatedPrice || 0), 0);
+    const metrics = calculateDeckMetrics(updatedCards);
 
     onUpdateDeck({
       ...deck,
       cards: updatedCards,
-      totalCards: updatedCards.length,
-      ownedPercentage: newOwnedPct,
-      wishlistTotalCost: newWishlistCost,
+      ...metrics,
     });
   };
 
   const handleSwapReplacement = (oldCardId: string, newCardRow: DeckCardRow) => {
     const updatedCards = deck.cards.map((c) => (c.card.id === oldCardId ? newCardRow : c));
-    onUpdateDeck({ ...deck, cards: updatedCards });
+    const metrics = calculateDeckMetrics(updatedCards);
+    onUpdateDeck({ ...deck, cards: updatedCards, ...metrics });
     setSwappingCard(null);
   };
+
+  const ownedCount = deck.ownedCardsCount ?? deck.cards.filter((c) => c.ownership === 'owned').length;
+  const wishlistCount = deck.wishlistCardsCount ?? deck.cards.filter((c) => c.ownership === 'wishlist').length;
+  const unfillableCount = deck.unfillableSlotsCount ?? 0;
+  const buildScore = deck.buildScore ?? 92;
 
   return (
     <div className="space-y-6" data-testid="generated-deck-view">
@@ -114,9 +154,13 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold text-violet-400 uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Generated Deck Strategy</span>
+              <span>Generated Draft Deck</span>
+              <span className="ml-2 px-2.5 py-0.5 rounded-full bg-violet-950 border border-violet-500/40 text-violet-300 font-bold text-[11px] flex items-center gap-1">
+                <Trophy className="w-3 h-3 text-amber-400" />
+                Build Score: {buildScore} / 100
+              </span>
             </div>
-            <h1 className="text-2xl font-black text-slate-100 mt-0.5">{deck.name}</h1>
+            <h1 className="text-2xl font-black text-slate-100 mt-1">{deck.name}</h1>
             <p className="text-xs text-slate-400 mt-0.5">
               Commander: <span className="text-slate-200 font-semibold">{deck.commander.name}</span>
             </p>
@@ -145,36 +189,44 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
           </div>
         </div>
 
-        {/* Stats Grid & Mana Curve */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Stats Summary Bar */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1">
             <span className="text-[11px] text-slate-400 uppercase font-semibold">Total Deck Size</span>
-            <div className="text-xl font-black text-slate-100 flex items-center gap-2">
-              <Layers className="w-5 h-5 text-violet-400" />
+            <div className="text-lg font-black text-slate-100 flex items-center gap-2">
+              <Layers className="w-4 h-4 text-violet-400" />
               <span>{deck.totalCards} / 100</span>
             </div>
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1">
             <span className="text-[11px] text-slate-400 uppercase font-semibold">Collection Coverage</span>
-            <div className="text-xl font-black text-emerald-400 flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5" />
-              <span>{deck.ownedPercentage}% Owned</span>
+            <div className="text-lg font-black text-emerald-400 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" />
+              <span>{ownedCount} cards ({deck.ownedPercentage}%)</span>
             </div>
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1">
-            <span className="text-[11px] text-slate-400 uppercase font-semibold">Wishlist Total Cost</span>
-            <div className="text-xl font-black text-amber-300 flex items-center gap-2">
-              <DollarSign className="w-5 h-5" />
-              <span>${deck.wishlistTotalCost.toFixed(2)}</span>
+            <span className="text-[11px] text-slate-400 uppercase font-semibold">Wishlist Count & Cost</span>
+            <div className="text-lg font-black text-amber-300 flex items-center gap-2">
+              <DollarSign className="w-4 h-4" />
+              <span>{wishlistCount} cards (${deck.wishlistTotalCost.toFixed(2)})</span>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1">
+            <span className="text-[11px] text-slate-400 uppercase font-semibold">Unfillable Slot Gaps</span>
+            <div className="text-lg font-black text-slate-200 flex items-center gap-2">
+              <AlertCircle className={`w-4 h-4 ${unfillableCount > 0 ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>{unfillableCount} {unfillableCount === 1 ? 'gap' : 'gaps'}</span>
             </div>
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1">
             <span className="text-[11px] text-slate-400 uppercase font-semibold">Avg Mana & Power</span>
-            <div className="text-xl font-black text-indigo-300 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-amber-400" />
+            <div className="text-lg font-black text-indigo-300 flex items-center gap-2">
+              <Zap className="w-4 h-4 text-amber-400" />
               <span>{deck.averageManaValue} CMC | Lv {deck.powerLevel}</span>
             </div>
           </div>
@@ -208,16 +260,16 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
 
       {/* Functional Sections Decklist */}
       <div className="space-y-6">
-        {SECTIONS.map((section) => {
-          const cardsInSection = groupedCards[section] || [];
+        {SECTIONS.map((sectionInfo) => {
+          const cardsInSection = groupedCards[sectionInfo.label] || [];
           if (cardsInSection.length === 0) return null;
 
           return (
-            <div key={section} className="space-y-3">
+            <div key={sectionInfo.label} className="space-y-3">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                 <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-violet-500" />
-                  <span>{section}</span>
+                  <span>{sectionInfo.label}</span>
                   <span className="text-xs font-normal text-slate-500 font-mono">
                     ({cardsInSection.length})
                   </span>
@@ -250,7 +302,7 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
 
                     {/* Right side: ownership badge, synergy score hover & action menu */}
                     <div className="flex items-center gap-4">
-                      {/* Tooltip trigger for Synergy */}
+                      {/* Tooltip trigger for Synergy fit */}
                       <div
                         className="relative"
                         onMouseEnter={() => setHoveredCardId(row.card.id)}
@@ -277,6 +329,16 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
 
                       {/* Row Actions */}
                       <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleSyncOwnership(row.card.id)}
+                          aria-label={`Sync ownership for ${row.card.name}`}
+                          title="Sync ownership state with collection"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-300 hover:bg-slate-800 transition-colors"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </button>
+
                         <button
                           type="button"
                           onClick={() => setSwappingCard(row)}

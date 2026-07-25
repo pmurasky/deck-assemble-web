@@ -18,7 +18,7 @@ describe('RecommendationsClient Component Flow', () => {
     expect(screen.getByText('Krenko, Mob Boss')).toBeInTheDocument();
   });
 
-  it('opens Build Config modal when Build Deck is clicked, then generates deck', () => {
+  it('opens Build Config modal when Build Deck is clicked, then generates deck', async () => {
     render(<RecommendationsClient />);
 
     // Click Build Deck on first commander tile
@@ -33,12 +33,13 @@ describe('RecommendationsClient Component Flow', () => {
     const generateBtn = screen.getByRole('button', { name: /Generate Deck/i });
     fireEvent.click(generateBtn);
 
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(500);
+      await Promise.resolve();
     });
 
     // Screen 3 Generated Deck View should now be active
     expect(screen.getByTestId('generated-deck-view')).toBeInTheDocument();
-    expect(screen.getByText(/Generated Deck Strategy/i)).toBeInTheDocument();
+    expect(screen.getByText(/Generated Draft Deck/i)).toBeInTheDocument();
   });
 });

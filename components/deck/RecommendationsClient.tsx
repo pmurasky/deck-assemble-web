@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MOCK_COMMANDERS, createMockGeneratedDeck, extractWishlistFromDeck } from '@/lib/mock-data/builder';
 import { CommanderSuggestion, DeckBuildConfig, GeneratedDeck, WishlistItem } from '@/types/builder';
+import { generateBuildDeck, getCommanderRecommendations } from '@/lib/api/recommendations';
 import { CommanderSuggestionsGrid } from './CommanderSuggestionsGrid';
 import { CommanderBuildConfigModal } from './CommanderBuildConfigModal';
 import { GeneratedDeckView } from './GeneratedDeckView';
@@ -11,6 +12,7 @@ import { DeckComparisonModal } from './DeckComparisonModal';
 import { Sparkles } from 'lucide-react';
 
 export function RecommendationsClient() {
+  const [commanders, setCommanders] = useState<CommanderSuggestion[]>(MOCK_COMMANDERS);
   const [selectedCommander, setSelectedCommander] = useState<CommanderSuggestion | null>(MOCK_COMMANDERS[0]);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
@@ -22,6 +24,18 @@ export function RecommendationsClient() {
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [comparisonDecks, setComparisonDecks] = useState<GeneratedDeck[]>([initialDeck]);
 
+  useEffect(() => {
+    let isMounted = true;
+    getCommanderRecommendations().then((fetched) => {
+      if (isMounted && fetched && fetched.length > 0) {
+        setCommanders(fetched);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Step 1: User clicks "Build Deck" on a Commander tile
   const handleSelectCommander = (commander: CommanderSuggestion) => {
     setSelectedCommander(commander);
@@ -29,25 +43,29 @@ export function RecommendationsClient() {
   };
 
   // Step 2: User submits Build Config Modal
-  const handleGenerateDeck = (config: DeckBuildConfig) => {
+  const handleGenerateDeck = async (config: DeckBuildConfig) => {
     if (!selectedCommander) return;
-    const generated = createMockGeneratedDeck(selectedCommander);
-    generated.powerLevel = config.powerLevel;
-    if (config.ownedOnly) {
-      generated.ownedPercentage = 100;
-      generated.wishlistTotalCost = 0;
-      generated.cards = generated.cards.map((c) => ({ ...c, ownership: 'owned', estimatedPrice: 0 }));
-    }
+
+    const payload = {
+      commanderCardId: selectedCommander.id,
+      secondaryCommanderCardId: config.secondaryCommanderId ?? null,
+      desiredPowerLevel: config.powerLevel,
+      playStyle: config.playStyles[0]?.toLowerCase() ?? 'midrange',
+      useOwnedCardsOnly: config.ownedOnly,
+      budgetLimit: config.budgetLimit,
+    };
+
+    const generated = await generateBuildDeck(payload);
 
     setActiveDeck(generated);
     setWishlistItems(extractWishlistFromDeck(generated));
     setIsConfigModalOpen(false);
     setCurrentView('generated_deck');
 
-    // Add to comparison list
+    // Add to comparison list (limit to top 3 for side-by-side comparison matrix)
     setComparisonDecks((prev) => {
       if (prev.some((d) => d.id === generated.id)) return prev;
-      return [...prev, generated];
+      return [...prev.slice(-2), generated];
     });
   };
 
@@ -71,16 +89,20 @@ export function RecommendationsClient() {
       const updatedCards = activeDeck.cards.map((c) =>
         c.card.id === cardId ? { ...c, ownership: 'owned' as const } : c
       );
-      const totalOwned = updatedCards.filter((c) => c.ownership === 'owned').length;
-      const newOwnedPct = Math.round((totalOwned / updatedCards.length) * 100);
-      const newWishlistCost = updatedCards
-        .filter((c) => c.ownership === 'wishlist')
-        .reduce((sum, c) => sum + (c.estimatedPrice || 0), 0);
+      const totalCards = updatedCards.length;
+      const ownedCards = updatedCards.filter((c) => c.ownership === 'owned');
+      const wishlistCards = updatedCards.filter((c) => c.ownership === 'wishlist');
+      const ownedCount = ownedCards.length;
+      const wishlistCount = wishlistCards.length;
+      const newOwnedPct = totalCards > 0 ? Math.round((ownedCount / totalCards) * 100) : 0;
+      const newWishlistCost = wishlistCards.reduce((sum, c) => sum + (c.estimatedPrice || 0), 0);
 
       setActiveDeck({
         ...activeDeck,
         cards: updatedCards,
         ownedPercentage: newOwnedPct,
+        ownedCardsCount: ownedCount,
+        wishlistCardsCount: wishlistCount,
         wishlistTotalCost: newWishlistCost,
       });
     }
@@ -143,7 +165,7 @@ export function RecommendationsClient() {
       {/* Screen 1: Commander Suggestions Grid */}
       {currentView === 'suggestions' && (
         <CommanderSuggestionsGrid
-          commanders={MOCK_COMMANDERS}
+          commanders={commanders}
           onSelectCommander={handleSelectCommander}
         />
       )}

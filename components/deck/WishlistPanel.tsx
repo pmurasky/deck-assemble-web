@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   DollarSign,
   Sparkles,
-  Layers,
 } from 'lucide-react';
 import { WishlistItem } from '@/types/builder';
 
