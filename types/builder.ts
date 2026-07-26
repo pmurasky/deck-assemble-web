@@ -1,4 +1,4 @@
-import { Card } from './card';
+import { Card, CardFace } from './card';
 
 export type OwnershipStatus = 'owned' | 'wishlist' | 'proxy';
 
@@ -13,6 +13,7 @@ export interface CommanderSuggestion {
   estimatedCostToComplete: number; // in USD
   popularityRank: number;
   typeLine: string;
+  faces?: CardFace[];
 }
 
 export interface DeckBuildConfig {
