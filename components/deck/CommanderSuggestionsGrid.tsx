@@ -142,14 +142,21 @@ interface CommanderCardTileProps {
 }
 
 const CommanderCardTile: React.FC<CommanderCardTileProps> = ({ commander, onSelect }) => {
+  const [faceIndex, setFaceIndex] = useState(0);
+  const faces = commander.faces ?? [];
+  const canFlip = faces.length >= 2;
+  const activeImageUrl = faces.length > 0 ? (faces[faceIndex]?.imageUrl || commander.imageUrl) : commander.imageUrl;
+  const activeName = faces.length > 0 ? (faces[faceIndex]?.name || commander.name) : commander.name;
+  const activeTypeLine = faces.length > 0 ? (faces[faceIndex]?.typeLine || commander.typeLine) : commander.typeLine;
+
   return (
     <div className="group relative flex flex-col justify-between rounded-xl bg-slate-900 border border-slate-800 hover:border-violet-500/50 transition-all duration-200 overflow-hidden shadow-lg hover:shadow-violet-500/10">
       {/* Top Banner / Image overlay */}
       <div className="relative h-44 w-full bg-slate-950 overflow-hidden">
-        {commander.imageUrl ? (
+        {activeImageUrl ? (
           <img
-            src={commander.imageUrl}
-            alt={commander.name}
+            src={activeImageUrl}
+            alt={activeName}
             className="w-full h-full object-cover object-top opacity-85 group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
@@ -164,6 +171,23 @@ const CommanderCardTile: React.FC<CommanderCardTileProps> = ({ commander, onSele
           <Award className="w-3 h-3 text-amber-400" />
           <span>#{commander.popularityRank} Meta</span>
         </div>
+
+        {/* Two-Sided Badge & Flip Button */}
+        {canFlip && (
+          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between z-10">
+            <span className="px-2 py-0.5 rounded bg-slate-950/90 border border-slate-700/80 text-[10px] font-semibold text-slate-300 backdrop-blur-xs">
+              Two-Sided
+            </span>
+            <button
+              type="button"
+              onClick={() => setFaceIndex(faceIndex === 0 ? 1 : 0)}
+              aria-label={`Show ${faces[faceIndex === 0 ? 1 : 0]?.name ?? commander.name}`}
+              className="px-2 py-1 rounded bg-slate-950/90 hover:bg-slate-900 border border-slate-700/80 text-slate-200 text-[11px] font-bold backdrop-blur-xs transition-all shadow-md active:scale-95"
+            >
+              Flip card
+            </button>
+          </div>
+        )}
 
         {/* Color Pips */}
         <div className="absolute top-2.5 right-2.5 flex items-center gap-1">
@@ -184,9 +208,9 @@ const CommanderCardTile: React.FC<CommanderCardTileProps> = ({ commander, onSele
       <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
         <div>
           <h3 className="text-base font-bold text-slate-100 group-hover:text-violet-300 transition-colors line-clamp-1">
-            {commander.name}
+            {activeName}
           </h3>
-          <p className="text-xs text-slate-400 line-clamp-1">{commander.typeLine}</p>
+          <p className="text-xs text-slate-400 line-clamp-1">{activeTypeLine}</p>
         </div>
 
         {/* Stats Grid */}

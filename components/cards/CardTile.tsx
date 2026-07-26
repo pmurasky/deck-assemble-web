@@ -48,28 +48,36 @@ export function CardTile({
     <>
       <div className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/90 p-4 transition-all duration-200 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-950/20 ${className}`}>
         {activeImageUrl ? (
-          <div className="relative w-full aspect-[2.5/3.5] rounded-lg overflow-hidden mb-3">
-            <img 
-              src={activeImageUrl} 
-              alt={activeName} 
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-            {canFlip && (
-              <>
-                <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-zinc-950/80 border border-zinc-700/80 text-[10px] font-semibold text-zinc-300 backdrop-blur-xs flex items-center gap-1">
-                  Two-Sided
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setFaceIndex(faceIndex === 0 ? 1 : 0)}
-                  aria-label={`Show ${faces[faceIndex === 0 ? 1 : 0]?.name ?? card.name}`}
-                  className="absolute top-2 right-2 px-2 py-1 rounded-md bg-zinc-950/80 hover:bg-zinc-900 border border-zinc-700/80 text-zinc-200 text-[11px] font-bold backdrop-blur-xs transition-all shadow-md active:scale-95"
-                >
-                  Flip card
-                </button>
-              </>
-            )}
+          <div>
+            <div className="relative w-full aspect-[2.5/3.5] rounded-lg overflow-hidden mb-3">
+              <img 
+                src={activeImageUrl} 
+                alt={activeName} 
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+              {canFlip && (
+                <>
+                  <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-zinc-950/80 border border-zinc-700/80 text-[10px] font-semibold text-zinc-300 backdrop-blur-xs flex items-center gap-1">
+                    Two-Sided
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setFaceIndex(faceIndex === 0 ? 1 : 0)}
+                    aria-label={`Show ${faces[faceIndex === 0 ? 1 : 0]?.name ?? card.name}`}
+                    className="absolute top-2 right-2 px-2 py-1 rounded-md bg-zinc-950/80 hover:bg-zinc-900 border border-zinc-700/80 text-zinc-200 text-[11px] font-bold backdrop-blur-xs transition-all shadow-md active:scale-95 cursor-pointer z-10"
+                  >
+                    Flip card
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="flex items-start justify-between gap-2 px-0.5">
+              <a href={`/cards/${card.id}`} className="font-bold text-zinc-100 text-sm group-hover:text-green-400 transition-colors line-clamp-1">
+                {activeName}
+              </a>
+              <ManaCost manaCost={faces.length > 0 ? (faces[faceIndex]?.manaCost ?? card.manaCost) : card.manaCost} />
+            </div>
           </div>
         ) : (
           <div className="space-y-2">

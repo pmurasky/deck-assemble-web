@@ -13,6 +13,26 @@ export const MOCK_COMMANDERS: CommanderSuggestion[] = [
     estimatedCostToComplete: 45.0,
     popularityRank: 1,
     typeLine: 'Legendary Creature — Phyrexian Angel',
+    faces: [
+      {
+        name: "Atraxa, Praetors' Voice",
+        manaCost: '{G}{W}{U}{B}',
+        typeLine: 'Legendary Creature — Phyrexian Angel',
+        oracleText: 'Flying, Vigilance, Deathtouch, Lifelink\nAt the beginning of your end step, proliferate.',
+        power: '4',
+        toughness: '4',
+        imageUrl: 'https://cards.scryfall.io/normal/front/d/0/d0d0_front.jpg',
+      },
+      {
+        name: 'Atraxa, Grand Unifier',
+        manaCost: '{3}{G}{W}{U}{B}',
+        typeLine: 'Legendary Creature — Phyrexian Angel',
+        oracleText: 'Flying, Vigilance, Deathtouch, Lifelink\nWhen Atraxa enters the battlefield, reveal top 10 cards.',
+        power: '7',
+        toughness: '7',
+        imageUrl: 'https://cards.scryfall.io/normal/front/d/0/d0d0_back.jpg',
+      },
+    ],
   },
   {
     id: 'cmd-2',

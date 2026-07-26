@@ -17,6 +17,26 @@ export const MOCK_CARDS: Card[] = [
     setName: 'Marvel Super Heroes MTG',
     rarity: 'mythic',
     legalities: { commander: 'legal' },
+    faces: [
+      {
+        name: 'Spider-Man, Neighborhood Hero',
+        manaCost: '{1}{U}{R}',
+        typeLine: 'Legendary Creature — Hero Human',
+        oracleText: 'Reach, Haste\nWhenever Spider-Man deals combat damage to a player, draw a card.',
+        power: '3',
+        toughness: '3',
+        imageUrl: 'https://cards.scryfall.io/normal/front/s/p/spidey_front.jpg',
+      },
+      {
+        name: 'Spider-Man, Peter Parker',
+        manaCost: '{2}{U}{R}',
+        typeLine: 'Legendary Creature — Hero Human Spider',
+        oracleText: 'Reach, First Strike\nWhenever you cast a hero spell, Spider-Man gets +1/+1 until end of turn.',
+        power: '3',
+        toughness: '4',
+        imageUrl: 'https://cards.scryfall.io/normal/front/s/p/spidey_back.jpg',
+      },
+    ],
   },
   {
     id: 'spidey-peter-parker',
