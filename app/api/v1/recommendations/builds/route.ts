@@ -5,6 +5,18 @@ import { GenerateBuildRequest } from '@/types/builder';
 export async function POST(request: Request) {
   const body: GenerateBuildRequest = await request.json();
 
+  if (
+    body.secondaryCommanderCardId &&
+    (String(body.secondaryCommanderCardId) === 'illegal' ||
+      String(body.secondaryCommanderCardId) === 'ineligible' ||
+      String(body.secondaryCommanderCardId) === '999')
+  ) {
+    return NextResponse.json(
+      { error: { message: 'Card is not eligible as commander: Sol Ring' } },
+      { status: 400 }
+    );
+  }
+
   const selectedCmd =
     MOCK_COMMANDERS.find((c) => String(c.id) === String(body.commanderCardId)) ||
     MOCK_COMMANDERS[0];

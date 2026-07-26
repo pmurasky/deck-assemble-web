@@ -11,9 +11,10 @@ export async function GET(req: NextRequest) {
   const setCode = searchParams.get('setCode') ?? '';
   const colorIdentity = searchParams.get('colorIdentity') ?? '';
   const sort = searchParams.get('sort') ?? '';
+  const commanderEligible = searchParams.get('commanderEligible') === 'true';
 
   try {
-    const data = await fetchCards({ query, page, size, type, setCode, colorIdentity, sort });
+    const data = await fetchCards({ query, page, size, type, setCode, colorIdentity, sort, commanderEligible });
     return NextResponse.json({ data });
   } catch {
     return NextResponse.json(

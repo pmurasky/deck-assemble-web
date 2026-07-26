@@ -53,8 +53,9 @@ export async function getCommanderRecommendations(
 export async function generateBuildDeck(
   request: GenerateBuildRequest
 ): Promise<GeneratedDeck> {
+  let res: Response | null = null;
   try {
-    const res = await fetch('/api/v1/recommendations/builds', {
+    res = await fetch('/api/v1/recommendations/builds', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -63,8 +64,17 @@ export async function generateBuildDeck(
     if (res.ok) {
       return await res.json();
     }
-  } catch {
-    // Fallback for isolated testing/mocking
+
+    if (res.status === 400 || res.status >= 400) {
+      const errData = await res.json().catch(() => null);
+      const msg = errData?.error?.message || errData?.message || 'Failed to generate build deck';
+      throw new Error(msg);
+    }
+  } catch (err: unknown) {
+    if (res && !res.ok) {
+      throw err;
+    }
+    // Fallback for isolated testing/mocking when network fails completely
   }
 
   const selectedCmd =

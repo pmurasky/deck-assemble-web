@@ -17,6 +17,7 @@ interface GetCardsParams {
   type?: string;
   setCode?: string;
   colorIdentity?: string;
+  commanderEligible?: boolean;
 }
 
 export async function getCards({
@@ -26,6 +27,7 @@ export async function getCards({
   type = '',
   setCode = '',
   colorIdentity = '',
+  commanderEligible = false,
 }: GetCardsParams = {}): Promise<{ cards: Card[]; total: number }> {
   const url = new URL('/api/v1/cards', typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
   url.searchParams.append('page', page.toString());
@@ -34,6 +36,7 @@ export async function getCards({
   if (type) url.searchParams.append('type', type);
   if (setCode) url.searchParams.append('setCode', setCode);
   if (colorIdentity) url.searchParams.append('colorIdentity', colorIdentity);
+  if (commanderEligible) url.searchParams.append('commanderEligible', 'true');
 
   const res = await fetch(url.pathname + url.search);
   if (!res.ok) {

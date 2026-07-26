@@ -48,6 +48,7 @@ export interface FetchCardsOptions {
   setCode?: string;
   colorIdentity?: string;
   sort?: string;
+  commanderEligible?: boolean;
 }
 
 export function toCard(api: ApiCard): Card {
@@ -83,6 +84,7 @@ export async function fetchCards({
   setCode = '',
   colorIdentity = '',
   sort = '',
+  commanderEligible = false,
 }: FetchCardsOptions = {}) {
   const url = new URL('/api/v1/cards', API_BASE_URL);
   if (query) url.searchParams.set('query', query);
@@ -92,6 +94,7 @@ export async function fetchCards({
   if (setCode) url.searchParams.set('setCode', setCode);
   if (colorIdentity) url.searchParams.set('colorIdentity', colorIdentity);
   if (sort) url.searchParams.set('sort', sort);
+  if (commanderEligible) url.searchParams.set('commanderEligible', 'true');
 
   try {
     const res = await fetch(url, { next: { revalidate: 300 } });
@@ -103,6 +106,15 @@ export async function fetchCards({
     return { cards: apiPage.content.map(toCard), total: apiPage.totalElements };
   } catch {
     let filtered = MOCK_CARDS;
+    if (commanderEligible) {
+      filtered = filtered.filter(
+        (c) =>
+          (c.typeLine.toLowerCase().includes('legendary') &&
+            (c.typeLine.toLowerCase().includes('creature') || c.typeLine.toLowerCase().includes('planeswalker'))) ||
+          c.oracleText?.toLowerCase().includes('can be your commander') ||
+          c.legalities?.commander === 'legal'
+      );
+    }
     if (query) {
       const q = query.toLowerCase();
       filtered = filtered.filter(
