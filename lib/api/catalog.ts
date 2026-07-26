@@ -1,5 +1,5 @@
-import type { Card, CardFace } from '@/types/card';
 import { MOCK_CARDS } from '@/lib/mock-data/cards';
+import type { Card, CardFace } from '@/types/card';
 
 const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
 
@@ -22,6 +22,15 @@ export interface ApiCard {
   setName?: string;
   rarity?: string;
   flavorText?: string;
+  faces?: CardFace[];
+}
+
+export interface ApiCardPrinting {
+  id: number;
+  setCode: string;
+  collectorNumber: string;
+  rarity: string;
+  imageUri?: string;
   faces?: CardFace[];
 }
 
@@ -139,6 +148,19 @@ export async function fetchCardById(cardId: string): Promise<Card | null> {
   }
 }
 
+export async function fetchCardPrintings(cardId: string): Promise<ApiCardPrinting[] | null> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/cards/${cardId}/printings`, {
+    next: { revalidate: 300 },
+  });
+  if (res.status === 404) {
+    return null;
+  }
+  if (!res.ok) {
+    throw new Error(`Card printings returned ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function fetchSetPrintings(
   setCode: string,
   { query = '', page = 0, size = 24, type = '' }: FetchCardsOptions = {}
@@ -177,4 +199,3 @@ export async function fetchSetPrintings(
     return { cards: paginated, total: filtered.length };
   }
 }
-
