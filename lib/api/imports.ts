@@ -38,10 +38,11 @@ export async function fetchLatestImport(): Promise<LatestImport | null> {
 
 export interface ImportResult {
   runId: number;
-  recordsRead: number;
-  recordsCreated: number;
-  recordsUpdated: number;
-  recordsFailed: number;
+  status?: string;
+  recordsRead?: number;
+  recordsCreated?: number;
+  recordsUpdated?: number;
+  recordsFailed?: number;
 }
 
 export async function fetchImportRuns(): Promise<ImportRun[]> {
@@ -64,7 +65,7 @@ export async function triggerImport(query: string): Promise<ImportResult> {
     method: 'POST',
     headers: { Authorization: `Bearer ${token.token}` },
   });
-  if (!res.ok) {
+  if (!res.ok && res.status !== 202) {
     throw new Error(`Import trigger returned ${res.status}`);
   }
   return res.json() as Promise<ImportResult>;

@@ -56,19 +56,16 @@ describe('API Route: /api/v1/admin/card-imports', () => {
       expect(json.error.message).toBe('Query parameter is required');
     });
 
-    it('should trigger import and return import result on success', async () => {
+    it('should trigger import and return 202 Accepted status with runId', async () => {
       const mockResult: importsApi.ImportResult = {
         runId: 3,
-        recordsRead: 1803,
-        recordsCreated: 1708,
-        recordsUpdated: 95,
-        recordsFailed: 0,
+        status: 'RUNNING',
       };
       vi.spyOn(importsApi, 'triggerImport').mockResolvedValue(mockResult);
 
       const req = new NextRequest('http://localhost/api/v1/admin/card-imports?query=e%3Amar');
       const res = await POST(req);
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(202);
 
       const json = await res.json();
       expect(json).toEqual({ data: mockResult });

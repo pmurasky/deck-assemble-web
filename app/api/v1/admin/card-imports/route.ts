@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       );
     }
     const result = await triggerImport(query);
-    return NextResponse.json({ data: result });
+    return NextResponse.json({ data: result }, { status: 202 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to trigger import';
     const statusMatch = message.match(/\b(401|403|400|404|500)\b/);
