@@ -24,10 +24,11 @@ async function getImportRuns(): Promise<ImportRun[]> {
 
 interface ImportResult {
   runId: number;
-  recordsRead: number;
-  recordsCreated: number;
-  recordsUpdated: number;
-  recordsFailed: number;
+  status?: string;
+  recordsRead?: number;
+  recordsCreated?: number;
+  recordsUpdated?: number;
+  recordsFailed?: number;
 }
 
 async function triggerImportRun(query: string): Promise<ImportResult> {
@@ -38,7 +39,7 @@ async function triggerImportRun(query: string): Promise<ImportResult> {
   const res = await fetch(`/api/v1/admin/card-imports?${params.toString()}`, {
     method: 'POST',
   });
-  if (!res.ok) {
+  if (!res.ok && res.status !== 202) {
     const errorJson = await res.json().catch(() => ({}));
     throw new Error(errorJson.error?.message || 'Failed to trigger import');
   }
@@ -79,6 +80,7 @@ function formatRelativeDate(value: string | null) {
 export default function AdminImportsPage() {
   const { user, isLoading: isUserLoading } = useUser();
   const [queryInput, setQueryInput] = useState('');
+  const [activeRunId, setActiveRunId] = useState<number | null>(null);
   const [lastResult, setLastResult] = useState<ImportResult | null>(null);
   const [lastQuery, setLastQuery] = useState<string>('');
   const queryClient = useQueryClient();
@@ -88,16 +90,36 @@ export default function AdminImportsPage() {
     queryFn: getImportRuns,
     refetchInterval: (query) => {
       const currentRuns = query.state.data as ImportRun[] | undefined;
-      const isRunning = currentRuns?.some(r => r.status === 'RUNNING' || r.status === 'PENDING');
-      return isRunning ? 5000 : false;
+      const isRunning = activeRunId !== null || currentRuns?.some(r => r.status === 'RUNNING' || r.status === 'PENDING');
+      return isRunning ? 1500 : false;
     },
   });
+
+  if (activeRunId && runs) {
+    const activeRun = runs.find((r) => r.id === activeRunId);
+    if (activeRun && activeRun.status !== 'RUNNING' && activeRun.status !== 'PENDING') {
+      setActiveRunId(null);
+      setLastResult({
+        runId: activeRun.id,
+        status: activeRun.status,
+        recordsRead: activeRun.recordsRead,
+        recordsCreated: activeRun.recordsCreated,
+        recordsUpdated: activeRun.recordsUpdated,
+        recordsFailed: activeRun.recordsFailed,
+      });
+    }
+  }
 
   const importMutation = useMutation({
     mutationFn: triggerImportRun,
     onSuccess: (data, variables) => {
-      setLastResult(data);
       setLastQuery(variables);
+      if (data.runId) {
+        setActiveRunId(data.runId);
+      }
+      if (data.recordsRead !== undefined && data.recordsRead > 0 && data.status !== 'RUNNING' && data.status !== 'PENDING') {
+        setLastResult(data);
+      }
       queryClient.invalidateQueries({ queryKey: ['importRuns'] });
     },
     onError: (err: Error) => {
@@ -105,6 +127,7 @@ export default function AdminImportsPage() {
     }
   });
 
+  const isImporting = importMutation.isPending || activeRunId !== null;
 
   // Role Gating
   if (isUserLoading) {
@@ -150,15 +173,15 @@ export default function AdminImportsPage() {
             placeholder="Scryfall query (e.g. e:mar)" 
             value={queryInput}
             onChange={(e) => setQueryInput(e.target.value)}
-            disabled={importMutation.isPending}
+            disabled={isImporting}
             className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-green-500 flex-1 md:w-80 disabled:opacity-50"
           />
           <button 
             type="submit"
-            disabled={importMutation.isPending || !queryInput.trim()}
-            className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors disabled:opacity-50 whitespace-nowrap"
+            disabled={isImporting || !queryInput.trim()}
+            className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors disabled:opacity-50 whitespace-nowrap cursor-pointer"
           >
-            {importMutation.isPending ? (
+            {isImporting ? (
               <>
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                 Importing...
@@ -173,12 +196,16 @@ export default function AdminImportsPage() {
         </form>
       </div>
 
-      {importMutation.isPending && (
+      {isImporting && (
         <div className="mb-6 rounded-xl border border-green-500/30 bg-green-950/20 p-4 text-green-300 flex items-center gap-3 animate-pulse">
           <span className="w-5 h-5 border-2 border-green-500/30 border-t-green-400 rounded-full animate-spin"></span>
           <div>
-            <p className="font-semibold text-sm">Importing cards from Scryfall...</p>
-            <p className="text-xs text-green-400/80">This request is synchronous and may take up to 2 minutes depending on query size.</p>
+            <p className="font-semibold text-sm">
+              Importing cards from Scryfall {activeRunId ? `(Run #${activeRunId})` : ''}...
+            </p>
+            <p className="text-xs text-green-400/80">
+              Import task accepted (HTTP 202). Polling import status until completion...
+            </p>
           </div>
         </div>
       )}
@@ -187,35 +214,36 @@ export default function AdminImportsPage() {
         <div className="mb-6 rounded-xl border border-purple-500/30 bg-purple-950/20 p-4 text-white relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-green-400"></span>
-              <h3 className="font-bold text-sm text-purple-300">Import Completed Successfully</h3>
+              <span className={`inline-block w-2 h-2 rounded-full ${lastResult.status === 'FAILED' ? 'bg-red-400' : 'bg-green-400'}`}></span>
+              <h3 className="font-bold text-sm text-purple-300">
+                {lastResult.status === 'FAILED' ? 'Import Failed' : 'Import Completed Successfully'}
+              </h3>
               {lastQuery && <span className="text-xs font-mono text-zinc-400">({lastQuery})</span>}
             </div>
-            <p className="text-xs text-zinc-400 mt-1">Run ID: #{lastResult.runId} • Total Records Read: {lastResult.recordsRead}</p>
+            <p className="text-xs text-zinc-400 mt-1">Run ID: #{lastResult.runId} • Total Records Read: {lastResult.recordsRead ?? 0}</p>
           </div>
           <div className="flex gap-4 text-xs font-medium bg-zinc-900/80 px-4 py-2 rounded-lg border border-zinc-800">
             <div>
               <span className="text-zinc-400">Created: </span>
-              <span className="text-green-400 font-bold">{lastResult.recordsCreated}</span>
+              <span className="text-green-400 font-bold">{lastResult.recordsCreated ?? 0}</span>
             </div>
             <div>
               <span className="text-zinc-400">Updated: </span>
-              <span className="text-blue-400 font-bold">{lastResult.recordsUpdated}</span>
+              <span className="text-blue-400 font-bold">{lastResult.recordsUpdated ?? 0}</span>
             </div>
             <div>
               <span className="text-zinc-400">Failed: </span>
-              <span className={lastResult.recordsFailed > 0 ? "text-red-400 font-bold" : "text-zinc-500"}>{lastResult.recordsFailed}</span>
+              <span className={(lastResult.recordsFailed ?? 0) > 0 ? "text-red-400 font-bold" : "text-zinc-500"}>{lastResult.recordsFailed ?? 0}</span>
             </div>
           </div>
           <button 
             onClick={() => setLastResult(null)}
-            className="absolute top-2 right-2 text-zinc-500 hover:text-zinc-300 text-xs px-2 py-1"
+            className="absolute top-2 right-2 text-zinc-500 hover:text-zinc-300 text-xs px-2 py-1 cursor-pointer"
           >
             ✕
           </button>
         </div>
       )}
-
 
       {isRunsLoading ? (
         <LoadingSkeleton />
@@ -262,7 +290,7 @@ export default function AdminImportsPage() {
                   <td className="px-4 py-3 text-right text-zinc-300">{run.recordsCreated}</td>
                   <td className="px-4 py-3 text-right text-zinc-300">{run.recordsUpdated}</td>
                   <td className="px-4 py-3 text-right text-zinc-300">{run.recordsFailed}</td>
-                  <td className="px-4 py-3 text-zinc-400">{formatRelativeDate(run.startedAt)}</td>
+                  <td className="px-4 py-3 text-right text-zinc-400">{formatRelativeDate(run.startedAt)}</td>
                   <td className="px-4 py-3 text-zinc-400">{formatRelativeDate(run.completedAt)}</td>
                 </tr>
               ))}
