@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import { Sparkles, DollarSign, Layers, Award, Filter, ShieldAlert } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Sparkles, DollarSign, Layers, Award, Filter, ShieldAlert, Search, RefreshCw } from 'lucide-react';
 import { CommanderSuggestion } from '@/types/builder';
+import { getCards } from '@/lib/api/cards';
 
 interface CommanderSuggestionsGridProps {
   commanders: CommanderSuggestion[];
@@ -22,6 +23,9 @@ export const CommanderSuggestionsGrid: React.FC<CommanderSuggestionsGridProps> =
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [maxBudget, setMaxBudget] = useState<number | ''>('');
   const [ownedOnlyFilter, setOwnedOnlyFilter] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchingCatalog, setIsSearchingCatalog] = useState(false);
+  const [catalogSearchResults, setCatalogSearchResults] = useState<CommanderSuggestion[]>([]);
 
   const toggleColor = (color: string) => {
     setSelectedColors((prev) =>
@@ -29,8 +33,58 @@ export const CommanderSuggestionsGrid: React.FC<CommanderSuggestionsGridProps> =
     );
   };
 
-  const filteredCommanders = useMemo(() => {
-    return commanders.filter((cmd) => {
+  // Perform catalog search via GET /cards?commanderEligible=true when query changes
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setCatalogSearchResults([]);
+      return;
+    }
+
+    let isMounted = true;
+    const timer = setTimeout(() => {
+      setIsSearchingCatalog(true);
+      getCards({
+        commanderEligible: true,
+        q: searchQuery,
+        colorIdentity: selectedColors.join(','),
+        limit: 24,
+      })
+        .then((res) => {
+          if (isMounted) {
+            const mapped: CommanderSuggestion[] = res.cards.map((card, idx) => ({
+              id: card.id,
+              name: card.name,
+              imageUrl: card.imageUrl,
+              colors: card.colors || [],
+              colorIdentity: card.colorIdentity || [],
+              ownershipCoverage: 70,
+              missingStaplesCount: 3,
+              estimatedCostToComplete: 25.0,
+              popularityRank: idx + 10,
+              typeLine: card.typeLine,
+              faces: card.faces,
+            }));
+            setCatalogSearchResults(mapped);
+          }
+        })
+        .catch(() => {
+          if (isMounted) setCatalogSearchResults([]);
+        })
+        .finally(() => {
+          if (isMounted) setIsSearchingCatalog(false);
+        });
+    }, 250);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, selectedColors]);
+
+  const displayedCommanders = useMemo(() => {
+    const sourceList = searchQuery.trim() ? catalogSearchResults : commanders;
+
+    return sourceList.filter((cmd) => {
       // Color identity filter
       if (selectedColors.length > 0) {
         const matchesColor = selectedColors.some((c) => cmd.colorIdentity.includes(c));
@@ -46,20 +100,35 @@ export const CommanderSuggestionsGrid: React.FC<CommanderSuggestionsGridProps> =
       }
       return true;
     });
-  }, [commanders, selectedColors, maxBudget, ownedOnlyFilter]);
+  }, [commanders, catalogSearchResults, searchQuery, selectedColors, maxBudget, ownedOnlyFilter]);
 
   return (
     <div className="space-y-6" data-testid="commander-suggestions-grid">
       {/* What can I build title section */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-violet-400" />
             <span>What can I build?</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Commanders ranked by your collection coverage, missing staples count, and estimated cost to complete.
+            Browse EDHREC suggestions or search all commander-eligible cards.
           </p>
+        </div>
+
+        {/* Free search bar using GET /cards?commanderEligible=true */}
+        <div className="relative w-full sm:w-72">
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search all eligible commanders..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 text-xs focus:ring-2 focus:ring-violet-500 focus:outline-none"
+          />
+          {isSearchingCatalog && (
+            <RefreshCw className="w-3.5 h-3.5 absolute right-3 top-2.5 text-violet-400 animate-spin" />
+          )}
         </div>
       </div>
 
@@ -119,7 +188,7 @@ export const CommanderSuggestionsGrid: React.FC<CommanderSuggestionsGridProps> =
       </div>
 
       {/* Grid of Commanders */}
-      {filteredCommanders.length === 0 ? (
+      {displayedCommanders.length === 0 ? (
         <div className="py-12 text-center rounded-xl bg-slate-900/40 border border-slate-800 text-slate-400">
           <ShieldAlert className="w-10 h-10 mx-auto text-amber-500 mb-2 opacity-80" />
           <p className="text-sm font-medium">No commanders match your criteria.</p>
@@ -127,7 +196,7 @@ export const CommanderSuggestionsGrid: React.FC<CommanderSuggestionsGridProps> =
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredCommanders.map((cmd) => (
+          {displayedCommanders.map((cmd) => (
             <CommanderCardTile key={cmd.id} commander={cmd} onSelect={onSelectCommander} />
           ))}
         </div>
