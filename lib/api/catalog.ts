@@ -23,6 +23,7 @@ export interface ApiCard {
   rarity?: string;
   flavorText?: string;
   faces?: CardFace[];
+  legalities?: Record<string, string>;
 }
 
 export interface ApiCardPrinting {
@@ -69,7 +70,7 @@ export function toCard(api: ApiCard): Card {
     setCode: api.setCode ?? '',
     setName: api.setName ?? '',
     rarity: api.rarity ?? '',
-    legalities: {},
+    legalities: api.legalities ?? {},
     faces: api.faces ?? [],
   };
 }
