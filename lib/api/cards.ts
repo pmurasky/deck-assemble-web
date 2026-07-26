@@ -1,5 +1,14 @@
-import { Card } from '@/types/card';
-import { ApiResponse } from '@/types/api';
+import type { ApiResponse } from '@/types/api';
+import type { Card } from '@/types/card';
+
+export interface CardPrinting {
+  id: number;
+  setCode: string;
+  collectorNumber: string;
+  rarity: string;
+  imageUri?: string;
+  faces?: Card['faces'];
+}
 
 interface GetCardsParams {
   page?: number;
@@ -53,6 +62,20 @@ export async function getCardById(cardId: string): Promise<Card> {
   return json.data;
 }
 
+export async function getCardPrintings(cardId: string): Promise<CardPrinting[]> {
+  const res = await fetch(`/api/v1/cards/${cardId}/printings`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch printings for card ${cardId}`);
+  }
+
+  const json: ApiResponse<CardPrinting[]> = await res.json();
+  if (json.error || !json.data) {
+    throw new Error(json.error?.message || `Unknown error fetching printings for card ${cardId}`);
+  }
+
+  return json.data;
+}
+
 export interface LatestImport {
   query: string;
   recordsRead: number;
@@ -94,4 +117,3 @@ export async function getSetPrintings(
 
   return json.data;
 }
-
