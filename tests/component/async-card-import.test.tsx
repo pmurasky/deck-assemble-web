@@ -23,7 +23,7 @@ describe('Async Card Import UI (202 + Polling)', () => {
   it('handles 202 Accepted trigger response and polls until COMPLETED', async () => {
     let fetchCount = 0;
 
-    vi.spyOn(global, 'fetch').mockImplementation((_input: RequestInfo | URL, init?: RequestInit) => {
+    vi.spyOn(global, 'fetch').mockImplementation(((_input: RequestInfo | URL, init?: RequestInit) => {
       if (init?.method === 'POST') {
         return Promise.resolve({
           ok: true,
@@ -76,7 +76,7 @@ describe('Async Card Import UI (202 + Polling)', () => {
           }),
         });
       }
-    });
+    }) as any);
 
     const queryClient = new QueryClient({
       defaultOptions: {

@@ -95,6 +95,29 @@ describe('GeneratedDeckView Component', () => {
     expect(screen.getByTestId('ownership-badge-wishlist')).toBeInTheDocument();
   });
 
+  it('renders secondary commander and gaps if present', () => {
+    const deckWithPartnerAndGaps: GeneratedDeck = {
+      ...mockDeck,
+      secondaryCommander: {
+        id: 'cmd-2',
+        name: 'Thrasios, Triton Hero',
+        colors: ['G', 'U'],
+        colorIdentity: ['G', 'U'],
+        ownershipCoverage: 100,
+        missingStaplesCount: 0,
+        estimatedCostToComplete: 0,
+        popularityRank: 2,
+        typeLine: 'Legendary Creature — Triton Wizard',
+      },
+      gaps: ['Missing 2 ramp spells from inventory'],
+    };
+
+    render(<GeneratedDeckView deck={deckWithPartnerAndGaps} onUpdateDeck={() => {}} onOpenWishlist={() => {}} />);
+
+    expect(screen.getByText(/Thrasios, Triton Hero/i)).toBeInTheDocument();
+    expect(screen.getByText(/Missing 2 ramp spells from inventory/i)).toBeInTheDocument();
+  });
+
   it('allows syncing ownership for a card row', () => {
     const handleUpdate = vi.fn();
     render(<GeneratedDeckView deck={mockDeck} onUpdateDeck={handleUpdate} onOpenWishlist={() => {}} />);
