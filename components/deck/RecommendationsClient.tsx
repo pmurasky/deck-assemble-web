@@ -1,36 +1,48 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { MOCK_COMMANDERS, createMockGeneratedDeck, extractWishlistFromDeck } from '@/lib/mock-data/builder';
 import { CommanderSuggestion, DeckBuildConfig, GeneratedDeck, WishlistItem } from '@/types/builder';
-import { generateBuildDeck, getCommanderRecommendations } from '@/lib/api/recommendations';
+import { generateBuildDeck, getCommanderRecommendations, extractWishlistFromDeck } from '@/lib/api/recommendations';
 import { CommanderSuggestionsGrid } from './CommanderSuggestionsGrid';
 import { CommanderBuildConfigModal } from './CommanderBuildConfigModal';
 import { GeneratedDeckView } from './GeneratedDeckView';
 import { WishlistPanel } from './WishlistPanel';
 import { DeckComparisonModal } from './DeckComparisonModal';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, AlertCircle, Loader2 } from 'lucide-react';
 
 export function RecommendationsClient() {
-  const [commanders, setCommanders] = useState<CommanderSuggestion[]>(MOCK_COMMANDERS);
-  const [selectedCommander, setSelectedCommander] = useState<CommanderSuggestion | null>(MOCK_COMMANDERS[0]);
+  const [commanders, setCommanders] = useState<CommanderSuggestion[]>([]);
+  const [selectedCommander, setSelectedCommander] = useState<CommanderSuggestion | null>(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
-  // Initialize with a default generated deck so tabs 2 and 3 are immediately accessible & previewable
-  const initialDeck = createMockGeneratedDeck(MOCK_COMMANDERS[0]);
-  const [activeDeck, setActiveDeck] = useState<GeneratedDeck | null>(initialDeck);
-  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>(() => extractWishlistFromDeck(initialDeck));
+  const [activeDeck, setActiveDeck] = useState<GeneratedDeck | null>(null);
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [currentView, setCurrentView] = useState<'suggestions' | 'generated_deck' | 'wishlist'>('suggestions');
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
-  const [comparisonDecks, setComparisonDecks] = useState<GeneratedDeck[]>([initialDeck]);
+  const [comparisonDecks, setComparisonDecks] = useState<GeneratedDeck[]>([]);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [buildError, setBuildError] = useState<string | null>(null);
+  const [isBuilding, setIsBuilding] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    getCommanderRecommendations().then((fetched) => {
-      if (isMounted && fetched && fetched.length > 0) {
-        setCommanders(fetched);
-      }
-    });
+    setIsLoading(true);
+    setError(null);
+    getCommanderRecommendations()
+      .then((fetched) => {
+        if (isMounted) {
+          setCommanders(fetched);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to load commander recommendations');
+          setIsLoading(false);
+        }
+      });
     return () => {
       isMounted = false;
     };
@@ -39,12 +51,16 @@ export function RecommendationsClient() {
   // Step 1: User clicks "Build Deck" on a Commander tile
   const handleSelectCommander = (commander: CommanderSuggestion) => {
     setSelectedCommander(commander);
+    setBuildError(null);
     setIsConfigModalOpen(true);
   };
 
   // Step 2: User submits Build Config Modal
   const handleGenerateDeck = async (config: DeckBuildConfig) => {
     if (!selectedCommander) return;
+
+    setIsBuilding(true);
+    setBuildError(null);
 
     const payload = {
       commanderCardId: selectedCommander.id,
@@ -55,26 +71,30 @@ export function RecommendationsClient() {
       budgetLimit: config.budgetLimit,
     };
 
-    const generated = await generateBuildDeck(payload);
+    try {
+      const generated = await generateBuildDeck(payload);
 
-    setActiveDeck(generated);
-    setWishlistItems(extractWishlistFromDeck(generated));
-    setIsConfigModalOpen(false);
-    setCurrentView('generated_deck');
+      setActiveDeck(generated);
+      setWishlistItems(extractWishlistFromDeck(generated));
+      setIsConfigModalOpen(false);
+      setCurrentView('generated_deck');
 
-    // Add to comparison list (limit to top 3 for side-by-side comparison matrix)
-    setComparisonDecks((prev) => {
-      if (prev.some((d) => d.id === generated.id)) return prev;
-      return [...prev.slice(-2), generated];
-    });
+      setComparisonDecks((prev) => {
+        if (prev.some((d) => d.id === generated.id)) return prev;
+        return [...prev.slice(-2), generated];
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to generate build deck';
+      setBuildError(msg);
+    } finally {
+      setIsBuilding(false);
+    }
   };
 
-  // Switch tabs safely, ensuring an active deck exists
+  // Switch tabs safely, ensuring an active deck exists for tabs 2 and 3
   const navigateToView = (view: 'suggestions' | 'generated_deck' | 'wishlist') => {
     if (!activeDeck && (view === 'generated_deck' || view === 'wishlist')) {
-      const demoDeck = createMockGeneratedDeck(MOCK_COMMANDERS[0]);
-      setActiveDeck(demoDeck);
-      setWishlistItems(extractWishlistFromDeck(demoDeck));
+      return;
     }
     setCurrentView(view);
   };
@@ -138,9 +158,12 @@ export function RecommendationsClient() {
 
           <button
             type="button"
+            disabled={!activeDeck}
             onClick={() => navigateToView('generated_deck')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              currentView === 'generated_deck'
+              !activeDeck
+                ? 'opacity-40 cursor-not-allowed text-slate-500'
+                : currentView === 'generated_deck'
                 ? 'bg-violet-600 text-white shadow-md'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
@@ -150,9 +173,12 @@ export function RecommendationsClient() {
 
           <button
             type="button"
+            disabled={!activeDeck}
             onClick={() => navigateToView('wishlist')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              currentView === 'wishlist'
+              !activeDeck
+                ? 'opacity-40 cursor-not-allowed text-slate-500'
+                : currentView === 'wishlist'
                 ? 'bg-amber-600 text-white shadow-md'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
@@ -162,12 +188,39 @@ export function RecommendationsClient() {
         </div>
       </div>
 
+      {error && (
+        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 flex items-center gap-3 text-sm">
+          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+          <div>
+            <span className="font-bold">Error: </span>
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
+      {buildError && (
+        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 flex items-center gap-3 text-sm">
+          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+          <div>
+            <span className="font-bold">Deck Build Failed: </span>
+            <span>{buildError}</span>
+          </div>
+        </div>
+      )}
+
       {/* Screen 1: Commander Suggestions Grid */}
       {currentView === 'suggestions' && (
-        <CommanderSuggestionsGrid
-          commanders={commanders}
-          onSelectCommander={handleSelectCommander}
-        />
+        isLoading ? (
+          <div className="p-12 flex items-center justify-center text-slate-400 gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
+            <span className="text-sm font-semibold">Loading recommendations from backend...</span>
+          </div>
+        ) : (
+          <CommanderSuggestionsGrid
+            commanders={commanders}
+            onSelectCommander={handleSelectCommander}
+          />
+        )
       )}
 
       {/* Screen 3: Generated Deck View */}

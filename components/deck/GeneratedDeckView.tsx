@@ -28,7 +28,8 @@ interface GeneratedDeckViewProps {
 }
 
 const SECTIONS: { key: DeckRoleSection; label: string; legacyKeys: string[] }[] = [
-  { key: 'Commander', label: 'Commander', legacyKeys: ['Commander'] },
+  { key: 'Commander', label: 'Commander', legacyKeys: ['Commander', 'COMMANDER'] },
+  { key: 'Main Deck', label: 'Main Deck', legacyKeys: ['Main Deck', 'MAIN_DECK'] },
   { key: 'Lands', label: 'Lands', legacyKeys: ['Lands'] },
   { key: 'Ramp', label: 'Ramp', legacyKeys: ['Ramp'] },
   { key: 'Draw', label: 'Draw', legacyKeys: ['Draw', 'Card Draw'] },
@@ -148,6 +149,17 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
         </div>
       ))}
 
+      {/* Unfillable Slot Gaps Banner */}
+      {deck.gaps && deck.gaps.length > 0 && (
+        <div className="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-300 flex items-center gap-2.5 text-xs">
+          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+          <div>
+            <span className="font-semibold mr-1">Collection Gaps:</span>
+            <span>{deck.gaps.join('; ')}</span>
+          </div>
+        </div>
+      )}
+
       {/* Header Dashboard Metrics */}
       <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
@@ -163,6 +175,11 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
             <h1 className="text-2xl font-black text-slate-100 mt-1">{deck.name}</h1>
             <p className="text-xs text-slate-400 mt-0.5">
               Commander: <span className="text-slate-200 font-semibold">{deck.commander.name}</span>
+              {deck.secondaryCommander && (
+                <span className="ml-2 text-violet-300 font-medium">
+                  + Partner: <span className="text-slate-200 font-semibold">{deck.secondaryCommander.name}</span>
+                </span>
+              )}
             </p>
           </div>
 
