@@ -1,47 +1,35 @@
-import { NextResponse } from 'next/server';
-import { MOCK_COMMANDERS, createMockGeneratedDeck } from '@/lib/mock-data/builder';
-import { GenerateBuildRequest } from '@/types/builder';
+import { NextRequest, NextResponse } from 'next/server';
+import { createBackendDeckBuild } from '@/lib/api/recommendations';
 
-export async function POST(request: Request) {
-  const body: GenerateBuildRequest = await request.json();
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Build request failed';
+}
 
-  if (
-    body.secondaryCommanderCardId &&
-    (String(body.secondaryCommanderCardId) === 'illegal' ||
-      String(body.secondaryCommanderCardId) === 'ineligible' ||
-      String(body.secondaryCommanderCardId) === '999')
-  ) {
+export async function POST(req: NextRequest) {
+  try {
+    const body: unknown = await req.json();
+    const data = await createBackendDeckBuild(body as any);
+    return NextResponse.json({ data });
+  } catch (error: unknown) {
+    const status =
+      typeof error === 'object' &&
+      error !== null &&
+      'status' in error &&
+      typeof error.status === 'number' &&
+      error.status < 500
+        ? error.status
+        : 502;
+
+    if (status === 400) {
+      return NextResponse.json(
+        { error: { message: errorMessage(error) } },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: { message: 'Card is not eligible as commander: Sol Ring' } },
-      { status: 400 }
+      { error: { code: 'UPSTREAM_ERROR', message: errorMessage(error) } },
+      { status: 502 }
     );
   }
-
-  const selectedCmd =
-    MOCK_COMMANDERS.find((c) => String(c.id) === String(body.commanderCardId)) ||
-    MOCK_COMMANDERS[0];
-
-  const generated = createMockGeneratedDeck(selectedCmd);
-
-  if (body.desiredPowerLevel !== undefined) {
-    generated.powerLevel = body.desiredPowerLevel;
-  }
-
-  if (body.useOwnedCardsOnly) {
-    generated.ownedPercentage = 100;
-    generated.ownedCardsCount = generated.totalCards;
-    generated.wishlistCardsCount = 0;
-    generated.wishlistTotalCost = 0;
-    generated.cards = generated.cards.map((c) => ({
-      ...c,
-      ownership: 'owned',
-      estimatedPrice: 0,
-    }));
-  } else if (body.budgetLimit !== undefined && body.budgetLimit > 0) {
-    if (generated.wishlistTotalCost > body.budgetLimit) {
-      generated.wishlistTotalCost = body.budgetLimit;
-    }
-  }
-
-  return NextResponse.json(generated);
 }
