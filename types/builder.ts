@@ -36,6 +36,7 @@ export interface GenerateBuildRequest {
 
 export type DeckRoleSection =
   | 'Commander'
+  | 'Main Deck'
   | 'Lands'
   | 'Ramp'
   | 'Draw'
@@ -65,6 +66,8 @@ export interface GeneratedDeck {
   id: string;
   name: string;
   commander: CommanderSuggestion;
+  secondaryCommander?: CommanderSuggestion | null;
+  gaps?: string[];
   cards: DeckCardRow[];
   totalCards: number;
   ownedPercentage: number;

@@ -19,6 +19,7 @@ export interface ApiDeckCard {
   cardPrintingId: number;
   quantity: number;
   deckSection: DeckSection;
+  ownershipStatus?: string;
   card: ApiCard;
 }
 
