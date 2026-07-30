@@ -1,12 +1,13 @@
-'use client';
-
 import React, { useState, useEffect } from 'react';
+import { useUser } from '@auth0/nextjs-auth0/client';
 import { useCollectionStore, CollectionItem } from '@/lib/store/useCollectionStore';
 import { CardTile } from '@/components/cards/CardTile';
+import { AuthGate } from '@/components/auth/AuthGate';
 import { PackageOpen, Search, AlertCircle, Loader2, Trash2, Sparkles, Edit2, X } from 'lucide-react';
 import Link from 'next/link';
 
 export function CollectionClient() {
+  const { user, isLoading: isUserLoading } = useUser();
   const {
     items,
     updateQuantities,
@@ -63,6 +64,25 @@ export function CollectionClient() {
   const filteredItems = items.filter((item) =>
     item.card.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const isUnauthorized =
+    (!isUserLoading && !user) ||
+    Boolean(error && (error.includes('401') || error.toLowerCase().includes('unauthorized') || error.toLowerCase().includes('login')));
+
+  if (isUnauthorized) {
+    return (
+      <AuthGate
+        title="Log In to View Your Collection"
+        description="Sign in to your Deck Assemble account to track your physical cards, manage foils, and analyze your card collection."
+        features={[
+          'Track regular & foil quantities for every card',
+          'Calculate collection value and ownership stats',
+          'Filter deck builder recommendations by cards you own',
+        ]}
+        icon={<PackageOpen className="w-8 h-8" />}
+      />
+    );
+  }
 
   return (
     <div className="space-y-8">

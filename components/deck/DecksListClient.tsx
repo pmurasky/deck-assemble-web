@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useUser } from '@auth0/nextjs-auth0/client';
 import { useDecksListStore, type SavedDeck } from '@/lib/store/useDecksListStore';
 import { useDeckStore } from '@/lib/store/deck-store';
-import { BookOpen, Edit2, Trash2, Plus } from 'lucide-react';
+import { AuthGate } from '@/components/auth/AuthGate';
+import { BookOpen, Edit2, Trash2, Plus, Layers } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export function DecksListClient() {
+  const { user, isLoading: isUserLoading } = useUser();
   const { decks, deleteDeck, fetchDecks, isLoading, error } = useDecksListStore();
   const { loadDeck, clearDeck, fetchDeckCards } = useDeckStore();
   const router = useRouter();
@@ -14,6 +17,25 @@ export function DecksListClient() {
   useEffect(() => {
     fetchDecks();
   }, [fetchDecks]);
+
+  const isUnauthorized =
+    (!isUserLoading && !user) ||
+    Boolean(error && (error.includes('401') || error.toLowerCase().includes('unauthorized') || error.toLowerCase().includes('login')));
+
+  if (isUnauthorized) {
+    return (
+      <AuthGate
+        title="Log In to Manage Your Decks"
+        description="Sign in to your account to save custom brews, track commander decklists, and build synergistic decks."
+        features={[
+          'Save unlimited Commander and MTG decklists',
+          'Export decks to Arena, MTGO, or text formats',
+          'Analyze mana curves, card types, and color distribution',
+        ]}
+        icon={<Layers className="w-8 h-8" />}
+      />
+    );
+  }
 
   const handleEditDeck = async (deck: SavedDeck) => {
     loadDeck(deck.id, deck.cards, deck.commander, deck.metadata);

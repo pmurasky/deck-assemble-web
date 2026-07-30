@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useUser } from '@auth0/nextjs-auth0/client';
 import { CommanderSuggestion, DeckBuildConfig, GeneratedDeck, WishlistItem } from '@/types/builder';
 import { generateBuildDeck, getCommanderRecommendations, extractWishlistFromDeck } from '@/lib/api/recommendations';
 import { CommanderSuggestionsGrid } from './CommanderSuggestionsGrid';
@@ -8,9 +9,11 @@ import { CommanderBuildConfigModal } from './CommanderBuildConfigModal';
 import { GeneratedDeckView } from './GeneratedDeckView';
 import { WishlistPanel } from './WishlistPanel';
 import { DeckComparisonModal } from './DeckComparisonModal';
+import { AuthGate } from '@/components/auth/AuthGate';
 import { Sparkles, AlertCircle, Loader2 } from 'lucide-react';
 
 export function RecommendationsClient() {
+  const { user, isLoading: isUserLoading } = useUser();
   const [commanders, setCommanders] = useState<CommanderSuggestion[]>([]);
   const [selectedCommander, setSelectedCommander] = useState<CommanderSuggestion | null>(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
@@ -47,6 +50,25 @@ export function RecommendationsClient() {
       isMounted = false;
     };
   }, []);
+
+  const isUnauthorized =
+    (!isUserLoading && !user) ||
+    Boolean(error && (error.includes('401') || error.toLowerCase().includes('unauthorized') || error.toLowerCase().includes('login')));
+
+  if (isUnauthorized) {
+    return (
+      <AuthGate
+        title="Log In for Commander Recommendations"
+        description="Sign in to your account to generate synergistic EDH decks, calculate card ownership match percentages, and create custom wishlists."
+        features={[
+          'AI-powered Commander recommendations based on your collection',
+          'Automated 100-card EDH deck building with custom power levels',
+          'Wishlist tracking & missing card price estimation',
+        ]}
+        icon={<Sparkles className="w-8 h-8 text-violet-400" />}
+      />
+    );
+  }
 
   // Step 1: User clicks "Build Deck" on a Commander tile
   const handleSelectCommander = (commander: CommanderSuggestion) => {
