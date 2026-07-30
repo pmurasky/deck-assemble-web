@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBackendCommanderSuggestions } from '@/lib/api/recommendations';
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Commander recommendations request failed';
-}
+import { handleRouteError } from '@/lib/api/route-utils';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,9 +8,6 @@ export async function GET(req: NextRequest) {
     const data = await getBackendCommanderSuggestions(queryString);
     return NextResponse.json({ data });
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: { code: 'UPSTREAM_ERROR', message: errorMessage(error) } },
-      { status: 502 }
-    );
+    return handleRouteError(error, 'Commander recommendations request failed');
   }
 }

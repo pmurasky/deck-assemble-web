@@ -20,7 +20,14 @@ export function DecksListClient() {
 
   const isUnauthorized =
     (!isUserLoading && !user) ||
-    Boolean(error && (error.includes('401') || error.toLowerCase().includes('unauthorized') || error.toLowerCase().includes('login')));
+    Boolean(
+      error &&
+        (error.includes('401') ||
+          error.toLowerCase().includes('unauthorized') ||
+          error.toLowerCase().includes('login') ||
+          error.toLowerCase().includes('authenticated') ||
+          (!user && (error.includes('502') || error.toLowerCase().includes('failed with status'))))
+    );
 
   if (isUnauthorized) {
     return (

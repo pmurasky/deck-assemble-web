@@ -1,19 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getDecks, createDeck } from '@/lib/api/decks';
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Deck request failed';
-}
+import { handleRouteError } from '@/lib/api/route-utils';
 
 export async function GET() {
   try {
     const data = await getDecks();
     return NextResponse.json({ data });
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: { code: 'UPSTREAM_ERROR', message: errorMessage(error) } },
-      { status: 502 }
-    );
+    return handleRouteError(error, 'Deck request failed');
   }
 }
 
@@ -24,10 +18,7 @@ export async function POST(req: NextRequest) {
     const data = await createDeck(body.name, body.formatCode);
     return NextResponse.json({ data });
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: { code: 'UPSTREAM_ERROR', message: errorMessage(error) } },
-      { status: 502 }
-    );
+    return handleRouteError(error, 'Create deck failed');
   }
 }
 

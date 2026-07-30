@@ -1,19 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getCollections, createCollection } from '@/lib/api/collections';
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Collection request failed';
-}
+import { handleRouteError } from '@/lib/api/route-utils';
 
 export async function GET() {
   try {
     const data = await getCollections();
     return NextResponse.json({ data });
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: { code: 'UPSTREAM_ERROR', message: errorMessage(error) } },
-      { status: 502 }
-    );
+    return handleRouteError(error, 'Collection request failed');
   }
 }
 
@@ -24,10 +18,7 @@ export async function POST(req: NextRequest) {
     const data = await createCollection(body.name, body.defaultCollection);
     return NextResponse.json({ data });
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: { code: 'UPSTREAM_ERROR', message: errorMessage(error) } },
-      { status: 502 }
-    );
+    return handleRouteError(error, 'Create collection failed');
   }
 }
 
