@@ -108,4 +108,35 @@ describe('CommanderBuildConfigModal Component', () => {
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByText('Card is not eligible as commander: Sol Ring')).toBeInTheDocument();
   });
+
+  it('passes partnerForCardId parameter when searching for partner commanders', async () => {
+    const { getCards } = await import('@/lib/api/cards');
+    const getCardsSpy = vi.spyOn(await import('@/lib/api/cards'), 'getCards').mockResolvedValue({
+      cards: [],
+      total: 0,
+    });
+
+    render(
+      <CommanderBuildConfigModal
+        commander={mockCommander}
+        isOpen={true}
+        onClose={() => {}}
+        onGenerate={() => {}}
+      />
+    );
+
+    const addPartnerBtn = screen.getByRole('button', { name: /Add Partner/i });
+    fireEvent.click(addPartnerBtn);
+
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(getCardsSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        commanderEligible: true,
+        partnerForCardId: 'cmd-1',
+      })
+    );
+  });
 });
