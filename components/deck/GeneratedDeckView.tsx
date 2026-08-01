@@ -16,9 +16,13 @@ import {
   RefreshCw,
   Trophy,
   AlertCircle,
+  Eye,
+  Filter,
+  CheckCircle2,
 } from 'lucide-react';
 import { GeneratedDeck, DeckCardRow, DeckRoleSection } from '@/types/builder';
 import { OwnershipBadge } from './OwnershipBadge';
+import { CardPreviewModal } from './CardPreviewModal';
 
 interface GeneratedDeckViewProps {
   deck: GeneratedDeck;
@@ -45,11 +49,21 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
   onOpenCompare,
 }) => {
   const [swappingCard, setSwappingCard] = useState<DeckCardRow | null>(null);
+  const [previewCardRow, setPreviewCardRow] = useState<DeckCardRow | null>(null);
+  const [hoveredCardRow, setHoveredCardRow] = useState<DeckCardRow | null>(null);
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
+  const [ownershipFilter, setOwnershipFilter] = useState<'all' | 'unowned' | 'owned'>('all');
+
+  // Filter cards by ownership if requested
+  const filteredDeckCards = deck.cards.filter((c) => {
+    if (ownershipFilter === 'unowned') return c.ownership !== 'owned';
+    if (ownershipFilter === 'owned') return c.ownership === 'owned';
+    return true;
+  });
 
   // Group cards by section with fallback matching
   const groupedCards = SECTIONS.reduce((acc, sectionInfo) => {
-    acc[sectionInfo.label] = deck.cards.filter((c) =>
+    acc[sectionInfo.label] = filteredDeckCards.filter((c) =>
       sectionInfo.legacyKeys.includes(c.section)
     );
     return acc;
@@ -277,6 +291,55 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
 
       {/* Functional Sections Decklist */}
       <div className="space-y-6">
+        {/* Ownership Filter Bar */}
+        <div className="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800 flex-wrap gap-3">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
+            <Filter className="w-4 h-4 text-violet-400" />
+            <span>Filter Deck View:</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setOwnershipFilter('all')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                ownershipFilter === 'all'
+                  ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30'
+                  : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800'
+              }`}
+            >
+              <span>All Cards ({deck.cards.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setOwnershipFilter('unowned')}
+              data-testid="filter-unowned-cards"
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                ownershipFilter === 'unowned'
+                  ? 'bg-amber-600 text-slate-950 shadow-md shadow-amber-600/30'
+                  : 'bg-slate-950 text-amber-400/90 hover:text-amber-300 border border-slate-800'
+              }`}
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+              <span>Unowned / Wishlist ({deck.cards.filter((c) => c.ownership !== 'owned').length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setOwnershipFilter('owned')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                ownershipFilter === 'owned'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                  : 'bg-slate-950 text-emerald-400/90 hover:text-emerald-300 border border-slate-800'
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Owned ({deck.cards.filter((c) => c.ownership === 'owned').length})</span>
+            </button>
+          </div>
+        </div>
+
         {SECTIONS.map((sectionInfo) => {
           const cardsInSection = groupedCards[sectionInfo.label] || [];
           if (cardsInSection.length === 0) return null;
@@ -297,10 +360,24 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
                 {cardsInSection.map((row) => (
                   <div
                     key={row.card.id}
-                    className="relative flex items-center justify-between p-3.5 hover:bg-slate-850 transition-colors group"
+                    className="relative flex items-center justify-between p-3.5 hover:bg-slate-850 transition-colors group cursor-pointer"
+                    onMouseEnter={() => setHoveredCardRow(row)}
+                    onMouseLeave={() => setHoveredCardRow(null)}
                   >
                     {/* Left details */}
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className="flex items-center gap-3 min-w-0 flex-1"
+                      onClick={() => setPreviewCardRow(row)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setPreviewCardRow(row);
+                        }
+                      }}
+                      aria-label={`Preview details for ${row.card.name}`}
+                    >
                       <span className="font-mono text-xs text-slate-500 font-bold w-5">
                         {row.quantity}x
                       </span>
@@ -348,6 +425,16 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
+                          onClick={() => setPreviewCardRow(row)}
+                          aria-label={`Inspect card image ${row.card.name}`}
+                          title="Inspect card art and full details"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-violet-300 hover:bg-slate-800 transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          type="button"
                           onClick={() => handleSyncOwnership(row.card.id)}
                           aria-label={`Sync ownership for ${row.card.name}`}
                           title="Sync ownership state with collection"
@@ -386,6 +473,21 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
                         </button>
                       </div>
                     </div>
+
+                    {/* Floating Hover Card Image Popover */}
+                    {hoveredCardRow?.card.id === row.card.id && row.card.imageUrl && (
+                      <div className="absolute left-1/3 bottom-full mb-2 w-48 p-2 rounded-xl bg-slate-950 border border-slate-700 shadow-2xl z-50 pointer-events-none animate-in fade-in">
+                        <img
+                          src={row.card.imageUrl}
+                          alt={row.card.name}
+                          className="w-full h-auto rounded-lg border border-slate-800 object-cover"
+                        />
+                        <div className="mt-1.5 text-center">
+                          <span className="text-[10px] font-bold text-slate-200 block truncate">{row.card.name}</span>
+                          <OwnershipBadge status={row.ownership} price={row.estimatedPrice} className="mt-1" />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -393,6 +495,17 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
           );
         })}
       </div>
+
+      {/* Card Detail Preview Modal */}
+      {previewCardRow && (
+        <CardPreviewModal
+          cardRow={previewCardRow}
+          onClose={() => setPreviewCardRow(null)}
+          onSyncOwnership={handleSyncOwnership}
+          onSwap={(row) => setSwappingCard(row)}
+          onRemove={handleRemoveCard}
+        />
+      )}
 
       {/* Swap Modal Drawer */}
       {swappingCard && (
