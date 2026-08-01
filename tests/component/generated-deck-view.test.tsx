@@ -144,4 +144,25 @@ describe('GeneratedDeckView Component', () => {
       })
     );
   });
+
+  it('filters deck view to show unowned / wishlist cards only', () => {
+    render(<GeneratedDeckView deck={mockDeck} onUpdateDeck={() => {}} onOpenWishlist={() => {}} />);
+
+    const filterUnownedBtn = screen.getByTestId('filter-unowned-cards');
+    fireEvent.click(filterUnownedBtn);
+
+    // Doubling Season (wishlist) should be visible, but Sol Ring (owned) should not be in filtered list
+    expect(screen.getByText('Doubling Season')).toBeInTheDocument();
+    expect(screen.queryByText('Sol Ring')).not.toBeInTheDocument();
+  });
+
+  it('opens CardPreviewModal when clicking inspect button for a card', () => {
+    render(<GeneratedDeckView deck={mockDeck} onUpdateDeck={() => {}} onOpenWishlist={() => {}} />);
+
+    const inspectBtns = screen.getAllByRole('button', { name: /Inspect card image/i });
+    expect(inspectBtns.length).toBeGreaterThan(0);
+    fireEvent.click(inspectBtns[0]);
+
+    expect(screen.getByTestId('card-preview-modal')).toBeInTheDocument();
+  });
 });
