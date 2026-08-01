@@ -12,9 +12,10 @@ export async function GET(req: NextRequest) {
   const colorIdentity = searchParams.get('colorIdentity') ?? '';
   const sort = searchParams.get('sort') ?? '';
   const commanderEligible = searchParams.get('commanderEligible') === 'true';
+  const partnerForCardId = searchParams.get('partnerForCardId') ?? undefined;
 
   try {
-    const data = await fetchCards({ query, page, size, type, setCode, colorIdentity, sort, commanderEligible });
+    const data = await fetchCards({ query, page, size, type, setCode, colorIdentity, sort, commanderEligible, partnerForCardId });
     return NextResponse.json({ data });
   } catch {
     return NextResponse.json(

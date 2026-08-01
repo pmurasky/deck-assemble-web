@@ -49,6 +49,7 @@ export interface FetchCardsOptions {
   colorIdentity?: string;
   sort?: string;
   commanderEligible?: boolean;
+  partnerForCardId?: string | number;
 }
 
 export function toCard(api: ApiCard): Card {
@@ -85,6 +86,7 @@ export async function fetchCards({
   colorIdentity = '',
   sort = '',
   commanderEligible = false,
+  partnerForCardId,
 }: FetchCardsOptions = {}) {
   const url = new URL('/api/v1/cards', API_BASE_URL);
   if (query) url.searchParams.set('query', query);
@@ -95,6 +97,9 @@ export async function fetchCards({
   if (colorIdentity) url.searchParams.set('colorIdentity', colorIdentity);
   if (sort) url.searchParams.set('sort', sort);
   if (commanderEligible) url.searchParams.set('commanderEligible', 'true');
+  if (partnerForCardId !== undefined && partnerForCardId !== null && partnerForCardId !== '') {
+    url.searchParams.set('partnerForCardId', String(partnerForCardId));
+  }
 
   try {
     const res = await fetch(url, { next: { revalidate: 300 } });
