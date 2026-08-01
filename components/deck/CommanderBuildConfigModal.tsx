@@ -70,7 +70,12 @@ export const CommanderBuildConfigModal: React.FC<CommanderBuildConfigModalProps>
     let isMounted = true;
     const timer = setTimeout(() => {
       setIsFetchingPartners(true);
-      getCards({ commanderEligible: true, q: partnerQuery, limit: 10 })
+      getCards({
+        commanderEligible: true,
+        partnerForCardId: commander?.id,
+        q: partnerQuery,
+        limit: 10,
+      })
         .then((res) => {
           if (isMounted) {
             // Filter out primary commander
@@ -320,6 +325,12 @@ export const CommanderBuildConfigModal: React.FC<CommanderBuildConfigModalProps>
                   <p className="text-xs text-slate-500 flex items-center gap-1.5 py-1">
                     <RefreshCw className="w-3 h-3 animate-spin text-violet-400" />
                     <span>Searching eligible commanders...</span>
+                  </p>
+                )}
+
+                {!isFetchingPartners && partnerSearchResults.length === 0 && (
+                  <p className="text-xs text-slate-500 py-2 text-center italic" data-testid="no-partners-found">
+                    No eligible partner commanders found for this card.
                   </p>
                 )}
 
