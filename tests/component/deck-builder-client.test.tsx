@@ -2,6 +2,13 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { DeckBuilderClient } from '@/components/deck/DeckBuilderClient';
 
+// Mock next/navigation
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => ({
+    get: (key: string) => (key === 'deckId' ? null : null),
+  }),
+}));
+
 // Mock child components to isolate test
 vi.mock('@/components/cards/CardSearchBar', () => ({ CardSearchBar: () => <div data-testid="search-bar" /> }));
 vi.mock('@/components/cards/CardFilterPanel', () => ({ CardFilterPanel: () => <div data-testid="filter-panel" /> }));

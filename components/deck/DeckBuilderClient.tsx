@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { CardSearchBar } from '@/components/cards/CardSearchBar';
 import { CardFilterPanel, CardFilters } from '@/components/cards/CardFilterPanel';
 import { DeckWorkspace } from '@/components/deck/DeckWorkspace';
@@ -12,6 +13,9 @@ import { useDeckStore } from '@/lib/store/deck-store';
 import type { Card } from '@/types/card';
 
 export function DeckBuilderClient() {
+  const searchParams = useSearchParams();
+  const deckId = searchParams?.get('deckId');
+
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,7 +25,13 @@ export function DeckBuilderClient() {
     manaValue: 0
   });
   
-  const { addCard } = useDeckStore();
+  const { id: activeDeckId, fetchDeckCards, addCard } = useDeckStore();
+
+  useEffect(() => {
+    if (deckId && deckId !== activeDeckId) {
+      fetchDeckCards(deckId);
+    }
+  }, [deckId, activeDeckId, fetchDeckCards]);
 
   useEffect(() => {
     // Simple fetch for the catalog side

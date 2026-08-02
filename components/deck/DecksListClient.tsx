@@ -46,8 +46,8 @@ export function DecksListClient() {
 
   const handleEditDeck = async (deck: SavedDeck) => {
     loadDeck(deck.id, deck.cards, deck.commander, deck.metadata);
+    router.push(`/deck-builder?deckId=${deck.id}`);
     await fetchDeckCards(deck.id);
-    router.push('/deck-builder');
   };
 
   const handleNewDeck = () => {
