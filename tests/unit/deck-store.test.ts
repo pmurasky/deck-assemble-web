@@ -136,5 +136,42 @@ describe('Deck Store', () => {
     expect(state.commander?.name).toBe('Spider-Man');
     expect(state.metadata.name).toBe('Iron Man Deck');
   });
+
+  it('should resolve commander by matching commanderCardId from cards list', async () => {
+    const mockDeckDetail = {
+      data: {
+        id: 42,
+        name: 'Spider-Man Deck',
+        formatCode: 'COMMANDER',
+        commanderCardId: 1,
+      },
+    };
+    const mockDeckCards = {
+      data: [
+        {
+          id: 101,
+          cardPrintingId: 123,
+          quantity: 1,
+          deckSection: 'MAIN_DECK',
+          card: apiCard,
+        },
+      ],
+    };
+
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.includes('/cards')) {
+        return new Response(JSON.stringify(mockDeckCards));
+      }
+      return new Response(JSON.stringify(mockDeckDetail));
+    }));
+
+    const { fetchDeckCards } = useDeckStore.getState();
+    await fetchDeckCards('42');
+
+    const state = useDeckStore.getState();
+    expect(state.cards.length).toBe(1);
+    expect(state.commander?.name).toBe('Spider-Man');
+  });
 });
+
 

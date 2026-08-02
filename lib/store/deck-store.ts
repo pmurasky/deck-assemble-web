@@ -322,11 +322,18 @@ export const useDeckStore = create<DeckState>((set, get) => ({
 
           const commanderCardId = typeof deckData.commanderCardId === 'number' ? deckData.commanderCardId : null;
           if (!commanderCard && commanderCardId !== null) {
-            const cardRes = await fetch(`/api/v1/cards/${commanderCardId}`).catch(() => null);
-            if (cardRes && cardRes.ok) {
-              const cardData = await cardRes.json();
-              if (cardData && cardData.data) {
-                commanderCard = cardData.data;
+            const matchedCardInDeck = cards.find(
+              (c) => String(c.card.id) === String(commanderCardId) || c.cardPrintingId === commanderCardId
+            );
+            if (matchedCardInDeck) {
+              commanderCard = matchedCardInDeck.card;
+            } else {
+              const cardRes = await fetch(`/api/v1/cards/${commanderCardId}`).catch(() => null);
+              if (cardRes && cardRes.ok) {
+                const cardData = await cardRes.json();
+                if (cardData && cardData.data) {
+                  commanderCard = cardData.data;
+                }
               }
             }
           }

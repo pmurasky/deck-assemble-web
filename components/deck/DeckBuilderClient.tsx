@@ -25,13 +25,13 @@ export function DeckBuilderClient() {
     manaValue: 0
   });
   
-  const { id: activeDeckId, fetchDeckCards, addCard } = useDeckStore();
+  const { id: activeDeckId, cards: activeCards, commander: activeCommander, isLoading: isDeckLoading, fetchDeckCards, addCard } = useDeckStore();
 
   useEffect(() => {
-    if (deckId && deckId !== activeDeckId) {
+    if (deckId && (deckId !== activeDeckId || (activeCards.length === 0 && !activeCommander && !isDeckLoading))) {
       fetchDeckCards(deckId);
     }
-  }, [deckId, activeDeckId, fetchDeckCards]);
+  }, [deckId, activeDeckId, activeCards.length, activeCommander, isDeckLoading, fetchDeckCards]);
 
   useEffect(() => {
     // Simple fetch for the catalog side
