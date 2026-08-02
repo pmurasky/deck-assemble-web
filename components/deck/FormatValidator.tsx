@@ -10,7 +10,11 @@ export function FormatValidator() {
     const errors: string[] = [];
     let isLegal = true;
 
-    const totalCards = cards.reduce((sum, c) => sum + c.quantity, 0);
+    const activeCommander = commander || cards.find((c) => c.deckSection === 'COMMANDER')?.card;
+    const hasSeparateCommander = Boolean(
+      commander && !cards.some((c) => c.card.id === commander.id)
+    );
+    const totalCards = cards.reduce((sum, c) => sum + c.quantity, 0) + (hasSeparateCommander ? 1 : 0);
 
     if (metadata.format === 'Commander') {
       if (totalCards !== 100) {
@@ -18,7 +22,7 @@ export function FormatValidator() {
         isLegal = false;
       }
 
-      if (!commander) {
+      if (!activeCommander) {
         errors.push('Commander format requires a designated Commander.');
         isLegal = false;
       }

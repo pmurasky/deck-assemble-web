@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { useDeckStore, type DeckCard } from '@/lib/store/deck-store';
 
 export function DeckWorkspace() {
-  const { cards, metadata, addCard, removeCard, isLoading } = useDeckStore();
+  const { cards, metadata, commander, addCard, removeCard, isLoading } = useDeckStore();
 
   const groupedCards = useMemo(() => {
     return cards.reduce((acc, deckCard) => {
@@ -19,7 +19,10 @@ export function DeckWorkspace() {
     }, {} as Record<string, DeckCard[]>);
   }, [cards]);
 
-  const totalCards = cards.reduce((sum, c) => sum + c.quantity, 0);
+  const hasSeparateCommander = Boolean(
+    commander && !cards.some((c) => c.card.id === commander.id)
+  );
+  const totalCards = cards.reduce((sum, c) => sum + c.quantity, 0) + (hasSeparateCommander ? 1 : 0);
 
   if (isLoading) {
     return (
@@ -30,7 +33,7 @@ export function DeckWorkspace() {
     );
   }
 
-  if (cards.length === 0) {
+  if (cards.length === 0 && !commander) {
     return (
       <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-zinc-800 rounded-xl bg-zinc-900/50">
         <p className="text-zinc-500 font-medium">Your deck is empty</p>
@@ -53,10 +56,20 @@ export function DeckWorkspace() {
             </span>
           </div>
         </div>
-        
       </div>
 
       <div className="overflow-y-auto pr-2 space-y-6 flex-1 custom-scrollbar">
+        {commander && (
+          <div className="space-y-2 pb-2">
+            <h3 className="font-semibold text-green-400 border-b border-green-900/50 pb-1 mb-3 text-xs uppercase tracking-wider">
+              Commander
+            </h3>
+            <div className="flex items-center justify-between bg-zinc-800/40 p-2 rounded-lg border border-green-900/30">
+              <span className="text-green-300 font-semibold truncate">{commander.name}</span>
+              <span className="text-xs text-zinc-400 font-mono">x1</span>
+            </div>
+          </div>
+        )}
         {Object.entries(groupedCards).map(([type, typeCards]) => (
           <div key={type} className="space-y-2">
             <h3 className="font-semibold text-zinc-400 border-b border-zinc-800/50 pb-1 mb-3">
