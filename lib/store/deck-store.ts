@@ -65,24 +65,19 @@ function isOptionalNumber(value: unknown): value is number | undefined {
 
 function isApiCard(value: unknown): value is ApiCard {
   return isObject(value)
-    && typeof value.id === 'number'
-    && typeof value.oracleId === 'string'
-    && typeof value.name === 'string'
-    && isOptionalNumber(value.printingId)
-    && isOptionalString(value.manaCost)
-    && isOptionalNumber(value.manaValue)
-    && isOptionalString(value.colors)
-    && isOptionalString(value.colorIdentity)
-    && isOptionalString(value.typeLine)
-    && isOptionalString(value.oracleText)
-    && isOptionalString(value.power)
-    && isOptionalString(value.toughness)
-    && isOptionalString(value.loyalty)
-    && isOptionalString(value.imageUrl)
-    && isOptionalString(value.setCode)
-    && isOptionalString(value.setName)
-    && isOptionalString(value.rarity)
-    && isOptionalString(value.flavorText);
+    && (typeof value.id === 'number' || typeof value.id === 'string')
+    && typeof value.name === 'string';
+}
+
+const formatByCode: Record<string, DeckMetadata['format']> = {
+  COMMANDER: 'Commander',
+  STANDARD: 'Standard',
+  MODERN: 'Modern',
+  LEGACY: 'Legacy',
+};
+
+function formatFromCode(formatCode?: string): DeckMetadata['format'] {
+  return (formatCode && formatByCode[formatCode.toUpperCase()]) ?? 'Commander';
 }
 
 function getProxyData(body: unknown): unknown {
@@ -296,17 +291,49 @@ export const useDeckStore = create<DeckState>((set, get) => ({
     if (deckId.includes('-')) return;
     set({ isLoading: true });
     try {
-      const res = await fetch(`/api/v1/decks/${deckId}/cards`);
-      if (res.ok) {
-        const data = await readProxyData(res);
-        if (!Array.isArray(data)) throw new Error('Invalid data format');
-        
-        const cards = data.map(parseDeckCard);
-        
-        set({ cards, isLoading: false });
-      } else {
-        throw new Error('Failed to fetch deck cards');
+      const [cardsRes, deckRes] = await Promise.all([
+        fetch(`/api/v1/decks/${deckId}/cards`),
+        fetch(`/api/v1/decks/${deckId}`).catch(() => null),
+      ]);
+
+      if (!cardsRes.ok) throw new Error('Failed to fetch deck cards');
+
+      const data = await readProxyData(cardsRes);
+      if (!Array.isArray(data)) throw new Error('Invalid data format');
+
+      const cards = data.map(parseDeckCard);
+      let commanderCard: Card | undefined = get().commander;
+      let metadata = get().metadata;
+
+      const commanderDeckCard = cards.find((c) => c.deckSection === 'COMMANDER');
+      if (commanderDeckCard) {
+        commanderCard = commanderDeckCard.card;
       }
+
+      if (deckRes && deckRes.ok) {
+        const deckData = await readProxyData(deckRes);
+        if (isObject(deckData)) {
+          const name = typeof deckData.name === 'string' ? deckData.name : metadata.name;
+          const formatCode = typeof deckData.formatCode === 'string' ? deckData.formatCode : undefined;
+          metadata = {
+            name,
+            format: formatFromCode(formatCode),
+          };
+
+          const commanderCardId = typeof deckData.commanderCardId === 'number' ? deckData.commanderCardId : null;
+          if (!commanderCard && commanderCardId !== null) {
+            const cardRes = await fetch(`/api/v1/cards/${commanderCardId}`).catch(() => null);
+            if (cardRes && cardRes.ok) {
+              const cardData = await cardRes.json();
+              if (cardData && cardData.data) {
+                commanderCard = cardData.data;
+              }
+            }
+          }
+        }
+      }
+
+      set({ id: deckId, cards, commander: commanderCard, metadata, isLoading: false });
     } catch (error) {
       console.error('Failed to fetch deck cards', error);
       set({ isLoading: false });
