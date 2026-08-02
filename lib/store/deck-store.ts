@@ -77,7 +77,8 @@ const formatByCode: Record<string, DeckMetadata['format']> = {
 };
 
 function formatFromCode(formatCode?: string): DeckMetadata['format'] {
-  return (formatCode && formatByCode[formatCode.toUpperCase()]) ?? 'Commander';
+  if (!formatCode) return 'Commander';
+  return formatByCode[formatCode.toUpperCase()] ?? 'Commander';
 }
 
 function getProxyData(body: unknown): unknown {
