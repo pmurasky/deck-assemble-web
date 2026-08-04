@@ -56,6 +56,41 @@ export async function getCards({
   return json.data;
 }
 
+export async function getPrintings({
+  page = 1,
+  limit = 50,
+  q = '',
+  type = '',
+  setCode = '',
+  colorIdentity = '',
+  commanderEligible = false,
+  partnerForCardId,
+}: GetCardsParams = {}): Promise<{ cards: Card[]; total: number }> {
+  const url = new URL('/api/v1/printings', typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+  url.searchParams.append('page', page.toString());
+  url.searchParams.append('limit', limit.toString());
+  if (q) url.searchParams.append('q', q);
+  if (type) url.searchParams.append('type', type);
+  if (setCode) url.searchParams.append('setCode', setCode);
+  if (colorIdentity) url.searchParams.append('colorIdentity', colorIdentity);
+  if (commanderEligible) url.searchParams.append('commanderEligible', 'true');
+  if (partnerForCardId !== undefined && partnerForCardId !== null && partnerForCardId !== '') {
+    url.searchParams.append('partnerForCardId', String(partnerForCardId));
+  }
+
+  const res = await fetch(url.pathname + url.search);
+  if (!res.ok) {
+    throw new Error('Failed to fetch printings');
+  }
+
+  const json: ApiResponse<{ cards: Card[]; total: number }> = await res.json();
+  if (json.error || !json.data) {
+    throw new Error(json.error?.message || 'Unknown error fetching printings');
+  }
+
+  return json.data;
+}
+
 export async function getCardById(cardId: string): Promise<Card> {
   const res = await fetch(`/api/v1/cards/${cardId}`);
   if (!res.ok) {

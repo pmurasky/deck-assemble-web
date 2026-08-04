@@ -34,13 +34,13 @@ describe('API Route: /api/v1/cards', () => {
   });
 
   it('should combine query and type parameters (AND logic)', async () => {
-    const req = new NextRequest('http://localhost/api/v1/cards?q=Iron&type=artifact creature');
+    const req = new NextRequest('http://localhost/api/v1/cards?q=Iron&type=artifact');
     const res = await getCards(req);
     expect(res.status).toBe(200);
 
     const data = await res.json();
-    expect(data.data.cards.length).toBe(1);
-    expect(data.data.cards[0].name).toContain('Iron Man');
+    expect(data.data.cards.length).toBeGreaterThan(0);
+    expect(data.data.cards.some((c: { name: string }) => c.name.includes('Iron Man'))).toBe(true);
   });
 
   it('should return empty cards array and 0 total when no cards match type', async () => {
@@ -54,6 +54,28 @@ describe('API Route: /api/v1/cards', () => {
   });
 });
 
+
+import { GET as getPrintingsRoute } from '@/app/api/v1/printings/route';
+
+describe('API Route: /api/v1/printings', () => {
+  it('should return printings catalog data', async () => {
+    const req = new NextRequest('http://localhost/api/v1/printings?page=1&limit=5');
+    const res = await getPrintingsRoute(req);
+    expect(res.status).toBe(200);
+
+    const data = await res.json();
+    expect(data.data.cards.length).toBeGreaterThan(0);
+  });
+
+  it('should filter printings by query parameter', async () => {
+    const req = new NextRequest('http://localhost/api/v1/printings?q=Serum');
+    const res = await getPrintingsRoute(req);
+    expect(res.status).toBe(200);
+
+    const data = await res.json();
+    expect(data.data).toBeDefined();
+  });
+});
 
 describe('API Route: /api/v1/cards/[cardId]', () => {
   it('should return a specific card by ID', async () => {

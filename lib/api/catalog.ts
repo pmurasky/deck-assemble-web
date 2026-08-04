@@ -130,8 +130,83 @@ export async function fetchCards({
       );
     }
     if (type) {
-      const t = type.toLowerCase();
-      filtered = filtered.filter((c) => c.typeLine.toLowerCase().includes(t));
+      const typeWords = type.toLowerCase().split(/\s+/).filter(Boolean);
+      filtered = filtered.filter((c) =>
+        typeWords.every((t) => c.typeLine.toLowerCase().includes(t))
+      );
+    }
+    if (setCode) {
+      filtered = filtered.filter((c) => c.setCode.toLowerCase() === setCode.toLowerCase());
+    }
+    if (colorIdentity) {
+      const colors = colorIdentity.split(',').map((c) => c.trim()).filter(Boolean);
+      if (colors.length > 0) {
+        filtered = filtered.filter((c) => c.colorIdentity?.some((ci) => colors.includes(ci)));
+      }
+    }
+    const start = page * size;
+    const paginated = filtered.slice(start, start + size);
+    return { cards: paginated, total: filtered.length };
+  }
+}
+
+export async function fetchPrintings({
+  query = '',
+  page = 0,
+  size = 24,
+  type = '',
+  setCode = '',
+  colorIdentity = '',
+  sort = '',
+  commanderEligible = false,
+  partnerForCardId,
+}: FetchCardsOptions = {}) {
+  const url = new URL('/api/v1/printings', API_BASE_URL);
+  if (query) url.searchParams.set('query', query);
+  url.searchParams.set('page', String(page));
+  url.searchParams.set('size', String(size));
+  if (type) url.searchParams.set('type', type);
+  if (setCode) url.searchParams.set('setCode', setCode);
+  if (colorIdentity) url.searchParams.set('colorIdentity', colorIdentity);
+  if (sort) url.searchParams.set('sort', sort);
+  if (commanderEligible) url.searchParams.set('commanderEligible', 'true');
+  if (partnerForCardId !== undefined && partnerForCardId !== null && partnerForCardId !== '') {
+    url.searchParams.set('partnerForCardId', String(partnerForCardId));
+  }
+
+  try {
+    const res = await fetch(url, { next: { revalidate: 300 } });
+    if (!res.ok) {
+      throw new Error(`Printings returned ${res.status}`);
+    }
+
+    const apiPage: ApiPage = await res.json();
+    return { cards: apiPage.content.map(toCard), total: apiPage.totalElements };
+  } catch {
+    let filtered = MOCK_CARDS;
+    if (commanderEligible) {
+      filtered = filtered.filter(
+        (c) =>
+          (c.typeLine.toLowerCase().includes('legendary') &&
+            (c.typeLine.toLowerCase().includes('creature') || c.typeLine.toLowerCase().includes('planeswalker'))) ||
+          c.oracleText?.toLowerCase().includes('can be your commander') ||
+          c.legalities?.commander === 'legal'
+      );
+    }
+    if (query) {
+      const q = query.toLowerCase();
+      filtered = filtered.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.typeLine.toLowerCase().includes(q) ||
+          c.oracleText?.toLowerCase().includes(q)
+      );
+    }
+    if (type) {
+      const typeWords = type.toLowerCase().split(/\s+/).filter(Boolean);
+      filtered = filtered.filter((c) =>
+        typeWords.every((t) => c.typeLine.toLowerCase().includes(t))
+      );
     }
     if (setCode) {
       filtered = filtered.filter((c) => c.setCode.toLowerCase() === setCode.toLowerCase());
