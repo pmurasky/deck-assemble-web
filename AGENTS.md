@@ -10,6 +10,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 This project provides reusable engineering standards for AI coding agents (OpenCode, Cursor, Copilot, etc.). It enforces coding practices, SOLID principles, TDD micro-commit workflows, and code quality standards across any project.
 
+## Agent Scope & Responsibilities
+
+- **Front-End Coding Only**: Perform front-end coding tasks only (UI components, layouts, state management, client-side logic, styling, and integration contracts).
+- **Back-End Work Summary**: Do not write back-end implementation code. When back-end changes (APIs, database schemas, backend services) are necessary, provide a structured summary detailing the required endpoints, data models, and architectural specifications.
+
 ## Core Principles
 
 You MUST follow these principles for ALL code changes. No exceptions.
