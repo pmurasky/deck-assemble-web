@@ -8,7 +8,7 @@ import { CardSearchBar } from '@/components/cards/CardSearchBar';
 import { CardTile } from '@/components/cards/CardTile';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton';
-import { getCardPrintings, getCards, getLatestImport } from '@/lib/api/cards';
+import { getLatestImport, getPrintings } from '@/lib/api/cards';
 import { useDeckStore } from '@/lib/store/deck-store';
 import { useCollectionStore } from '@/lib/store/useCollectionStore';
 
@@ -23,30 +23,8 @@ export default function CardBrowserPage() {
   const typeQuery = filters.types.join(' ');
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['cards', searchTerm, filters.colors, filters.types],
-    queryFn: async () => {
-      const result = await getCards({ q: searchTerm, type: typeQuery });
-      const query = searchTerm.trim().toLowerCase();
-      const card = result.cards[0];
-      if (!query || result.cards.length !== 1 || card.name.toLowerCase() !== query) return result;
-
-      try {
-        const printings = await getCardPrintings(card.id);
-        if (printings.length === 0) return result;
-
-        const cards = printings.map((printing) => ({
-          ...card,
-          printingId: printing.id,
-          imageUrl: printing.imageUri,
-          setCode: printing.setCode,
-          rarity: printing.rarity,
-          faces: printing.faces ?? [],
-        }));
-        return { cards, total: cards.length };
-      } catch {
-        return result;
-      }
-    },
+    queryKey: ['printings', searchTerm, filters.colors, filters.types],
+    queryFn: () => getPrintings({ q: searchTerm, type: typeQuery }),
   });
 
   const { data: latestImport } = useQuery({
