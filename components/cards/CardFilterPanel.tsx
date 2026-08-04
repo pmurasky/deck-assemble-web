@@ -21,6 +21,8 @@ const CARD_TYPES = [
   'Enchantment',
   'Planeswalker',
   'Land',
+  'Token Creature',
+  'Token Artifact',
 ];
 
 const COLOR_OPTIONS = [
