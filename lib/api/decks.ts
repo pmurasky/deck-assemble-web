@@ -31,9 +31,15 @@ async function fetchDecks(path: string, init?: RequestInit) {
   return fetch(new URL(`/api/v1${path}`, API_BASE_URL), { ...init, cache: 'no-store', headers });
 }
 
-async function json<T>(res: Promise<Response>, message: string): Promise<T> {
+async function json<T>(res: Promise<Response>, fallbackMessage: string): Promise<T> {
   const response = await res;
-  if (!response.ok) throw new Error(message);
+  if (!response.ok) {
+    const errData = await response.json().catch(() => null);
+    const msg = errData?.error?.message || errData?.message || fallbackMessage;
+    const err = new Error(msg) as Error & { status?: number };
+    err.status = response.status;
+    throw err;
+  }
   return response.json() as Promise<T>;
 }
 

@@ -72,7 +72,11 @@ export const useCollectionStore = create<CollectionState>()((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const res = await fetch('/api/v1/collections');
-      if (!res.ok) throw new Error('Failed to fetch collections');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        const msg = errData?.error?.message || `Failed to fetch collections (${res.status})`;
+        throw new Error(msg);
+      }
       const collections = await responseData<ApiCollection[]>(res, 'Failed to fetch collections');
       
       if (collections && collections.length > 0) {
@@ -80,7 +84,11 @@ export const useCollectionStore = create<CollectionState>()((set, get) => ({
         set({ collectionId: defaultCol.id });
         
         const cardsRes = await fetch(`/api/v1/collections/${defaultCol.id}/cards`);
-        if (!cardsRes.ok) throw new Error('Failed to fetch collection cards');
+        if (!cardsRes.ok) {
+          const errData = await cardsRes.json().catch(() => null);
+          const msg = errData?.error?.message || `Failed to fetch collection cards (${cardsRes.status})`;
+          throw new Error(msg);
+        }
         const cards = await responseData<ApiCollectionCard[]>(cardsRes, 'Failed to fetch collection cards');
         const items = cards.map(toItem);
         set({ items, isLoading: false });
