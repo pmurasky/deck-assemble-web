@@ -1,18 +1,23 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { useDecksListStore, type SavedDeck } from '@/lib/store/useDecksListStore';
 import { useDeckStore } from '@/lib/store/deck-store';
 import { AuthGate } from '@/components/auth/AuthGate';
-import { BookOpen, Edit2, Trash2, Plus, Layers } from 'lucide-react';
+import { BookOpen, Edit2, Trash2, Plus, Layers, Upload, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { ImportWizardModal } from '@/components/import/ImportWizardModal';
+import { ExportDeckModal } from '@/components/export/ExportDeckModal';
 
 export function DecksListClient() {
   const { user, isLoading: isUserLoading } = useUser();
   const { decks, deleteDeck, fetchDecks, isLoading, error } = useDecksListStore();
   const { loadDeck, clearDeck, fetchDeckCards } = useDeckStore();
   const router = useRouter();
+
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [exportDeckTarget, setExportDeckTarget] = useState<{ id: number | string; name: string } | null>(null);
 
   useEffect(() => {
     fetchDecks();
@@ -57,21 +62,31 @@ export function DecksListClient() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-green-500 to-purple-500 bg-clip-text text-transparent">
             MY DECKS
           </h1>
           <p className="text-zinc-400 mt-1 text-sm">Manage your custom MTG decks and Commander brews</p>
         </div>
-        <button
-          type="button"
-          onClick={handleNewDeck}
-          className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-950/40"
-        >
-          <Plus className="w-5 h-5" />
-          Create New Deck
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsImportOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold rounded-xl transition-all border border-zinc-700"
+          >
+            <Upload className="w-4 h-4 text-purple-400" />
+            Import Deck
+          </button>
+          <button
+            type="button"
+            onClick={handleNewDeck}
+            className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-950/40"
+          >
+            <Plus className="w-5 h-5" />
+            Create New Deck
+          </button>
+        </div>
       </div>
 
       {error ? (
@@ -87,14 +102,23 @@ export function DecksListClient() {
         <div className="text-center py-24 border-2 border-dashed border-zinc-800 rounded-2xl bg-zinc-900/20">
           <BookOpen className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-zinc-300">You don&apos;t have any saved decks</h3>
-          <p className="text-zinc-500 mt-2 mb-6">Head over to the Deck Builder to start brewing your first deck.</p>
-          <button 
-            type="button"
-            onClick={handleNewDeck}
-            className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors"
-          >
-            Go to Deck Builder
-          </button>
+          <p className="text-zinc-500 mt-2 mb-6">Head over to the Deck Builder or import a deck file to get started.</p>
+          <div className="flex justify-center gap-4">
+            <button 
+              type="button"
+              onClick={handleNewDeck}
+              className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors"
+            >
+              Go to Deck Builder
+            </button>
+            <button 
+              type="button"
+              onClick={() => setIsImportOpen(true)}
+              className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold rounded-xl transition-colors border border-zinc-700"
+            >
+              Import Deck File
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -130,6 +154,13 @@ export function DecksListClient() {
                   </span>
                   <div className="flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     <button
+                      onClick={() => setExportDeckTarget({ id: deck.id, name: deck.metadata.name })}
+                      className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors"
+                      title="Export Deck"
+                    >
+                      <Download className="w-4 h-4 text-purple-400" />
+                    </button>
+                    <button
                       onClick={() => handleEditDeck(deck)}
                       className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors"
                       title="Edit Deck"
@@ -154,7 +185,27 @@ export function DecksListClient() {
           })}
         </div>
       )}
+
+      {/* Import Wizard Modal */}
+      <ImportWizardModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        targetType="decks"
+        onImportSuccess={() => fetchDecks()}
+      />
+
+      {/* Export Deck Modal */}
+      {exportDeckTarget && (
+        <ExportDeckModal
+          isOpen={Boolean(exportDeckTarget)}
+          onClose={() => setExportDeckTarget(null)}
+          deckId={exportDeckTarget.id}
+          deckName={exportDeckTarget.name}
+        />
+      )}
+
       {error && <p className="text-sm text-red-400">{error}</p>}
     </div>
   );
 }
+

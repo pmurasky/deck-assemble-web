@@ -107,3 +107,61 @@ export async function removeDeckCard(deckId: number, deckCardId: number): Promis
   const res = await fetchDecks(`/decks/${deckId}/cards/${deckCardId}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('Failed to remove deck card');
 }
+
+export interface ManaCurveItem {
+  cmc: string;
+  count: number;
+}
+
+export interface ColorDemandItem {
+  color: string;
+  count: number;
+}
+
+export interface TypeDistributionItem {
+  type: string;
+  count: number;
+}
+
+export interface OwnershipBreakdown {
+  ownedCount: number;
+  missingCount: number;
+  ownedPercentage: number;
+}
+
+export interface CategoryItem {
+  name: string;
+  count: number;
+}
+
+export interface ComboItem {
+  name: string;
+  cards: string[];
+  description?: string;
+}
+
+export interface DeckAnalysisData {
+  deckId: number;
+  totalCards: number;
+  manaCurve: ManaCurveItem[];
+  colorDemand: ColorDemandItem[];
+  typeDistribution: TypeDistributionItem[];
+  ownership: OwnershipBreakdown;
+  valueByCurrency: Record<string, number>;
+  categories: CategoryItem[];
+  combos: ComboItem[];
+}
+
+export async function getDeckAnalysis(deckId: number): Promise<DeckAnalysisData> {
+  const res = await fetch(`/api/v1/decks/${deckId}/analysis`);
+  if (!res.ok) {
+    const errData = await res.json().catch(() => null);
+    const msg = errData?.error?.message || errData?.message || 'Failed to fetch deck analysis';
+    const err = new Error(msg) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
+  }
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as DeckAnalysisData;
+}
+

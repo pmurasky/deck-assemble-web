@@ -5,8 +5,10 @@ import { useUser } from '@auth0/nextjs-auth0/client';
 import { useCollectionStore, CollectionItem } from '@/lib/store/useCollectionStore';
 import { CardTile } from '@/components/cards/CardTile';
 import { AuthGate } from '@/components/auth/AuthGate';
-import { PackageOpen, Search, AlertCircle, Loader2, Trash2, Sparkles, Edit2, X } from 'lucide-react';
+import { PackageOpen, Search, AlertCircle, Loader2, Trash2, Sparkles, Edit2, X, Upload } from 'lucide-react';
 import Link from 'next/link';
+import { ImportWizardModal } from '@/components/import/ImportWizardModal';
+import { ExportCollectionButton } from '@/components/export/ExportCollectionButton';
 
 export function CollectionClient() {
   const { user, isLoading: isUserLoading } = useUser();
@@ -25,6 +27,7 @@ export function CollectionClient() {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [editingItem, setEditingItem] = useState<CollectionItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<CollectionItem | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   // Edit modal state
   const [editRegular, setEditRegular] = useState(0);
@@ -96,7 +99,7 @@ export function CollectionClient() {
   return (
     <div className="space-y-8">
       {/* Header & Stats */}
-      <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+      <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center">
         <div>
           <h1 className="text-3xl font-extrabold text-white">My Collection</h1>
           <p className="text-zinc-400 mt-2">
@@ -110,17 +113,38 @@ export function CollectionClient() {
           </p>
         </div>
 
-        <div className="w-full md:w-96 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search your collection..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-500/50"
-          />
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+          <div className="w-full sm:w-72 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search your collection..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-500/50"
+            />
+          </div>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <button
+              type="button"
+              onClick={() => setIsImportOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm rounded-xl transition-colors shadow-lg shadow-purple-950/40"
+            >
+              <Upload className="w-4 h-4" />
+              Import Collection
+            </button>
+            <ExportCollectionButton collectionId={1} collectionName="My_Collection" />
+          </div>
         </div>
       </div>
+
+      <ImportWizardModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        targetType="collections"
+        onImportSuccess={() => fetchCollection()}
+      />
 
       {error && (
         <div className="p-4 bg-red-900/20 border border-red-900 rounded-xl flex items-center gap-3 text-red-400">

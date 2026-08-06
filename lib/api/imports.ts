@@ -36,6 +36,88 @@ export async function fetchLatestImport(): Promise<LatestImport | null> {
   return res.json() as Promise<LatestImport>;
 }
 
+export interface ImportPreviewRow {
+  lineNumber: number;
+  rawText: string;
+  status: 'resolved' | 'ambiguous' | 'unmatched' | 'invalid';
+  cardName?: string;
+  quantity?: number;
+  candidatePrintingIds?: number[];
+  errorMessage?: string;
+}
+
+export interface ImportPreviewResult {
+  previewToken: string;
+  expiresAt: string;
+  totalRows: number;
+  rows: ImportPreviewRow[];
+}
+
+export interface ImportCommitParams {
+  previewToken: string;
+  excludedLineNumbers: number[];
+  selectedPrintings?: Record<number, number>;
+  deckName?: string;
+  formatCode?: string;
+  idempotencyKey: string;
+  targetType: 'decks' | 'collections';
+}
+
+export interface ImportCommitResult {
+  success: boolean;
+  importedCount: number;
+  failedCount: number;
+  errorsUrl?: string;
+  deckId?: number;
+  collectionId?: number;
+}
+
+export async function uploadImportPreview(
+  file: File,
+  targetType: 'decks' | 'collections'
+): Promise<ImportPreviewResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`/api/v1/${targetType}/import/preview`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => null);
+    const msg = errData?.error?.message || errData?.message || `Import preview failed (${res.status})`;
+    const err = new Error(msg) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
+  }
+
+  return res.json() as Promise<ImportPreviewResult>;
+}
+
+export async function commitImport(params: ImportCommitParams): Promise<ImportCommitResult> {
+  const { targetType, idempotencyKey, ...payload } = params;
+
+  const res = await fetch(`/api/v1/${targetType}/import/commit`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Idempotency-Key': idempotencyKey,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => null);
+    const msg = errData?.error?.message || errData?.message || `Import commit failed (${res.status})`;
+    const err = new Error(msg) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
+  }
+
+  return res.json() as Promise<ImportCommitResult>;
+}
+
 export interface ImportResult {
   runId: number;
   status?: string;
@@ -70,3 +152,9 @@ export async function triggerImport(query: string): Promise<ImportResult> {
   }
   return res.json() as Promise<ImportResult>;
 }
+
+export function getImportErrorsDownloadUrl(token: string, targetType: 'decks' | 'collections'): string {
+  return `/api/v1/${targetType}/import/errors?token=${encodeURIComponent(token)}`;
+}
+
+

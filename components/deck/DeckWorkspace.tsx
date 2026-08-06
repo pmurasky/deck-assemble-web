@@ -1,11 +1,15 @@
 'use client';
 
-import { useMemo } from 'react';
-import { Loader2, Crown, Layers, Plus, Minus } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Loader2, Crown, Layers, Plus, Minus, Download, BarChart2 } from 'lucide-react';
 import { useDeckStore, type DeckCard } from '@/lib/store/deck-store';
+import { ExportDeckModal } from '@/components/export/ExportDeckModal';
+import { DeckAnalysisPanel } from '@/components/deck/DeckAnalysisPanel';
 
 export function DeckWorkspace() {
-  const { cards, metadata, commander, addCard, removeCard, isLoading } = useDeckStore();
+  const { id, cards, metadata, commander, addCard, removeCard, isLoading } = useDeckStore();
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
 
   const groupedCards = useMemo(() => {
     return cards.reduce((acc, deckCard) => {
@@ -46,7 +50,7 @@ export function DeckWorkspace() {
   return (
     <div className="bg-zinc-900/90 rounded-2xl border border-zinc-800 p-5 flex flex-col h-full overflow-hidden shadow-xl">
       <div className="flex justify-between items-start mb-4 pb-4 border-b border-zinc-800">
-        <div className="space-y-1 max-w-[70%]">
+        <div className="space-y-1 max-w-[60%]">
           <h2 className="text-xl font-extrabold text-zinc-100 truncate tracking-tight">{metadata.name}</h2>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-zinc-300 bg-zinc-800/80 px-2.5 py-0.5 rounded-lg border border-zinc-700/50">
@@ -56,6 +60,27 @@ export function DeckWorkspace() {
               {metadata.format}
             </span>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsAnalysisOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-purple-300 rounded-xl text-xs font-bold transition-colors border border-zinc-700"
+            title="Deck Analysis"
+          >
+            <BarChart2 className="w-3.5 h-3.5" />
+            Analyze
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsExportOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-colors shadow-md shadow-purple-950/50"
+            title="Export Deck"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export
+          </button>
         </div>
       </div>
 
@@ -132,6 +157,37 @@ export function DeckWorkspace() {
           );
         })}
       </div>
+
+      {id && (
+        <ExportDeckModal
+          isOpen={isExportOpen}
+          onClose={() => setIsExportOpen(false)}
+          deckId={id}
+          deckName={metadata.name}
+        />
+      )}
+
+      {isAnalysisOpen && id && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-5xl w-full p-6 text-zinc-100 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-zinc-800">
+              <div>
+                <h3 className="text-xl font-bold text-white">Deck Analytics: {metadata.name}</h3>
+                <p className="text-xs text-zinc-400">Detailed breakdown of mana curve, colors, ownership & combos</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAnalysisOpen(false)}
+                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-semibold"
+              >
+                Close
+              </button>
+            </div>
+            <DeckAnalysisPanel deckId={id} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
