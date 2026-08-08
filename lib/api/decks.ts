@@ -165,3 +165,96 @@ export async function getDeckAnalysis(deckId: number): Promise<DeckAnalysisData>
   return (jsonRes.data ?? jsonRes) as DeckAnalysisData;
 }
 
+export async function getDeckCategories(deckId: number): Promise<import('@/types/card').DeckCategory[]> {
+  const res = await fetch(`/api/v1/decks/${deckId}/categories`);
+  if (!res.ok) throw new Error('Failed to fetch deck categories');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as import('@/types/card').DeckCategory[];
+}
+
+export async function createDeckCategory(
+  deckId: number,
+  data: { name: string; description?: string; color?: string }
+): Promise<import('@/types/card').DeckCategory> {
+  const res = await fetch(`/api/v1/decks/${deckId}/categories`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to create deck category');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as import('@/types/card').DeckCategory;
+}
+
+export async function updateDeckCategory(
+  deckId: number,
+  categoryId: number,
+  data: { name?: string; description?: string; color?: string }
+): Promise<import('@/types/card').DeckCategory> {
+  const res = await fetch(`/api/v1/decks/${deckId}/categories/${categoryId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to update deck category');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as import('@/types/card').DeckCategory;
+}
+
+export async function deleteDeckCategory(deckId: number, categoryId: number): Promise<void> {
+  const res = await fetch(`/api/v1/decks/${deckId}/categories/${categoryId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Failed to delete deck category');
+}
+
+export async function getDeckCategoriesBackend(deckId: number) {
+  return json(fetchDecks(`/decks/${deckId}/categories`), 'Failed to fetch deck categories');
+}
+
+export async function createDeckCategoryBackend(
+  deckId: number,
+  data: { name: string; description?: string; color?: string }
+) {
+  return json(
+    fetchDecks(`/decks/${deckId}/categories`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    'Failed to create deck category'
+  );
+}
+
+export async function updateDeckCategoryBackend(
+  deckId: number,
+  categoryId: number,
+  data: { name?: string; description?: string; color?: string }
+) {
+  return json(
+    fetchDecks(`/decks/${deckId}/categories/${categoryId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+    'Failed to update deck category'
+  );
+}
+
+export async function deleteDeckCategoryBackend(deckId: number, categoryId: number): Promise<void> {
+  const res = await fetchDecks(`/decks/${deckId}/categories/${categoryId}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete deck category');
+}
+
+export async function bulkReplaceCategoryCardsBackend(
+  deckId: number,
+  categoryId: number,
+  cardPrintingIds: number[]
+): Promise<void> {
+  const res = await fetchDecks(`/decks/${deckId}/categories/${categoryId}/cards`, {
+    method: 'PUT',
+    body: JSON.stringify({ cardPrintingIds }),
+  });
+  if (!res.ok) throw new Error('Failed to bulk replace category cards');
+}
+
+
+
