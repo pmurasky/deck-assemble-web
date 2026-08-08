@@ -50,6 +50,20 @@ export interface FetchCardsOptions {
   sort?: string;
   commanderEligible?: boolean;
   partnerForCardId?: string | number;
+  name?: string;
+  oracleText?: string;
+  minCmc?: number;
+  maxCmc?: number;
+  power?: string;
+  toughness?: string;
+  loyalty?: string;
+  rarity?: string;
+  format?: string;
+  keywords?: string;
+  artist?: string;
+  isReserved?: boolean;
+  isFullArt?: boolean;
+  isPromo?: boolean;
 }
 
 export function toCard(api: ApiCard): Card {
@@ -77,17 +91,33 @@ export function toCard(api: ApiCard): Card {
   };
 }
 
-export async function fetchCards({
-  query = '',
-  page = 0,
-  size = 24,
-  type = '',
-  setCode = '',
-  colorIdentity = '',
-  sort = '',
-  commanderEligible = false,
-  partnerForCardId,
-}: FetchCardsOptions = {}) {
+export async function fetchCards(options: FetchCardsOptions = {}) {
+  const {
+    query = '',
+    page = 0,
+    size = 24,
+    type = '',
+    setCode = '',
+    colorIdentity = '',
+    sort = '',
+    commanderEligible = false,
+    partnerForCardId,
+    name,
+    oracleText,
+    minCmc,
+    maxCmc,
+    power,
+    toughness,
+    loyalty,
+    rarity,
+    format,
+    keywords,
+    artist,
+    isReserved,
+    isFullArt,
+    isPromo,
+  } = options;
+
   const url = new URL('/api/v1/cards', API_BASE_URL);
   if (query) url.searchParams.set('query', query);
   url.searchParams.set('page', String(page));
@@ -100,6 +130,21 @@ export async function fetchCards({
   if (partnerForCardId !== undefined && partnerForCardId !== null && partnerForCardId !== '') {
     url.searchParams.set('partnerForCardId', String(partnerForCardId));
   }
+  if (name) url.searchParams.set('name', name);
+  if (oracleText) url.searchParams.set('oracleText', oracleText);
+  if (minCmc !== undefined) url.searchParams.set('minCmc', String(minCmc));
+  if (maxCmc !== undefined) url.searchParams.set('maxCmc', String(maxCmc));
+  if (power) url.searchParams.set('power', power);
+  if (toughness) url.searchParams.set('toughness', toughness);
+  if (loyalty) url.searchParams.set('loyalty', loyalty);
+  if (rarity) url.searchParams.set('rarity', rarity);
+  if (format) url.searchParams.set('format', format);
+  if (keywords) url.searchParams.set('keywords', keywords);
+  if (artist) url.searchParams.set('artist', artist);
+  if (isReserved !== undefined) url.searchParams.set('isReserved', String(isReserved));
+  if (isFullArt !== undefined) url.searchParams.set('isFullArt', String(isFullArt));
+  if (isPromo !== undefined) url.searchParams.set('isPromo', String(isPromo));
+
 
   try {
     const res = await fetch(url, { next: { revalidate: 300 } });

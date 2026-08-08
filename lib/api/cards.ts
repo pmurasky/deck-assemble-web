@@ -1,5 +1,5 @@
 import type { ApiResponse } from '@/types/api';
-import type { Card } from '@/types/card';
+import type { Card, AdvancedCardSearchParams } from '@/types/card';
 
 export interface CardPrinting {
   id: number;
@@ -10,7 +10,7 @@ export interface CardPrinting {
   faces?: Card['faces'];
 }
 
-interface GetCardsParams {
+export interface GetCardsParams extends AdvancedCardSearchParams {
   page?: number;
   limit?: number;
   q?: string;
@@ -21,16 +21,32 @@ interface GetCardsParams {
   partnerForCardId?: string | number;
 }
 
-export async function getCards({
-  page = 1,
-  limit = 50,
-  q = '',
-  type = '',
-  setCode = '',
-  colorIdentity = '',
-  commanderEligible = false,
-  partnerForCardId,
-}: GetCardsParams = {}): Promise<{ cards: Card[]; total: number }> {
+export async function getCards(params: GetCardsParams = {}): Promise<{ cards: Card[]; total: number }> {
+  const {
+    page = 1,
+    limit = 50,
+    q = '',
+    type = '',
+    setCode = '',
+    colorIdentity = '',
+    commanderEligible = false,
+    partnerForCardId,
+    name,
+    oracleText,
+    minCmc,
+    maxCmc,
+    power,
+    toughness,
+    loyalty,
+    rarity,
+    format,
+    keywords,
+    artist,
+    isReserved,
+    isFullArt,
+    isPromo,
+  } = params;
+
   const url = new URL('/api/v1/cards', typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
   url.searchParams.append('page', page.toString());
   url.searchParams.append('limit', limit.toString());
@@ -42,6 +58,20 @@ export async function getCards({
   if (partnerForCardId !== undefined && partnerForCardId !== null && partnerForCardId !== '') {
     url.searchParams.append('partnerForCardId', String(partnerForCardId));
   }
+  if (name) url.searchParams.append('name', name);
+  if (oracleText) url.searchParams.append('oracleText', oracleText);
+  if (minCmc !== undefined) url.searchParams.append('minCmc', String(minCmc));
+  if (maxCmc !== undefined) url.searchParams.append('maxCmc', String(maxCmc));
+  if (power) url.searchParams.append('power', power);
+  if (toughness) url.searchParams.append('toughness', toughness);
+  if (loyalty) url.searchParams.append('loyalty', loyalty);
+  if (rarity) url.searchParams.append('rarity', rarity);
+  if (format) url.searchParams.append('format', format);
+  if (keywords) url.searchParams.append('keywords', keywords);
+  if (artist) url.searchParams.append('artist', artist);
+  if (isReserved !== undefined) url.searchParams.append('isReserved', String(isReserved));
+  if (isFullArt !== undefined) url.searchParams.append('isFullArt', String(isFullArt));
+  if (isPromo !== undefined) url.searchParams.append('isPromo', String(isPromo));
 
   const res = await fetch(url.pathname + url.search);
   if (!res.ok) {

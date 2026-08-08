@@ -5,6 +5,13 @@ export interface CardFilters {
   colors: string[];
   types: string[];
   manaValue: number;
+  minCmc?: number;
+  maxCmc?: number;
+  rarity?: string;
+  oracleText?: string;
+  format?: string;
+  power?: string;
+  toughness?: string;
 }
 
 interface CardFilterPanelProps {
@@ -33,6 +40,8 @@ const COLOR_OPTIONS = [
   { code: 'G', label: 'Green', bg: 'bg-emerald-600 text-white border-emerald-400' },
 ];
 
+const RARITIES = ['common', 'uncommon', 'rare', 'mythic'];
+
 export function CardFilterPanel({ filters, onFilterChange, className = '' }: CardFilterPanelProps) {
   const handleColorToggle = (color: string) => {
     const newColors = filters.colors.includes(color)
@@ -51,10 +60,31 @@ export function CardFilterPanel({ filters, onFilterChange, className = '' }: Car
   };
 
   const handleReset = () => {
-    onFilterChange({ colors: [], types: [], manaValue: 0 });
+    onFilterChange({
+      colors: [],
+      types: [],
+      manaValue: 0,
+      minCmc: undefined,
+      maxCmc: undefined,
+      rarity: undefined,
+      oracleText: undefined,
+      format: undefined,
+      power: undefined,
+      toughness: undefined,
+    });
   };
 
-  const hasActiveFilters = filters.colors.length > 0 || filters.types.length > 0 || filters.manaValue > 0;
+  const hasActiveFilters =
+    filters.colors.length > 0 ||
+    filters.types.length > 0 ||
+    filters.manaValue > 0 ||
+    filters.minCmc !== undefined ||
+    filters.maxCmc !== undefined ||
+    !!filters.rarity ||
+    !!filters.oracleText ||
+    !!filters.format ||
+    !!filters.power ||
+    !!filters.toughness;
 
   return (
     <div className={`p-5 rounded-2xl border border-zinc-800/80 bg-zinc-900/90 backdrop-blur-xl shadow-xl flex flex-col space-y-6 ${className}`}>
@@ -129,12 +159,68 @@ export function CardFilterPanel({ filters, onFilterChange, className = '' }: Car
           </div>
         </div>
 
+        {/* Advanced Filters: CMC Range & Rarity */}
         <div>
-          <h4 className="font-semibold text-xs text-zinc-400 uppercase tracking-wider mb-2">Mana Value</h4>
-          <div className="text-xs text-zinc-500 italic">Filter by CMC range available soon</div>
+          <h4 className="font-semibold text-xs text-zinc-400 uppercase tracking-wider mb-3">Mana Value Range (CMC)</h4>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              placeholder="Min"
+              value={filters.minCmc ?? ''}
+              onChange={(e) =>
+                onFilterChange({
+                  ...filters,
+                  minCmc: e.target.value !== '' ? parseInt(e.target.value, 10) : undefined,
+                })
+              }
+              className="w-1/2 px-3 py-1.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 focus:outline-none focus:border-purple-500"
+            />
+            <span className="text-zinc-500 text-xs">to</span>
+            <input
+              type="number"
+              placeholder="Max"
+              value={filters.maxCmc ?? ''}
+              onChange={(e) =>
+                onFilterChange({
+                  ...filters,
+                  maxCmc: e.target.value !== '' ? parseInt(e.target.value, 10) : undefined,
+                })
+              }
+              className="w-1/2 px-3 py-1.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 focus:outline-none focus:border-purple-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-semibold text-xs text-zinc-400 uppercase tracking-wider mb-3">Rarity</h4>
+          <div className="flex flex-wrap gap-2">
+            {RARITIES.map((r) => {
+              const isSelected = filters.rarity === r;
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() =>
+                    onFilterChange({
+                      ...filters,
+                      rarity: isSelected ? undefined : r,
+                    })
+                  }
+                  className={`capitalize px-3 py-1 rounded-xl text-xs font-medium border transition-all ${
+                    isSelected
+                      ? 'bg-purple-600/30 border-purple-500 text-purple-300'
+                      : 'bg-zinc-950/40 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  {r}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
 

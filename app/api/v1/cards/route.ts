@@ -14,8 +14,47 @@ export async function GET(req: NextRequest) {
   const commanderEligible = searchParams.get('commanderEligible') === 'true';
   const partnerForCardId = searchParams.get('partnerForCardId') ?? undefined;
 
+  const name = searchParams.get('name') ?? undefined;
+  const oracleText = searchParams.get('oracleText') ?? undefined;
+  const minCmc = searchParams.has('minCmc') ? parseInt(searchParams.get('minCmc')!, 10) : undefined;
+  const maxCmc = searchParams.has('maxCmc') ? parseInt(searchParams.get('maxCmc')!, 10) : undefined;
+  const power = searchParams.get('power') ?? undefined;
+  const toughness = searchParams.get('toughness') ?? undefined;
+  const loyalty = searchParams.get('loyalty') ?? undefined;
+  const rarity = searchParams.get('rarity') ?? undefined;
+  const format = searchParams.get('format') ?? undefined;
+  const keywords = searchParams.get('keywords') ?? undefined;
+  const artist = searchParams.get('artist') ?? undefined;
+  const isReserved = searchParams.has('isReserved') ? searchParams.get('isReserved') === 'true' : undefined;
+  const isFullArt = searchParams.has('isFullArt') ? searchParams.get('isFullArt') === 'true' : undefined;
+  const isPromo = searchParams.has('isPromo') ? searchParams.get('isPromo') === 'true' : undefined;
+
   try {
-    const data = await fetchCards({ query, page, size, type, setCode, colorIdentity, sort, commanderEligible, partnerForCardId });
+    const data = await fetchCards({
+      query,
+      page,
+      size,
+      type,
+      setCode,
+      colorIdentity,
+      sort,
+      commanderEligible,
+      partnerForCardId,
+      name,
+      oracleText,
+      minCmc,
+      maxCmc,
+      power,
+      toughness,
+      loyalty,
+      rarity,
+      format,
+      keywords,
+      artist,
+      isReserved,
+      isFullArt,
+      isPromo,
+    });
     return NextResponse.json({ data });
   } catch {
     return NextResponse.json(
