@@ -238,21 +238,34 @@ export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Category List */}
         <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6">
-          <h4 className="text-base font-bold text-white mb-4">Deck Categories</h4>
-          {data.categories && data.categories.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3">
-              {data.categories.map((cat) => (
-                <div key={cat.name} className="flex justify-between items-center bg-zinc-950 p-3 rounded-xl border border-zinc-800">
-                  <span className="text-xs font-semibold text-zinc-300">{cat.name}</span>
-                  <span className="text-xs font-bold text-purple-400 px-2 py-0.5 bg-purple-500/10 rounded-md">
-                    {cat.count}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-zinc-500 italic">No categories tagged for this deck.</p>
-          )}
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-base font-bold text-white">Deck Categories</h4>
+            {data.functionalCategories && data.functionalCategories.length > 0 && (
+              <span className="text-[10px] uppercase font-semibold text-purple-400 bg-purple-950/60 px-2 py-0.5 rounded border border-purple-800/50">
+                User Assigned
+              </span>
+            )}
+          </div>
+          {(() => {
+            const displayCategories = (data.functionalCategories && data.functionalCategories.length > 0)
+              ? data.functionalCategories
+              : data.categories;
+
+            return displayCategories && displayCategories.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3">
+                {displayCategories.map((cat) => (
+                  <div key={cat.name} className="flex justify-between items-center bg-zinc-950 p-3 rounded-xl border border-zinc-800">
+                    <span className="text-xs font-semibold text-zinc-300">{cat.name}</span>
+                    <span className="text-xs font-bold text-purple-400 px-2 py-0.5 bg-purple-500/10 rounded-md">
+                      {cat.count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-zinc-500 italic">No categories tagged for this deck.</p>
+            );
+          })()}
         </div>
 
         {/* Combo Summary */}

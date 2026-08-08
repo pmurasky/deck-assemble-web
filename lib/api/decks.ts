@@ -132,6 +132,13 @@ export interface OwnershipBreakdown {
 export interface CategoryItem {
   name: string;
   count: number;
+  isCustom?: boolean;
+}
+
+export interface FunctionalCategoryItem {
+  name: string;
+  count: number;
+  isCustom?: boolean;
 }
 
 export interface ComboItem {
@@ -149,6 +156,7 @@ export interface DeckAnalysisData {
   ownership: OwnershipBreakdown;
   valueByCurrency: Record<string, number>;
   categories: CategoryItem[];
+  functionalCategories?: FunctionalCategoryItem[];
   combos: ComboItem[];
 }
 
@@ -207,6 +215,20 @@ export async function deleteDeckCategory(deckId: number, categoryId: number): Pr
   });
   if (!res.ok) throw new Error('Failed to delete deck category');
 }
+
+export async function bulkReplaceCategoryCards(
+  deckId: number,
+  categoryId: number,
+  cardPrintingIds: number[]
+): Promise<void> {
+  const res = await fetch(`/api/v1/decks/${deckId}/categories/${categoryId}/cards`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cardPrintingIds }),
+  });
+  if (!res.ok) throw new Error('Failed to bulk replace category cards');
+}
+
 
 export async function getDeckCategoriesBackend(deckId: number) {
   return json(fetchDecks(`/decks/${deckId}/categories`), 'Failed to fetch deck categories');

@@ -101,4 +101,30 @@ describe('DeckAnalysisPanel Component', () => {
     expect(screen.getByText('Ramp')).toBeInTheDocument();
     expect(screen.getByText("Thassa's Oracle + Demonic Consultation")).toBeInTheDocument();
   });
+
+  it('renders user-assigned functionalCategories when present', async () => {
+    vi.mocked(decksApi.getDeckAnalysis).mockResolvedValueOnce({
+      deckId: 10,
+      totalCards: 100,
+      manaCurve: [],
+      colorDemand: [],
+      typeDistribution: [],
+      ownership: { ownedCount: 100, missingCount: 0, ownedPercentage: 100 },
+      valueByCurrency: { USD: 0 },
+      categories: [],
+      functionalCategories: [
+        { name: 'Custom Win-Condition', count: 4, isCustom: true },
+        { name: 'Fast Mana', count: 8, isCustom: true },
+      ],
+      combos: [],
+    });
+
+    render(<DeckAnalysisPanel deckId={10} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Custom Win-Condition')).toBeInTheDocument();
+      expect(screen.getByText('Fast Mana')).toBeInTheDocument();
+    });
+  });
 });
+
