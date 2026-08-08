@@ -256,5 +256,141 @@ export async function bulkReplaceCategoryCardsBackend(
   if (!res.ok) throw new Error('Failed to bulk replace category cards');
 }
 
+// Client API helpers for Folders, Tags, Templates
+export async function getDeckFolders(): Promise<import('@/types/card').DeckFolder[]> {
+  const res = await fetch('/api/v1/deck-folders');
+  if (!res.ok) throw new Error('Failed to fetch deck folders');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as import('@/types/card').DeckFolder[];
+}
+
+export async function createDeckFolder(data: { name: string; parentId?: number | null; icon?: string; color?: string }) {
+  const res = await fetch('/api/v1/deck-folders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to create deck folder');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as import('@/types/card').DeckFolder;
+}
+
+export async function setDeckFolder(deckId: number, folderId: number | null): Promise<void> {
+  const res = await fetch(`/api/v1/decks/${deckId}/folder`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ folderId }),
+  });
+  if (!res.ok) throw new Error('Failed to set deck folder');
+}
+
+export async function getDeckTags(): Promise<import('@/types/card').DeckTag[]> {
+  const res = await fetch('/api/v1/deck-tags');
+  if (!res.ok) throw new Error('Failed to fetch deck tags');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as import('@/types/card').DeckTag[];
+}
+
+export async function createDeckTag(data: { name: string; color?: string }) {
+  const res = await fetch('/api/v1/deck-tags', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to create deck tag');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as import('@/types/card').DeckTag;
+}
+
+export async function setDeckTags(deckId: number, tagIds: number[]): Promise<void> {
+  const res = await fetch(`/api/v1/decks/${deckId}/tags`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tagIds }),
+  });
+  if (!res.ok) throw new Error('Failed to set deck tags');
+}
+
+export async function getCategoryTemplates(): Promise<import('@/types/card').CategoryTemplate[]> {
+  const res = await fetch('/api/v1/category-templates');
+  if (!res.ok) throw new Error('Failed to fetch category templates');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as import('@/types/card').CategoryTemplate[];
+}
+
+export async function applyCategoryTemplate(deckId: number, templateId: number): Promise<void> {
+  const res = await fetch(`/api/v1/decks/${deckId}/categories/from-template`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ templateId }),
+  });
+  if (!res.ok) throw new Error('Failed to apply category template');
+}
+
+// Backend Auth0 proxy handlers for BFF routes
+export async function getDeckFoldersBackend() {
+  return json(fetchDecks('/deck-folders'), 'Failed to fetch deck folders');
+}
+
+export async function createDeckFolderBackend(data: { name: string; parentId?: number | null; icon?: string; color?: string }) {
+  return json(fetchDecks('/deck-folders', { method: 'POST', body: JSON.stringify(data) }), 'Failed to create deck folder');
+}
+
+export async function updateDeckFolderBackend(id: number, data: Record<string, unknown>) {
+  return json(fetchDecks(`/deck-folders/${id}`, { method: 'PATCH', body: JSON.stringify(data) }), 'Failed to update deck folder');
+}
+
+export async function deleteDeckFolderBackend(id: number) {
+  const res = await fetchDecks(`/deck-folders/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete deck folder');
+}
+
+export async function setDeckFolderBackend(deckId: number, folderId: number | null) {
+  return json(fetchDecks(`/decks/${deckId}/folder`, { method: 'PUT', body: JSON.stringify({ folderId }) }), 'Failed to set deck folder');
+}
+
+export async function getDeckTagsBackend() {
+  return json(fetchDecks('/deck-tags'), 'Failed to fetch deck tags');
+}
+
+export async function createDeckTagBackend(data: { name: string; color?: string }) {
+  return json(fetchDecks('/deck-tags', { method: 'POST', body: JSON.stringify(data) }), 'Failed to create deck tag');
+}
+
+export async function updateDeckTagBackend(id: number, data: Record<string, unknown>) {
+  return json(fetchDecks(`/deck-tags/${id}`, { method: 'PATCH', body: JSON.stringify(data) }), 'Failed to update deck tag');
+}
+
+export async function deleteDeckTagBackend(id: number) {
+  const res = await fetchDecks(`/deck-tags/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete deck tag');
+}
+
+export async function setDeckTagsBackend(deckId: number, tagIds: number[]) {
+  return json(fetchDecks(`/decks/${deckId}/tags`, { method: 'PUT', body: JSON.stringify({ tagIds }) }), 'Failed to set deck tags');
+}
+
+export async function getCategoryTemplatesBackend() {
+  return json(fetchDecks('/category-templates'), 'Failed to fetch category templates');
+}
+
+export async function createCategoryTemplateBackend(data: Record<string, unknown>) {
+  return json(fetchDecks('/category-templates', { method: 'POST', body: JSON.stringify(data) }), 'Failed to create category template');
+}
+
+export async function updateCategoryTemplateBackend(id: number, data: Record<string, unknown>) {
+  return json(fetchDecks(`/category-templates/${id}`, { method: 'PATCH', body: JSON.stringify(data) }), 'Failed to update category template');
+}
+
+export async function deleteCategoryTemplateBackend(id: number) {
+  const res = await fetchDecks(`/category-templates/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete category template');
+}
+
+export async function applyCategoryTemplateBackend(deckId: number, templateId: number) {
+  return json(fetchDecks(`/decks/${deckId}/categories/from-template`, { method: 'POST', body: JSON.stringify({ templateId }) }), 'Failed to apply category template');
+}
+
+
 
 
