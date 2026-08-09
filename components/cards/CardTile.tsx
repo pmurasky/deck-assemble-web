@@ -128,11 +128,11 @@ export function CardTile({
             );
           })()}
 
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 shrink-0">
             <button
               type="button"
               onClick={() => setIsModalOpen(true)}
-              className="rounded-md bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-200 hover:bg-zinc-700 transition-colors"
+              className="rounded-lg bg-zinc-800 px-2.5 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors active:scale-95 touch-manipulation"
             >
               + Collection
             </button>
@@ -140,7 +140,7 @@ export function CardTile({
               <button
                 type="button"
                 onClick={() => onAddToDeck(card)}
-                className="rounded-md bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-500 transition-colors shadow-xs"
+                className="rounded-lg bg-green-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-green-500 transition-colors shadow-xs active:scale-95 touch-manipulation"
               >
                 + Deck
               </button>

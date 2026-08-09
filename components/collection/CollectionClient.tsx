@@ -210,7 +210,7 @@ export function CollectionClient() {
                   </div>
 
                   {/* Controls Overlay */}
-                  <div className="absolute top-2 right-2 bg-zinc-900/95 backdrop-blur border border-zinc-700 rounded-lg p-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                  <div className="absolute top-2 right-2 bg-zinc-900/95 backdrop-blur border border-zinc-700 rounded-lg p-1 flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20">
                     <button
                       onClick={() => openEditModal(item)}
                       disabled={updatingId === item.id}
