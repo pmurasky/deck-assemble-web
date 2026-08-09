@@ -162,11 +162,11 @@ export function DeckWorkspace() {
                         {card.name}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button
                         type="button"
                         onClick={() => removeCard(deckCardId)}
-                        className="w-5 h-5 rounded flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors"
+                        className="w-6 h-6 sm:w-5 sm:h-5 rounded flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors active:scale-95"
                         aria-label="Remove one"
                       >
                         <Minus className="w-3 h-3" />
@@ -174,7 +174,7 @@ export function DeckWorkspace() {
                       <button
                         type="button"
                         onClick={() => addCard(card, deckSection)}
-                        className="w-5 h-5 rounded flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors"
+                        className="w-6 h-6 sm:w-5 sm:h-5 rounded flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors active:scale-95"
                         aria-label="Add one"
                       >
                         <Plus className="w-3 h-3" />
