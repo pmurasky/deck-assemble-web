@@ -1,0 +1,30 @@
+import { NextResponse, type NextRequest } from 'next/server';
+import { generateSampleHands } from '@/lib/api/simulations';
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Failed to generate sample hands';
+}
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ deckId: string }> }
+) {
+  try {
+    const { deckId } = await params;
+    const id = Number(deckId);
+    if (!Number.isSafeInteger(id) || id < 1) {
+      return NextResponse.json({ error: { code: 'VALIDATION_ERROR', message: 'Invalid deck ID' } }, { status: 400 });
+    }
+
+    const body = (await req.json().catch(() => ({}))) as { count?: number; mulliganConfig?: unknown };
+    const count = Number(body.count ?? 7);
+
+    const data = await generateSampleHands(id, count, body.mulliganConfig as any);
+    return NextResponse.json({ data });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { error: { code: 'UPSTREAM_ERROR', message: errorMessage(error) } },
+      { status: 502 }
+    );
+  }
+}
