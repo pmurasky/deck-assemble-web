@@ -1,17 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   X,
   Upload,
   FileText,
   CheckCircle,
   AlertTriangle,
-  XCircle,
   Download,
-  Check,
   RefreshCw,
-  Layers,
   ArrowRight,
   ArrowLeft,
 } from 'lucide-react';
@@ -20,7 +17,6 @@ import {
   commitImport,
   getImportErrorsDownloadUrl,
   type ImportPreviewResult,
-  type ImportPreviewRow,
 } from '@/lib/api/imports';
 
 interface ImportWizardModalProps {
@@ -54,15 +50,15 @@ export function ImportWizardModal({
   const [idempotencyKey, setIdempotencyKey] = useState<string>('');
   const [isCommitLoading, setIsCommitLoading] = useState(false);
   const [commitError, setCommitError] = useState<string | null>(null);
-  const [commitSuccess, setCommitSuccess] = useState<boolean>(false);
   const [errorsUrl, setErrorsUrl] = useState<string | null>(null);
 
   const maxRows = targetType === 'decks' ? 500 : 5000;
 
-  useEffect(() => {
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
-      // Generate idempotency key once per import session
-      setIdempotencyKey(typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `idemp-${Date.now()}`);
       setStep(1);
       setFile(null);
       setDeckName('');
@@ -72,10 +68,9 @@ export function ImportWizardModal({
       setExcludedLineNumbers([]);
       setSelectedPrintings({});
       setCommitError(null);
-      setCommitSuccess(false);
       setErrorsUrl(null);
     }
-  }, [isOpen]);
+  }
 
   if (!isOpen) return null;
 
@@ -154,11 +149,10 @@ export function ImportWizardModal({
         selectedPrintings,
         deckName: deckName || (file ? file.name.replace(/\.[^/.]+$/, '') : 'Imported Deck'),
         formatCode,
-        idempotencyKey,
+        idempotencyKey: idempotencyKey || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'idemp-session'),
         targetType,
       });
 
-      setCommitSuccess(true);
       if (res.errorsUrl || res.failedCount > 0) {
         setErrorsUrl(getImportErrorsDownloadUrl(previewData.previewToken, targetType));
       }

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import React from 'react';
 import SharedDeckPage from '@/app/shared/decks/[slug]/page';
 import { notFound } from 'next/navigation';
 

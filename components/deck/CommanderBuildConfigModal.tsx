@@ -54,14 +54,17 @@ export const CommanderBuildConfigModal: React.FC<CommanderBuildConfigModalProps>
   const [partnerSearchResults, setPartnerSearchResults] = useState<Card[]>([]);
   const [isFetchingPartners, setIsFetchingPartners] = useState(false);
 
-  useEffect(() => {
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (!isOpen) {
       setErrorMessage(null);
       setSecondaryCommander(null);
       setIsSearchingPartner(false);
       setPartnerQuery('');
     }
-  }, [isOpen]);
+  }
 
   // Fetch eligible partner commanders when searching
   useEffect(() => {

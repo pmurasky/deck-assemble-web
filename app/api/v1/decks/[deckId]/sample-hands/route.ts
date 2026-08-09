@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { generateSampleHands } from '@/lib/api/simulations';
+import type { MulliganConfig } from '@/types/m3';
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Failed to generate sample hands';
@@ -16,10 +17,10 @@ export async function POST(
       return NextResponse.json({ error: { code: 'VALIDATION_ERROR', message: 'Invalid deck ID' } }, { status: 400 });
     }
 
-    const body = (await req.json().catch(() => ({}))) as { count?: number; mulliganConfig?: unknown };
+    const body = (await req.json().catch(() => ({}))) as { count?: number; mulliganConfig?: MulliganConfig };
     const count = Number(body.count ?? 7);
 
-    const data = await generateSampleHands(id, count, body.mulliganConfig as any);
+    const data = await generateSampleHands(id, count, body.mulliganConfig);
     return NextResponse.json({ data });
   } catch (error: unknown) {
     return NextResponse.json(

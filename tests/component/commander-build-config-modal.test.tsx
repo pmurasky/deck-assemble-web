@@ -110,8 +110,8 @@ describe('CommanderBuildConfigModal Component', () => {
   });
 
   it('passes partnerForCardId parameter when searching for partner commanders', async () => {
-    const { getCards } = await import('@/lib/api/cards');
-    const getCardsSpy = vi.spyOn(await import('@/lib/api/cards'), 'getCards').mockResolvedValue({
+    const cardsApi = await import('@/lib/api/cards');
+    const getCardsSpy = vi.spyOn(cardsApi, 'getCards').mockResolvedValue({
       cards: [],
       total: 0,
     });

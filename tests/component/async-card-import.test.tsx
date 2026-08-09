@@ -76,7 +76,7 @@ describe('Async Card Import UI (202 + Polling)', () => {
           }),
         });
       }
-    }) as any);
+    }) as unknown as typeof fetch);
 
     const queryClient = new QueryClient({
       defaultOptions: {

@@ -35,12 +35,16 @@ export const CommanderSuggestionsGrid: React.FC<CommanderSuggestionsGridProps> =
 
   // Perform catalog search via GET /cards?commanderEligible=true when query changes
   useEffect(() => {
+    let isMounted = true;
     if (!searchQuery.trim()) {
-      setCatalogSearchResults([]);
-      return;
+      setTimeout(() => {
+        if (isMounted) setCatalogSearchResults([]);
+      }, 0);
+      return () => {
+        isMounted = false;
+      };
     }
 
-    let isMounted = true;
     const timer = setTimeout(() => {
       setIsSearchingCatalog(true);
       getCards({

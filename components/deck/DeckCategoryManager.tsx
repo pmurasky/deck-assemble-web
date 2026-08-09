@@ -21,23 +21,27 @@ export function DeckCategoryManager({ deckId, onCategorySelect }: DeckCategoryMa
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCategories = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await getDeckCategories(deckId);
-      setCategories(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load categories');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   useEffect(() => {
-    if (deckId) {
-      fetchCategories();
-    }
+    let isMounted = true;
+    if (!deckId) return;
+    getDeckCategories(deckId)
+      .then((resData) => {
+        if (isMounted) {
+          setCategories(resData);
+          setIsLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to load categories');
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [deckId]);
 
   const handleAddCategory = async (e: React.FormEvent) => {

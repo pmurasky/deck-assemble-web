@@ -55,13 +55,7 @@ function isPositiveInteger(value: number): boolean {
   return Number.isInteger(value) && value > 0;
 }
 
-function isOptionalString(value: unknown): value is string | undefined {
-  return value === undefined || typeof value === 'string';
-}
 
-function isOptionalNumber(value: unknown): value is number | undefined {
-  return value === undefined || typeof value === 'number';
-}
 
 function isApiCard(value: unknown): value is ApiCard {
   return isObject(value)

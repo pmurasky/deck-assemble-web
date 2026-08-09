@@ -31,8 +31,6 @@ export function RecommendationsClient() {
 
   useEffect(() => {
     let isMounted = true;
-    setIsLoading(true);
-    setError(null);
     getCommanderRecommendations()
       .then((fetched) => {
         if (isMounted) {
@@ -101,6 +99,7 @@ export function RecommendationsClient() {
     };
 
     try {
+      setIsBuilding(true);
       const generated = await generateBuildDeck(payload);
 
       setActiveDeck(generated);

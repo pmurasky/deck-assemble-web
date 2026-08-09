@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createBackendDeckBuild } from '@/lib/api/recommendations';
+import type { GenerateBuildRequest } from '@/types/builder';
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Build request failed';
@@ -8,7 +9,7 @@ function errorMessage(error: unknown) {
 export async function POST(req: NextRequest) {
   try {
     const body: unknown = await req.json();
-    const data = await createBackendDeckBuild(body as any);
+    const data = await createBackendDeckBuild(body as GenerateBuildRequest);
     return NextResponse.json({ data });
   } catch (error: unknown) {
     const status =

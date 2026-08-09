@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getSharedDeck } from '@/lib/api/publishing';
 import { SharedDeckClient } from '@/components/deck/SharedDeckClient';
+import type { SharedDeckResponse } from '@/types/m3';
 
 interface SharedDeckPageProps {
   params: Promise<{ slug: string }>;
@@ -8,15 +9,17 @@ interface SharedDeckPageProps {
 
 export default async function SharedDeckPage({ params }: SharedDeckPageProps) {
   const { slug } = await params;
+  let deck: SharedDeckResponse | null = null;
 
   try {
-    const deck = await getSharedDeck(slug);
-    if (!deck) {
-      notFound();
-    }
-    return <SharedDeckClient deck={deck} />;
-  } catch (_error: unknown) {
-    // Spec: 404 (never 403) for private deck or unknown slug - deliberately indistinguishable
+    deck = await getSharedDeck(slug);
+  } catch {
     notFound();
   }
+
+  if (!deck) {
+    notFound();
+  }
+
+  return <SharedDeckClient deck={deck} />;
 }

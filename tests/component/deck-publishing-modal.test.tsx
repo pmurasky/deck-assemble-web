@@ -15,7 +15,7 @@ describe('DeckPublishingModal Component', () => {
   });
 
   it('handles visibility change and publishing action separately', async () => {
-    global.fetch = vi.fn().mockImplementation((url: string | URL, init?: RequestInit) => {
+    global.fetch = vi.fn().mockImplementation((url: string | URL) => {
       const urlStr = url.toString();
       if (urlStr.includes('/publishing')) {
         return Promise.resolve({

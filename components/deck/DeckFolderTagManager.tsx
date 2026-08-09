@@ -31,22 +31,26 @@ export function DeckFolderTagManager({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const [foldersRes, tagsRes] = await Promise.all([getDeckFolders(), getDeckTags()]);
-      setFolders(foldersRes);
-      setTags(tagsRes);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load organization data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   useEffect(() => {
-    loadData();
+    let isMounted = true;
+    Promise.all([getDeckFolders(), getDeckTags()])
+      .then(([foldersRes, tagsRes]) => {
+        if (!isMounted) return;
+        setFolders(foldersRes);
+        setTags(tagsRes);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        setError(err instanceof Error ? err.message : 'Failed to load organization data');
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleCreateFolder = async (e: React.FormEvent) => {

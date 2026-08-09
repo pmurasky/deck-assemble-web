@@ -19,8 +19,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  PieChart,
-  Pie,
   Cell,
 } from 'recharts';
 import { getDeckAnalysis, type DeckAnalysisData } from '@/lib/api/decks';
@@ -66,9 +64,24 @@ export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps
   };
 
   useEffect(() => {
-    if (deckId) {
-      fetchAnalysis();
-    }
+    let isMounted = true;
+    if (!deckId) return;
+    getDeckAnalysis(Number(deckId))
+      .then((resData) => {
+        if (isMounted) {
+          setData(resData);
+          setIsLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to load deck analysis');
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [deckId]);
 
   if (isLoading) {

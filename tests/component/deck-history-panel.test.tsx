@@ -58,7 +58,7 @@ describe('DeckHistoryPanel Component', () => {
       size: 20,
     };
 
-    global.fetch = vi.fn().mockImplementation((url: string | URL, init?: RequestInit) => {
+    global.fetch = vi.fn().mockImplementation((url: string | URL) => {
       const urlStr = url.toString();
       if (urlStr.includes('/restore')) {
         return Promise.resolve({

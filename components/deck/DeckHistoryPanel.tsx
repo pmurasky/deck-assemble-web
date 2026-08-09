@@ -20,11 +20,8 @@ export function DeckHistoryPanel({
   const [restoringRevision, setRestoringRevision] = useState<number | null>(null);
   const [selectedRevisionDetail, setSelectedRevisionDetail] = useState<DeckRevisionDetail | null>(null);
   const [diff, setDiff] = useState<DeckRevisionDiff | null>(null);
-  const [comparingRev, setComparingRev] = useState<number | null>(null);
 
   const fetchRevisions = useCallback(async () => {
-    setLoading(true);
-    setError(null);
     try {
       const res = await fetch(`/api/v1/decks/${deckId}/revisions?page=1&size=20`);
       if (!res.ok) throw new Error('Failed to load deck history');
@@ -38,8 +35,24 @@ export function DeckHistoryPanel({
   }, [deckId]);
 
   useEffect(() => {
-    fetchRevisions();
-  }, [fetchRevisions]);
+    let isMounted = true;
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/v1/decks/${deckId}/revisions?page=1&size=20`);
+        if (!res.ok) throw new Error('Failed to load deck history');
+        const payload = await res.json();
+        if (isMounted) setRevisions(payload.data?.items || []);
+      } catch (err: unknown) {
+        if (isMounted) setError(err instanceof Error ? err.message : 'Error loading history');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, [deckId]);
 
   const handleRestore = async (revNum: number) => {
     setRestoringRevision(revNum);
@@ -79,7 +92,6 @@ export function DeckHistoryPanel({
 
   const compareWithCurrent = async (revNum: number) => {
     try {
-      setComparingRev(revNum);
       const res = await fetch(`/api/v1/decks/${deckId}/revisions/${revNum}/diff/${currentRevision}`);
       if (!res.ok) throw new Error('Failed to load diff');
       const payload = await res.json();
