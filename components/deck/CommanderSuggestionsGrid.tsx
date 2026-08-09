@@ -218,18 +218,27 @@ const CommanderCardTile: React.FC<CommanderCardTileProps> = ({ commander, onSele
   const [faceIndex, setFaceIndex] = useState(0);
   const faces = commander.faces ?? [];
   const canFlip = faces.length >= 2;
-  const activeImageUrl = faces.length > 0 ? (faces[faceIndex]?.imageUrl || commander.imageUrl) : commander.imageUrl;
+
   const activeName = faces.length > 0 ? (faces[faceIndex]?.name || commander.name) : commander.name;
   const activeTypeLine = faces.length > 0 ? (faces[faceIndex]?.typeLine || commander.typeLine) : commander.typeLine;
+  const fallbackUrl = activeName ? `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(activeName)}&format=image` : '';
+  const initialImageUrl = (faces.length > 0 ? (faces[faceIndex]?.imageUrl || commander.imageUrl) : commander.imageUrl) || fallbackUrl;
+
+  const [imgSrc, setImgSrc] = useState(initialImageUrl);
 
   return (
     <div className="group relative flex flex-col justify-between rounded-xl bg-slate-900 border border-slate-800 hover:border-violet-500/50 transition-all duration-200 overflow-hidden shadow-lg hover:shadow-violet-500/10">
       {/* Top Banner / Image overlay */}
       <div className="relative h-44 w-full bg-slate-950 overflow-hidden">
-        {activeImageUrl ? (
+        {imgSrc ? (
           <img
-            src={activeImageUrl}
+            src={imgSrc}
             alt={activeName}
+            onError={() => {
+              if (fallbackUrl && imgSrc !== fallbackUrl) {
+                setImgSrc(fallbackUrl);
+              }
+            }}
             className="w-full h-full object-cover object-top opacity-85 group-hover:scale-105 transition-transform duration-300"
           />
         ) : (

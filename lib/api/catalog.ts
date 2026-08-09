@@ -67,12 +67,15 @@ export interface FetchCardsOptions {
 }
 
 export function toCard(api: ApiCard): Card {
+  const imageUrl =
+    api.imageUrl ||
+    (api.name ? `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(api.name)}&format=image` : undefined);
   return {
     id: String(api.id),
     printingId: api.printingId,
     oracleId: api.oracleId,
     name: api.name,
-    imageUrl: api.imageUrl,
+    imageUrl,
     manaCost: api.manaCost,
     manaValue: api.manaValue ?? 0,
     colors: api.colors?.split(',').filter(Boolean) ?? [],
@@ -274,14 +277,15 @@ export async function fetchCardById(cardId: string): Promise<Card | null> {
       next: { revalidate: 300 },
     });
     if (res.status === 404) {
-      return null;
+      const mockMatch = MOCK_CARDS.find((c) => c.id === cardId || c.name.toLowerCase() === cardId.toLowerCase());
+      return mockMatch ?? null;
     }
     if (!res.ok) {
       throw new Error(`Card catalog returned ${res.status}`);
     }
     return toCard(await res.json());
   } catch {
-    const card = MOCK_CARDS.find((c) => c.id === cardId);
+    const card = MOCK_CARDS.find((c) => c.id === cardId || c.name.toLowerCase() === cardId.toLowerCase());
     return card ?? null;
   }
 }

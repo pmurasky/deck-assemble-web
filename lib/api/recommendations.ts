@@ -117,13 +117,19 @@ export async function getCommanderRecommendations(
   return data.map((item, idx) => mapApiCommanderToSuggestion(item, cardDetails[idx]));
 }
 
+function getScryfallFallbackImageUrl(name: string): string {
+  if (!name) return '';
+  return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}&format=image`;
+}
+
 function mapApiCommanderToSuggestion(item: ApiCommanderSuggestion, card: Card | null): CommanderSuggestion {
   const colorIdentityArray = item.colorIdentity ? item.colorIdentity.split(',').filter(Boolean) : [];
+  const imageUrl = card?.imageUrl || (card?.faces && card.faces[0]?.imageUrl) || getScryfallFallbackImageUrl(item.commanderName);
   return {
     id: String(item.commanderCardId),
     name: item.commanderName,
-    imageUrl: card?.imageUrl ?? '',
-    colors: card?.colors ?? colorIdentityArray,
+    imageUrl,
+    colors: card?.colors?.length ? card.colors : colorIdentityArray,
     colorIdentity: colorIdentityArray,
     ownershipCoverage: item.coveragePercent,
     missingStaplesCount: item.missingCardCount,
@@ -167,7 +173,7 @@ function mapCommanderFromRow(row?: ApiDeckCard, fallbackId?: number, fallbackNam
     return {
       id: card.id,
       name: card.name,
-      imageUrl: card.imageUrl,
+      imageUrl: card.imageUrl || getScryfallFallbackImageUrl(card.name),
       colors: card.colors,
       colorIdentity: card.colorIdentity,
       ownershipCoverage: 100,
@@ -178,9 +184,11 @@ function mapCommanderFromRow(row?: ApiDeckCard, fallbackId?: number, fallbackNam
       faces: card.faces,
     };
   }
+  const name = fallbackName ?? 'Unknown Commander';
   return {
     id: String(fallbackId ?? 0),
-    name: fallbackName ?? 'Unknown Commander',
+    name,
+    imageUrl: getScryfallFallbackImageUrl(name),
     colors: [],
     colorIdentity: [],
     ownershipCoverage: 0,
