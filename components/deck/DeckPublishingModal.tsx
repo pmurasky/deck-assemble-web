@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import type { DeckVisibility, PublishDeckResponse } from '@/types/m3';
 
 interface DeckPublishingModalProps {
-  deckId: number;
+  deckId: number | string;
   initialVisibility?: DeckVisibility;
   initialSlug?: string;
   initialPrimerTitle?: string;

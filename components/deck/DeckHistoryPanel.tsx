@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { DeckRevisionSummary, DeckRevisionDiff, DeckRevisionDetail } from '@/types/m3';
 
 interface DeckHistoryPanelProps {
-  deckId: number;
-  currentRevision: number;
+  deckId: number | string;
+  currentRevision?: number;
   onRestoreSuccess?: (newRevisionNumber: number) => void;
 }
 

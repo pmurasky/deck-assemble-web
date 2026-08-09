@@ -8,7 +8,7 @@ import type {
 } from '@/types/m3';
 
 interface DeckSimulationPanelProps {
-  deckId: number;
+  deckId: number | string;
 }
 
 export function DeckSimulationPanel({ deckId }: DeckSimulationPanelProps) {
