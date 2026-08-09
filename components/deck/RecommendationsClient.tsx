@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { CommanderSuggestion, DeckBuildConfig, GeneratedDeck, WishlistItem } from '@/types/builder';
-import { generateBuildDeck, getCommanderRecommendations, extractWishlistFromDeck } from '@/lib/api/recommendations';
+import { generateBuildDeck, getCommanderRecommendations, extractWishlistFromDeck, getFastMissingStaplesPreview } from '@/lib/api/recommendations';
 import { CommanderSuggestionsGrid } from './CommanderSuggestionsGrid';
 import { CommanderBuildConfigModal } from './CommanderBuildConfigModal';
+import { MissingStaplesModal } from './MissingStaplesModal';
 import { GeneratedDeckView } from './GeneratedDeckView';
 import { WishlistPanel } from './WishlistPanel';
 import { DeckComparisonModal } from './DeckComparisonModal';
@@ -28,6 +29,12 @@ export function RecommendationsClient() {
   const [error, setError] = useState<string | null>(null);
   const [buildError, setBuildError] = useState<string | null>(null);
   const [isBuilding, setIsBuilding] = useState(false);
+
+  // Missing Staples Modal state
+  const [isMissingStaplesModalOpen, setIsMissingStaplesModalOpen] = useState(false);
+  const [previewWishlistItems, setPreviewWishlistItems] = useState<WishlistItem[]>([]);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -82,11 +89,16 @@ export function RecommendationsClient() {
     setIsConfigModalOpen(true);
   };
 
-  // Direct shortcut from "X missing staples" link on tile to view missing card wishlist
+  // Direct shortcut from "X missing staples" link on tile to view missing card preview modal
   const handleViewMissingStaples = async (commander: CommanderSuggestion) => {
     setSelectedCommander(commander);
-    setIsBuilding(true);
-    setBuildError(null);
+    setIsMissingStaplesModalOpen(true);
+    setPreviewError(null);
+
+    // Instant 0ms preview from cache or fast staples generator
+    const fastPreview = getFastMissingStaplesPreview(commander);
+    setPreviewWishlistItems(fastPreview);
+    setIsPreviewLoading(fastPreview.length === 0);
 
     const payload = {
       commanderCardId: commander.id,
@@ -100,19 +112,22 @@ export function RecommendationsClient() {
     try {
       const generated = await generateBuildDeck(payload);
       setActiveDeck(generated);
-      setWishlistItems(extractWishlistFromDeck(generated));
-      setCurrentView('wishlist');
+      const wishlist = extractWishlistFromDeck(generated);
+      setWishlistItems(wishlist);
+      setPreviewWishlistItems(wishlist);
 
       setComparisonDecks((prev) => {
         if (prev.some((d) => d.id === generated.id)) return prev;
         return [...prev.slice(-2), generated];
       });
     } catch (err: unknown) {
-      setIsConfigModalOpen(true);
-      const msg = err instanceof Error ? err.message : 'Failed to generate deck build';
-      setBuildError(msg);
+      // If fast preview already has cards, keep them; otherwise set error
+      if (fastPreview.length === 0) {
+        const msg = err instanceof Error ? err.message : 'Failed to load missing cards';
+        setPreviewError(msg);
+      }
     } finally {
-      setIsBuilding(false);
+      setIsPreviewLoading(false);
     }
   };
 
@@ -318,6 +333,24 @@ export function RecommendationsClient() {
         decks={comparisonDecks}
         isOpen={isCompareModalOpen}
         onClose={() => setIsCompareModalOpen(false)}
+      />
+
+      {/* Missing Staples Preview Modal */}
+      <MissingStaplesModal
+        commander={selectedCommander}
+        isOpen={isMissingStaplesModalOpen}
+        onClose={() => setIsMissingStaplesModalOpen(false)}
+        isLoading={isPreviewLoading}
+        error={previewError}
+        wishlistItems={previewWishlistItems}
+        onBuildFullDeck={() => {
+          setIsMissingStaplesModalOpen(false);
+          if (activeDeck) {
+            setCurrentView('generated_deck');
+          } else if (selectedCommander) {
+            handleSelectCommander(selectedCommander);
+          }
+        }}
       />
     </div>
   );

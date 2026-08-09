@@ -199,7 +199,89 @@ function mapCommanderFromRow(row?: ApiDeckCard, fallbackId?: number, fallbackNam
   };
 }
 
+const buildDeckCache = new Map<string, GeneratedDeck>();
+
+export function getBuildCacheKey(request: GenerateBuildRequest): string {
+  return [
+    request.commanderCardId,
+    request.secondaryCommanderCardId ?? '',
+    request.desiredPowerLevel ?? 7,
+    request.playStyle ?? 'midrange',
+    request.useOwnedCardsOnly ?? false,
+    request.budgetLimit ?? '',
+  ].join(':');
+}
+
+export function getCachedBuildDeck(request: GenerateBuildRequest): GeneratedDeck | null {
+  const key = getBuildCacheKey(request);
+  return buildDeckCache.get(key) ?? null;
+}
+
+export function getFastMissingStaplesPreview(commander: CommanderSuggestion): WishlistItem[] {
+  // Check if a build for this commander is already cached
+  const defaultKey = getBuildCacheKey({
+    commanderCardId: commander.id,
+    desiredPowerLevel: 7,
+    playStyle: 'midrange',
+    useOwnedCardsOnly: false,
+  });
+
+  const cached = buildDeckCache.get(defaultKey);
+  if (cached) {
+    return extractWishlistFromDeck(cached);
+  }
+
+  // Generate instant placeholder missing staples based on missing card count and commander attributes
+  const missingCount = commander.missingStaplesCount || 10;
+  const estCardPrice = missingCount > 0 ? Number((commander.estimatedCostToComplete / missingCount).toFixed(2)) : 5.0;
+
+  const stapleCategories = [
+    'Sol Ring',
+    'Arcane Signet',
+    'Command Tower',
+    'Lightning Greaves',
+    'Rhystic Study',
+    'Smothering Tithe',
+    'Cyclonic Rift',
+    'Demonic Tutor',
+    'Heroic Intervention',
+    'Fierce Guardianship',
+    'Teferi\'s Protection',
+    'Toxic Deluge',
+  ];
+
+  return Array.from({ length: Math.min(missingCount, 12) }, (_, i) => {
+    const cardName = stapleCategories[i % stapleCategories.length] || `Synergy Staple ${i + 1}`;
+    return {
+      card: {
+        id: `preview-staple-${commander.id}-${i}`,
+        oracleId: `oracle-preview-${commander.id}-${i}`,
+        name: cardName,
+        typeLine: i % 3 === 0 ? 'Artifact' : i % 3 === 1 ? 'Instant' : 'Enchantment',
+        manaCost: '{2}',
+        manaValue: 2,
+        colors: commander.colors,
+        colorIdentity: commander.colorIdentity,
+        setCode: 'EDH',
+        setName: 'Commander Essentials',
+        rarity: i % 2 === 0 ? 'rare' : 'mythic',
+        legalities: { commander: 'legal' },
+        imageUrl: `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}&format=image`,
+      },
+      priority: i < 3 ? 'High Synergy' : 'Key Staple',
+      estimatedPrice: estCardPrice > 0 ? estCardPrice : 3.5,
+      acquired: false,
+      quantity: 1,
+    };
+  });
+}
+
 export async function generateBuildDeck(request: GenerateBuildRequest): Promise<GeneratedDeck> {
+  const cacheKey = getBuildCacheKey(request);
+  if (buildDeckCache.has(cacheKey)) {
+    return buildDeckCache.get(cacheKey)!;
+  }
+
   const payload = {
     commanderCardId: Number(request.commanderCardId),
     secondaryCommanderCardId: request.secondaryCommanderCardId ? Number(request.secondaryCommanderCardId) : null,
@@ -243,7 +325,7 @@ export async function generateBuildDeck(request: GenerateBuildRequest): Promise<
     message: v.message,
   }));
 
-  return {
+  const generatedDeck: GeneratedDeck = {
     id: String(buildResult.deck.id),
     name: buildResult.deck.name,
     commander,
@@ -261,6 +343,9 @@ export async function generateBuildDeck(request: GenerateBuildRequest): Promise<
     powerLevel: request.desiredPowerLevel ?? 7,
     buildScore: buildResult.score ?? 85,
   };
+
+  buildDeckCache.set(cacheKey, generatedDeck);
+  return generatedDeck;
 }
 
 export function extractWishlistFromDeck(deck: GeneratedDeck): WishlistItem[] {
