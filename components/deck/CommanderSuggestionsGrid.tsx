@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Sparkles, DollarSign, Layers, Award, Filter, ShieldAlert, Search, RefreshCw } from 'lucide-react';
+import { Sparkles, DollarSign, Layers, Award, Filter, ShieldAlert, Search, RefreshCw, ExternalLink, CheckCircle } from 'lucide-react';
 import { CommanderSuggestion } from '@/types/builder';
 import { getCards } from '@/lib/api/cards';
 
 interface CommanderSuggestionsGridProps {
   commanders: CommanderSuggestion[];
   onSelectCommander: (commander: CommanderSuggestion) => void;
+  onViewMissingStaples?: (commander: CommanderSuggestion) => void;
 }
 
 const COLOR_MAP: Record<string, { label: string; bg: string; text: string; name: string }> = {
@@ -19,6 +20,7 @@ const COLOR_MAP: Record<string, { label: string; bg: string; text: string; name:
 export const CommanderSuggestionsGrid: React.FC<CommanderSuggestionsGridProps> = ({
   commanders,
   onSelectCommander,
+  onViewMissingStaples,
 }) => {
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [maxBudget, setMaxBudget] = useState<number | ''>('');
@@ -201,7 +203,12 @@ export const CommanderSuggestionsGrid: React.FC<CommanderSuggestionsGridProps> =
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {displayedCommanders.map((cmd) => (
-            <CommanderCardTile key={cmd.id} commander={cmd} onSelect={onSelectCommander} />
+            <CommanderCardTile
+              key={cmd.id}
+              commander={cmd}
+              onSelect={onSelectCommander}
+              onViewMissingStaples={onViewMissingStaples}
+            />
           ))}
         </div>
       )}
@@ -212,9 +219,10 @@ export const CommanderSuggestionsGrid: React.FC<CommanderSuggestionsGridProps> =
 interface CommanderCardTileProps {
   commander: CommanderSuggestion;
   onSelect: (commander: CommanderSuggestion) => void;
+  onViewMissingStaples?: (commander: CommanderSuggestion) => void;
 }
 
-const CommanderCardTile: React.FC<CommanderCardTileProps> = ({ commander, onSelect }) => {
+const CommanderCardTile: React.FC<CommanderCardTileProps> = ({ commander, onSelect, onViewMissingStaples }) => {
   const [faceIndex, setFaceIndex] = useState(0);
   const faces = commander.faces ?? [];
   const canFlip = faces.length >= 2;
@@ -310,13 +318,29 @@ const CommanderCardTile: React.FC<CommanderCardTileProps> = ({ commander, onSele
 
         {/* Missing Staples & CTA */}
         <div className="pt-2 flex items-center justify-between gap-3">
-          <span className="text-[11px] text-slate-400">
-            {commander.missingStaplesCount === 0 ? (
-              <span className="text-emerald-400 font-medium">All staples owned</span>
-            ) : (
+          {commander.missingStaplesCount === 0 ? (
+            <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+              <CheckCircle className="w-3 h-3 text-emerald-400" />
+              All staples owned
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onViewMissingStaples) {
+                  onViewMissingStaples(commander);
+                } else {
+                  onSelect(commander);
+                }
+              }}
+              className="text-[11px] text-violet-400 hover:text-violet-300 font-semibold hover:underline flex items-center gap-1 transition-colors group/link cursor-pointer"
+              title="Click to view missing cards wishlist for this commander"
+            >
               <span>{commander.missingStaplesCount} missing staples</span>
-            )}
-          </span>
+              <ExternalLink className="w-3 h-3 opacity-75 group-hover/link:opacity-100 group-hover/link:translate-x-0.5 transition-all" />
+            </button>
+          )}
 
           <button
             type="button"

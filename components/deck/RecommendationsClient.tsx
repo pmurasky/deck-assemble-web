@@ -82,6 +82,40 @@ export function RecommendationsClient() {
     setIsConfigModalOpen(true);
   };
 
+  // Direct shortcut from "X missing staples" link on tile to view missing card wishlist
+  const handleViewMissingStaples = async (commander: CommanderSuggestion) => {
+    setSelectedCommander(commander);
+    setIsBuilding(true);
+    setBuildError(null);
+
+    const payload = {
+      commanderCardId: commander.id,
+      secondaryCommanderCardId: null,
+      desiredPowerLevel: 7,
+      playStyle: 'midrange',
+      useOwnedCardsOnly: false,
+      budgetLimit: undefined,
+    };
+
+    try {
+      const generated = await generateBuildDeck(payload);
+      setActiveDeck(generated);
+      setWishlistItems(extractWishlistFromDeck(generated));
+      setCurrentView('wishlist');
+
+      setComparisonDecks((prev) => {
+        if (prev.some((d) => d.id === generated.id)) return prev;
+        return [...prev.slice(-2), generated];
+      });
+    } catch (err: unknown) {
+      setIsConfigModalOpen(true);
+      const msg = err instanceof Error ? err.message : 'Failed to generate deck build';
+      setBuildError(msg);
+    } finally {
+      setIsBuilding(false);
+    }
+  };
+
   // Step 2: User submits Build Config Modal
   const handleGenerateDeck = async (config: DeckBuildConfig) => {
     if (!selectedCommander) return;
@@ -247,6 +281,7 @@ export function RecommendationsClient() {
           <CommanderSuggestionsGrid
             commanders={commanders}
             onSelectCommander={handleSelectCommander}
+            onViewMissingStaples={handleViewMissingStaples}
           />
         )
       )}
