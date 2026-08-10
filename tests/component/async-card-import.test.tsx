@@ -116,4 +116,95 @@ describe('Async Card Import UI (202 + Polling)', () => {
       expect(screen.getByText(/Run ID: #101/i)).toBeInTheDocument();
     });
   });
+
+  it('triggers oracle tags import on button click and polls until COMPLETED', async () => {
+    let fetchCount = 0;
+
+    vi.spyOn(global, 'fetch').mockImplementation(((input: RequestInfo | URL, init?: RequestInit) => {
+      const urlStr = input.toString();
+      if (init?.method === 'POST' && urlStr.includes('/oracle-tags')) {
+        return Promise.resolve({
+          ok: true,
+          status: 202,
+          json: async () => ({
+            data: { runId: 202, status: 'RUNNING' },
+          }),
+        });
+      }
+
+      fetchCount++;
+      if (fetchCount <= 2) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            data: [
+              {
+                id: 202,
+                provider: 'oracle-tags',
+                query: 'oracle-tags',
+                status: 'RUNNING',
+                recordsRead: 0,
+                recordsCreated: 0,
+                recordsUpdated: 0,
+                recordsFailed: 0,
+                startedAt: '2026-08-10T20:00:00Z',
+                completedAt: null,
+              },
+            ],
+          }),
+        });
+      } else {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            data: [
+              {
+                id: 202,
+                provider: 'oracle-tags',
+                query: 'oracle-tags',
+                status: 'COMPLETED',
+                recordsRead: 300,
+                recordsCreated: 280,
+                recordsUpdated: 20,
+                recordsFailed: 0,
+                startedAt: '2026-08-10T20:00:00Z',
+                completedAt: '2026-08-10T20:01:00Z',
+              },
+            ],
+          }),
+        });
+      }
+    }) as unknown as typeof fetch);
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AdminImportsPage />
+      </QueryClientProvider>
+    );
+
+    // Find and click the Oracle Tags trigger button
+    const oracleTagsBtn = await screen.findByRole('button', { name: /Sync Oracle Tags/i });
+    fireEvent.click(oracleTagsBtn);
+
+    // Should display polling banner upon HTTP 202 trigger response
+    await waitFor(() => {
+      expect(screen.getByText(/Import task accepted \(HTTP 202\)/i)).toBeInTheDocument();
+    });
+
+    // Trigger next polling tick
+    queryClient.refetchQueries({ queryKey: ['importRuns'] });
+
+    // Once polling refetches completed status, summary card should appear
+    await waitFor(() => {
+      expect(screen.getByText('Import Completed Successfully')).toBeInTheDocument();
+      expect(screen.getByText(/Run ID: #202/i)).toBeInTheDocument();
+    });
+  });
 });
+

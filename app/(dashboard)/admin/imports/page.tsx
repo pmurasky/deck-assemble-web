@@ -6,7 +6,7 @@ import { useUser } from '@auth0/nextjs-auth0/client';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton';
 import { isAdmin } from '@/lib/utils/permissions';
-import { ShieldAlert, Play } from 'lucide-react';
+import { ShieldAlert, Play, Tag } from 'lucide-react';
 import type { ApiResponse } from '@/types/api';
 import type { ImportRun } from '@/lib/api/imports';
 
@@ -46,6 +46,21 @@ async function triggerImportRun(query: string): Promise<ImportResult> {
   const json: ApiResponse<ImportResult> = await res.json();
   if (json.error || !json.data) {
     throw new Error(json.error?.message || 'Failed to trigger import');
+  }
+  return json.data;
+}
+
+async function triggerOracleTagsImportRun(): Promise<ImportResult> {
+  const res = await fetch('/api/v1/admin/card-imports/oracle-tags', {
+    method: 'POST',
+  });
+  if (!res.ok && res.status !== 202) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error?.message || 'Failed to trigger oracle tags import');
+  }
+  const json: ApiResponse<ImportResult> = await res.json();
+  if (json.error || !json.data) {
+    throw new Error(json.error?.message || 'Failed to trigger oracle tags import');
   }
   return json.data;
 }
@@ -127,7 +142,24 @@ export default function AdminImportsPage() {
     }
   });
 
-  const isImporting = importMutation.isPending || activeRunId !== null;
+  const oracleTagsMutation = useMutation({
+    mutationFn: triggerOracleTagsImportRun,
+    onSuccess: (data) => {
+      setLastQuery('oracle-tags');
+      if (data.runId) {
+        setActiveRunId(data.runId);
+      }
+      if (data.recordsRead !== undefined && data.recordsRead > 0 && data.status !== 'RUNNING' && data.status !== 'PENDING') {
+        setLastResult(data);
+      }
+      queryClient.invalidateQueries({ queryKey: ['importRuns'] });
+    },
+    onError: (err: Error) => {
+      alert(`Error triggering oracle tags import: ${err.message}`);
+    }
+  });
+
+  const isImporting = importMutation.isPending || oracleTagsMutation.isPending || activeRunId !== null;
 
   // Role Gating
   if (isUserLoading) {
@@ -160,40 +192,61 @@ export default function AdminImportsPage() {
           </p>
         </div>
 
-        <form 
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!queryInput.trim()) return;
-            importMutation.mutate(queryInput);
-          }}
-          className="flex gap-2 w-full md:w-auto"
-        >
-          <input 
-            type="text" 
-            placeholder="Scryfall query (e.g. e:mar)" 
-            value={queryInput}
-            onChange={(e) => setQueryInput(e.target.value)}
-            disabled={isImporting}
-            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-green-500 flex-1 md:w-80 disabled:opacity-50"
-          />
-          <button 
-            type="submit"
-            disabled={isImporting || !queryInput.trim()}
-            className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors disabled:opacity-50 whitespace-nowrap cursor-pointer"
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!queryInput.trim()) return;
+              importMutation.mutate(queryInput);
+            }}
+            className="flex gap-2 w-full sm:w-auto flex-1"
           >
-            {isImporting ? (
+            <input 
+              type="text" 
+              placeholder="Scryfall query (e.g. e:mar)" 
+              value={queryInput}
+              onChange={(e) => setQueryInput(e.target.value)}
+              disabled={isImporting}
+              className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-green-500 flex-1 md:w-80 disabled:opacity-50"
+            />
+            <button 
+              type="submit"
+              disabled={isImporting || !queryInput.trim()}
+              className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors disabled:opacity-50 whitespace-nowrap cursor-pointer"
+            >
+              {importMutation.isPending ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4" />
+                  Run Import
+                </>
+              )}
+            </button>
+          </form>
+
+          <button
+            type="button"
+            disabled={isImporting}
+            onClick={() => oracleTagsMutation.mutate()}
+            className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors disabled:opacity-50 whitespace-nowrap cursor-pointer justify-center"
+          >
+            {oracleTagsMutation.isPending ? (
               <>
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                Importing...
+                Triggering...
               </>
             ) : (
               <>
-                <Play className="w-4 h-4" />
-                Run Import
+                <Tag className="w-4 h-4" />
+                Sync Oracle Tags
               </>
             )}
           </button>
-        </form>
+        </div>
       </div>
 
       {isImporting && (
