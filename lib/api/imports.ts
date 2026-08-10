@@ -157,4 +157,30 @@ export function getImportErrorsDownloadUrl(token: string, targetType: 'decks' | 
   return `/api/v1/${targetType}/import/errors?token=${encodeURIComponent(token)}`;
 }
 
+export async function triggerOracleTagsImport(): Promise<ImportResult> {
+  const token = await auth0.getAccessToken();
+  const url = new URL('/api/v1/admin/card-imports/oracle-tags', API_BASE_URL);
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token.token}` },
+  });
+  if (!res.ok && res.status !== 202) {
+    throw new Error(`Oracle tags import trigger returned ${res.status}`);
+  }
+  return res.json() as Promise<ImportResult>;
+}
+
+export async function fetchImportRunStatus(runId: number | string): Promise<ImportRun> {
+  const token = await auth0.getAccessToken();
+  const url = new URL(`/api/v1/admin/card-imports/${runId}`, API_BASE_URL);
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token.token}` },
+  });
+  if (!res.ok) {
+    throw new Error(`Import run status returned ${res.status}`);
+  }
+  return res.json() as Promise<ImportRun>;
+}
+
+
 

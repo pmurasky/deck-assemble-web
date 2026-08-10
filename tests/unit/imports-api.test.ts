@@ -1,5 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { uploadImportPreview, commitImport, getImportErrorsDownloadUrl } from '@/lib/api/imports';
+import {
+  uploadImportPreview,
+  commitImport,
+  getImportErrorsDownloadUrl,
+  triggerOracleTagsImport,
+  fetchImportRunStatus,
+} from '@/lib/api/imports';
+
+vi.mock('@/lib/auth0', () => ({
+  auth0: {
+    getAccessToken: vi.fn().mockResolvedValue({ token: 'test-token' }),
+  },
+}));
 
 describe('Imports API Client', () => {
   beforeEach(() => {
@@ -123,4 +135,78 @@ describe('Imports API Client', () => {
       expect(url).toBe('/api/v1/decks/import/errors?token=tok-123');
     });
   });
+
+  describe('triggerOracleTagsImport', () => {
+    it('should trigger POST /api/v1/admin/card-imports/oracle-tags and return ImportResult', async () => {
+      const mockResult = { runId: 42, status: 'RUNNING' };
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 202,
+        json: async () => mockResult,
+      } as Response);
+
+      const result = await triggerOracleTagsImport();
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          href: expect.stringContaining('/api/v1/admin/card-imports/oracle-tags'),
+        }),
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
+        })
+      );
+      expect(result).toEqual(mockResult);
+    });
+
+    it('should throw error when trigger returns non-ok status', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      } as Response);
+
+      await expect(triggerOracleTagsImport()).rejects.toThrow('Oracle tags import trigger returned 500');
+    });
+  });
+
+  describe('fetchImportRunStatus', () => {
+    it('should fetch status for specific import runId', async () => {
+      const mockRun = {
+        id: 42,
+        provider: 'oracle-tags',
+        query: 'oracle-tags',
+        status: 'COMPLETED',
+        recordsRead: 500,
+        recordsCreated: 450,
+        recordsUpdated: 50,
+        recordsFailed: 0,
+        startedAt: '2026-08-10T10:00:00Z',
+        completedAt: '2026-08-10T10:01:00Z',
+      };
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockRun,
+      } as Response);
+
+      const result = await fetchImportRunStatus(42);
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          href: expect.stringContaining('/api/v1/admin/card-imports/42'),
+        }),
+        expect.objectContaining({
+          headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
+        })
+      );
+      expect(result).toEqual(mockRun);
+    });
+
+    it('should throw error when status endpoint returns non-ok', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+      } as Response);
+
+      await expect(fetchImportRunStatus(42)).rejects.toThrow('Import run status returned 404');
+    });
+  });
 });
+
