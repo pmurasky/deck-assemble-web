@@ -2,6 +2,58 @@ import { Card, CardFace } from './card';
 
 export type OwnershipStatus = 'owned' | 'wishlist' | 'proxy';
 
+export interface ScoreContribution {
+  category: string; // 'coverage' | 'missing' | 'cost' | 'rank' | 'color support'
+  score: number;
+  explanation?: string;
+  description?: string;
+}
+
+export interface CardQuantityDiff {
+  cardId: number;
+  cardName: string;
+  manaCost?: string;
+  typeLine?: string;
+  baseQuantity: number;
+  otherQuantity: number;
+  delta: number;
+}
+
+export interface GameChangersDiff {
+  added: string[];
+  removed: string[];
+}
+
+export interface LegalityDelta {
+  baseLegal: boolean;
+  otherLegal: boolean;
+  violationsAdded?: string[];
+  violationsResolved?: string[];
+}
+
+export interface ComboDelta {
+  addedCombos?: string[];
+  removedCombos?: string[];
+}
+
+export interface DeckComparisonResponse {
+  baseDeckId: number;
+  otherDeckId: number;
+  ownershipDelta: number;
+  missingCostDeltaByCurrency: Record<string, number>;
+  valueDeltaByCurrency?: Record<string, number>;
+  added: CardQuantityDiff[];
+  removed: CardQuantityDiff[];
+  quantityChanged: CardQuantityDiff[];
+  curveDelta?: Record<string, number>;
+  categoryDelta?: Record<string, number>;
+  legalityDelta?: LegalityDelta;
+  gameChangersAdded?: string[];
+  gameChangersRemoved?: string[];
+  gameChangersDelta?: GameChangersDiff;
+  comboDelta?: ComboDelta;
+}
+
 export interface CommanderSuggestion {
   id: string;
   name: string;
@@ -10,10 +62,12 @@ export interface CommanderSuggestion {
   colorIdentity: string[];
   ownershipCoverage: number; // e.g., 68 for 68%
   missingStaplesCount: number;
+  unpricedMissingCardCount?: number;
   estimatedCostToComplete: number; // in USD
-  popularityRank: number;
+  popularityRank: number | null;
   typeLine: string;
   faces?: CardFace[];
+  explanations?: ScoreContribution[];
 }
 
 export interface DeckBuildConfig {

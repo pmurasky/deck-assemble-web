@@ -20,8 +20,12 @@ describe('Recommendations API Client & Endpoints', () => {
         coveragePercent: 75.0,
         missingCardCount: 2,
         estimatedCompletionCostUsd: 45.0,
-        unpricedMissingCardCount: 0,
-        commanderRank: 1,
+        unpricedMissingCardCount: 1,
+        commanderRank: null,
+        explanations: [
+          { category: 'coverage', score: 80, explanation: 'High collection overlap' },
+          { category: 'missing', score: 90, explanation: 'Only 2 missing staples' },
+        ],
       },
     ];
 
@@ -58,8 +62,11 @@ describe('Recommendations API Client & Endpoints', () => {
     expect(recommendations[0].colorIdentity).toEqual(['W', 'U', 'B', 'G']);
     expect(recommendations[0].ownershipCoverage).toBe(75.0);
     expect(recommendations[0].missingStaplesCount).toBe(2);
+    expect(recommendations[0].unpricedMissingCardCount).toBe(1);
     expect(recommendations[0].estimatedCostToComplete).toBe(45.0);
-    expect(recommendations[0].popularityRank).toBe(1);
+    expect(recommendations[0].popularityRank).toBeNull();
+    expect(recommendations[0].explanations).toHaveLength(2);
+    expect(recommendations[0].explanations?.[0].category).toBe('coverage');
     expect(recommendations[0].typeLine).toBe('Legendary Creature — Phyrexian Angel');
     expect(recommendations[0].imageUrl).toBe('https://example.com/atraxa.jpg');
   });

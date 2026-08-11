@@ -10,6 +10,7 @@ import type {
   GeneratedDeck,
   LegalityWarning,
   OwnershipStatus,
+  ScoreContribution,
   WishlistItem,
 } from '@/types/builder';
 
@@ -29,7 +30,8 @@ export interface ApiCommanderSuggestion {
   missingCardCount: number;
   estimatedCompletionCostUsd: number;
   unpricedMissingCardCount: number;
-  commanderRank: number;
+  commanderRank: number | null;
+  explanations?: ScoreContribution[];
 }
 
 export interface BackendDeck {
@@ -133,10 +135,12 @@ function mapApiCommanderToSuggestion(item: ApiCommanderSuggestion, card: Card | 
     colorIdentity: colorIdentityArray,
     ownershipCoverage: item.coveragePercent,
     missingStaplesCount: item.missingCardCount,
+    unpricedMissingCardCount: item.unpricedMissingCardCount ?? 0,
     estimatedCostToComplete: item.estimatedCompletionCostUsd,
     popularityRank: item.commanderRank,
     typeLine: card?.typeLine ?? '',
     faces: card?.faces,
+    explanations: item.explanations ?? [],
   };
 }
 
