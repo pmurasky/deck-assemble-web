@@ -259,7 +259,7 @@ const CommanderCardTile: React.FC<CommanderCardTileProps> = ({ commander, onSele
         {/* Popularity Rank Badge */}
         <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-slate-700/60 text-[11px] font-semibold text-amber-300 flex items-center gap-1">
           <Award className="w-3 h-3 text-amber-400" />
-          <span>#{commander.popularityRank} Meta</span>
+          <span>{commander.popularityRank !== null && commander.popularityRank !== undefined ? `#${commander.popularityRank} Rank` : 'Unranked'}</span>
         </div>
 
         {/* Two-Sided Badge & Flip Button */}
@@ -303,6 +303,21 @@ const CommanderCardTile: React.FC<CommanderCardTileProps> = ({ commander, onSele
           <p className="text-xs text-slate-400 line-clamp-1">{activeTypeLine}</p>
         </div>
 
+        {/* Explanation Chips */}
+        {commander.explanations && commander.explanations.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 py-0.5">
+            {commander.explanations.map((exp, idx) => (
+              <span
+                key={idx}
+                title={exp.explanation || exp.description || `${exp.category}: ${exp.score}`}
+                className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-950/80 text-violet-300 border border-violet-500/30 backdrop-blur-xs"
+              >
+                {exp.category}: {exp.score}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-slate-800/80">
           <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-950/30 px-2 py-1 rounded border border-emerald-500/20">
@@ -337,7 +352,10 @@ const CommanderCardTile: React.FC<CommanderCardTileProps> = ({ commander, onSele
               className="text-[11px] text-violet-400 hover:text-violet-300 font-semibold hover:underline flex items-center gap-1 transition-colors group/link cursor-pointer"
               title="Click to view missing cards wishlist for this commander"
             >
-              <span>{commander.missingStaplesCount} missing staples</span>
+              <span>
+                {commander.missingStaplesCount} missing staples
+                {commander.unpricedMissingCardCount ? ` (${commander.unpricedMissingCardCount} unpriced)` : ''}
+              </span>
               <ExternalLink className="w-3 h-3 opacity-75 group-hover/link:opacity-100 group-hover/link:translate-x-0.5 transition-all" />
             </button>
           )}
