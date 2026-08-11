@@ -334,7 +334,13 @@ export const DeckComparisonView: React.FC<DeckComparisonViewProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {otherDecks.map((otherDeck) => {
                 const comp = comparisons[otherDeck.id];
-                const items: CardQuantityDiff[] = comp ? comp[activeDiffTab] : [];
+                const items: CardQuantityDiff[] = comp
+                  ? activeDiffTab === 'added'
+                    ? comp.added
+                    : activeDiffTab === 'removed'
+                    ? comp.removed
+                    : comp.quantityChanged
+                  : [];
 
                 return (
                   <div key={otherDeck.id} className="space-y-3 p-4 rounded-xl bg-slate-950 border border-slate-800">
