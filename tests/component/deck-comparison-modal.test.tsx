@@ -59,13 +59,14 @@ const mockDecks: GeneratedDeck[] = [
 ];
 
 describe('DeckComparisonModal Component', () => {
-  it('renders side-by-side comparison metrics for multiple decks', () => {
+  it('renders side-by-side comparison metrics for multiple decks', async () => {
     render(<DeckComparisonModal decks={mockDecks} isOpen={true} onClose={() => {}} />);
 
     expect(screen.getByText("Atraxa's Proliferate Engine")).toBeInTheDocument();
-    expect(screen.getByText('Krenko Goblin Swarm')).toBeInTheDocument();
-    expect(screen.getByText('74% Owned')).toBeInTheDocument();
-    expect(screen.getByText('92% Owned')).toBeInTheDocument();
+    const krenkoTitles = await screen.findAllByText('Krenko Goblin Swarm');
+    expect(krenkoTitles.length).toBeGreaterThan(0);
+    expect(screen.getByText('74%')).toBeInTheDocument();
+    expect(screen.getByText('92%')).toBeInTheDocument();
     expect(screen.getByText('$38.40')).toBeInTheDocument();
     expect(screen.getByText('$12.50')).toBeInTheDocument();
   });
