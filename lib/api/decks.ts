@@ -1,5 +1,6 @@
 import { auth0 } from '@/lib/auth0';
 import type { ApiCard } from '@/lib/api/catalog';
+import type { DeckComparisonResponse } from '@/types/builder';
 
 const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
 
@@ -411,6 +412,21 @@ export async function deleteCategoryTemplateBackend(id: number) {
 
 export async function applyCategoryTemplateBackend(deckId: number, templateId: number) {
   return json(fetchDecks(`/decks/${deckId}/categories/from-template`, { method: 'POST', body: JSON.stringify({ templateId }) }), 'Failed to apply category template');
+}
+
+export async function getDeckComparison(deckId: number, otherDeckId: number): Promise<DeckComparisonResponse> {
+  const res = await fetch(`/api/v1/decks/${deckId}/comparison/${otherDeckId}`, { cache: 'no-store' });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => null);
+    const msg = errData?.error?.message || errData?.message || 'Failed to fetch deck comparison';
+    throw new Error(msg);
+  }
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as DeckComparisonResponse;
+}
+
+export async function getDeckComparisonBackend(deckId: number, otherDeckId: number): Promise<DeckComparisonResponse> {
+  return json(fetchDecks(`/decks/${deckId}/comparison/${otherDeckId}`), 'Failed to fetch deck comparison');
 }
 
 
