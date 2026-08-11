@@ -86,7 +86,7 @@ export async function createBackendDeckBuild(body: GenerateBuildRequest): Promis
       commanderCardId: Number(body.commanderCardId),
       secondaryCommanderCardId: body.secondaryCommanderCardId ? Number(body.secondaryCommanderCardId) : null,
       desiredPowerLevel: body.desiredPowerLevel,
-      playStyle: body.playStyle,
+      playStyle: body.playStyle ? body.playStyle.toLowerCase() : 'midrange',
       useOwnedCardsOnly: body.useOwnedCardsOnly,
       budgetLimit: body.budgetLimit,
     }),

@@ -70,20 +70,22 @@ export interface CommanderSuggestion {
   explanations?: ScoreContribution[];
 }
 
+export type PlayStyleOption = 'aggro' | 'control' | 'combo' | 'tribal' | 'midrange';
+
 export interface DeckBuildConfig {
   commanderId: string;
   secondaryCommanderId?: string | null;
   ownedOnly: boolean;
   budgetLimit?: number;
   powerLevel: number; // 1 - 10
-  playStyles: string[]; // e.g. ['Aggro', 'Combo']
+  playStyles: string[]; // e.g. ['Aggro', 'Control', 'Combo', 'Tribal', 'Midrange']
 }
 
 export interface GenerateBuildRequest {
   commanderCardId: number | string;
   secondaryCommanderCardId?: number | string | null;
   desiredPowerLevel?: number;
-  playStyle?: string;
+  playStyle?: PlayStyleOption | string;
   useOwnedCardsOnly?: boolean;
   budgetLimit?: number;
 }

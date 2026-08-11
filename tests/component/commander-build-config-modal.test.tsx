@@ -38,14 +38,36 @@ describe('CommanderBuildConfigModal Component', () => {
     expect(screen.getByText("Atraxa, Praetors' Voice")).toBeInTheDocument();
     expect(screen.getByLabelText(/Owned cards only/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Power Level/i)).toBeInTheDocument();
+    expect(screen.getByText('Aggro')).toBeInTheDocument();
     expect(screen.getByText('Control')).toBeInTheDocument();
     expect(screen.getByText('Combo')).toBeInTheDocument();
+    expect(screen.getByText('Tribal')).toBeInTheDocument();
+    expect(screen.getByText('Midrange')).toBeInTheDocument();
 
     // Verify color identity pips for Atraxa (W, U, B, G)
     expect(screen.getByTestId('color-pip-W')).toBeInTheDocument();
     expect(screen.getByTestId('color-pip-U')).toBeInTheDocument();
     expect(screen.getByTestId('color-pip-B')).toBeInTheDocument();
     expect(screen.getByTestId('color-pip-G')).toBeInTheDocument();
+  });
+
+  it('renders exactly the 5 supported play style selector options', () => {
+    render(
+      <CommanderBuildConfigModal
+        commander={mockCommander}
+        isOpen={true}
+        onClose={() => {}}
+        onGenerate={() => {}}
+      />
+    );
+
+    expect(screen.getByText('Aggro')).toBeInTheDocument();
+    expect(screen.getByText('Control')).toBeInTheDocument();
+    expect(screen.getByText('Combo')).toBeInTheDocument();
+    expect(screen.getByText('Tribal')).toBeInTheDocument();
+    expect(screen.getByText('Midrange')).toBeInTheDocument();
+    expect(screen.queryByText('Spellslinger')).not.toBeInTheDocument();
+    expect(screen.queryByText('Voltron')).not.toBeInTheDocument();
   });
 
   it('collects user configuration and triggers onGenerate with ownedOnly enabled by default', async () => {

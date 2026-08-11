@@ -15,13 +15,8 @@ const PLAY_STYLES = [
   'Aggro',
   'Control',
   'Combo',
+  'Tribal',
   'Midrange',
-  'Tribal / Kindred',
-  'Spellslinger',
-  'Aristocrats',
-  'Voltron',
-  'Stax / Tax',
-  'Superfriends',
 ];
 
 const COLOR_MAP: Record<string, { label: string; bg: string; name: string }> = {
