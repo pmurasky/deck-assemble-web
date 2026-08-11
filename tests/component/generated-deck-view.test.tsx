@@ -165,4 +165,70 @@ describe('GeneratedDeckView Component', () => {
 
     expect(screen.getByTestId('card-preview-modal')).toBeInTheDocument();
   });
+
+  it('renders PROTECTION and FINISHER category sections for labeled cards', () => {
+    const deckWithProtectionAndFinisher: GeneratedDeck = {
+      ...mockDeck,
+      cards: [
+        {
+          card: {
+            id: 'prot-1',
+            oracleId: 'ora-prot-1',
+            name: "Heroic Intervention",
+            manaCost: '{1}{G}',
+            manaValue: 2,
+            colors: ['G'],
+            colorIdentity: ['G'],
+            typeLine: 'Instant',
+            setCode: 'aer',
+            setName: 'Aether Revolt',
+            rarity: 'rare',
+            legalities: { commander: 'legal' },
+          },
+          quantity: 1,
+          section: 'PROTECTION' as any,
+          ownership: 'owned',
+          estimatedPrice: 2.5,
+          synergyScore: 95,
+          synergyReason: 'Protects board from wipes and targeted removal.',
+        },
+        {
+          card: {
+            id: 'fin-1',
+            oracleId: 'ora-fin-1',
+            name: 'Craterhoof Behemoth',
+            manaCost: '{5}{G}{G}{G}',
+            manaValue: 8,
+            colors: ['G'],
+            colorIdentity: ['G'],
+            typeLine: 'Creature — Beast',
+            setCode: 'avr',
+            setName: 'Avacyn Restored',
+            rarity: 'mythic',
+            legalities: { commander: 'legal' },
+          },
+          quantity: 1,
+          section: 'FINISHER' as any,
+          ownership: 'owned',
+          estimatedPrice: 30.0,
+          synergyScore: 99,
+          synergyReason: 'Game-ending finisher with wide board state.',
+        },
+      ],
+    };
+
+    render(
+      <GeneratedDeckView
+        deck={deckWithProtectionAndFinisher}
+        onUpdateDeck={() => {}}
+        onOpenWishlist={() => {}}
+      />
+    );
+
+    expect(screen.getByText('Protection')).toBeInTheDocument();
+    expect(screen.getByText('Heroic Intervention')).toBeInTheDocument();
+    expect(screen.getByText('Finisher')).toBeInTheDocument();
+    expect(screen.getByText('Craterhoof Behemoth')).toBeInTheDocument();
+  });
 });
+

@@ -42,7 +42,17 @@ export type DeckRoleSection =
   | 'Draw'
   | 'Removal'
   | 'Board Wipes'
-  | 'Theme/Synergy';
+  | 'Protection'
+  | 'Finisher'
+  | 'Theme/Synergy'
+  | 'LAND'
+  | 'RAMP'
+  | 'DRAW'
+  | 'WIPE'
+  | 'REMOVAL'
+  | 'PROTECTION'
+  | 'FINISHER'
+  | 'SYNERGY';
 
 export interface DeckCardRow {
   card: Card;

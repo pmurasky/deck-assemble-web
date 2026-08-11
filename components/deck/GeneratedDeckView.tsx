@@ -34,12 +34,14 @@ interface GeneratedDeckViewProps {
 const SECTIONS: { key: DeckRoleSection; label: string; legacyKeys: string[] }[] = [
   { key: 'Commander', label: 'Commander', legacyKeys: ['Commander', 'COMMANDER'] },
   { key: 'Main Deck', label: 'Main Deck', legacyKeys: ['Main Deck', 'MAIN_DECK'] },
-  { key: 'Lands', label: 'Lands', legacyKeys: ['Lands'] },
-  { key: 'Ramp', label: 'Ramp', legacyKeys: ['Ramp'] },
-  { key: 'Draw', label: 'Draw', legacyKeys: ['Draw', 'Card Draw'] },
-  { key: 'Removal', label: 'Removal', legacyKeys: ['Removal', 'Targeted Removal'] },
-  { key: 'Board Wipes', label: 'Board Wipes', legacyKeys: ['Board Wipes'] },
-  { key: 'Theme/Synergy', label: 'Theme/Synergy', legacyKeys: ['Theme/Synergy', 'Synergy'] },
+  { key: 'Lands', label: 'Lands', legacyKeys: ['Lands', 'LAND'] },
+  { key: 'Ramp', label: 'Ramp', legacyKeys: ['Ramp', 'RAMP'] },
+  { key: 'Draw', label: 'Draw', legacyKeys: ['Draw', 'Card Draw', 'DRAW'] },
+  { key: 'Removal', label: 'Removal', legacyKeys: ['Removal', 'Targeted Removal', 'REMOVAL'] },
+  { key: 'Board Wipes', label: 'Board Wipes', legacyKeys: ['Board Wipes', 'WIPE', 'Wipes'] },
+  { key: 'Protection', label: 'Protection', legacyKeys: ['Protection', 'PROTECTION'] },
+  { key: 'Finisher', label: 'Finisher', legacyKeys: ['Finisher', 'FINISHER', 'Finishers'] },
+  { key: 'Theme/Synergy', label: 'Theme/Synergy', legacyKeys: ['Theme/Synergy', 'Synergy', 'SYNERGY'] },
 ];
 
 export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
@@ -64,10 +66,17 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
   // Group cards by section with fallback matching
   const groupedCards = SECTIONS.reduce((acc, sectionInfo) => {
     acc[sectionInfo.label] = filteredDeckCards.filter((c) =>
-      sectionInfo.legacyKeys.includes(c.section)
+      sectionInfo.legacyKeys.some((k) => k.toLowerCase() === (c.section || '').toLowerCase())
     );
     return acc;
   }, {} as Record<string, DeckCardRow[]>);
+
+  // Fallback: place any unassigned cards into Main Deck section
+  const matchedCardIds = new Set(Object.values(groupedCards).flat().map((c) => c.card.id));
+  const unassignedCards = filteredDeckCards.filter((c) => !matchedCardIds.has(c.card.id));
+  if (unassignedCards.length > 0) {
+    groupedCards['Main Deck'] = [...(groupedCards['Main Deck'] || []), ...unassignedCards];
+  }
 
   // Mana Curve calculation (0 to 6+)
   const manaCurve = [0, 1, 2, 3, 4, 5, 6].map((cmc) => {
