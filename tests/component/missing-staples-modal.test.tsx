@@ -20,6 +20,7 @@ const sampleWishlist: WishlistItem[] = [
   {
     card: {
       id: '201',
+      oracleId: 'orc-201',
       name: 'Doubling Season',
       typeLine: 'Enchantment',
       manaCost: '{4}{G}',

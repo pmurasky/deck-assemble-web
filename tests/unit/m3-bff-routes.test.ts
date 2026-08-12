@@ -46,7 +46,7 @@ describe('M3 BFF Proxy Routes', () => {
     vi.spyOn(revisionsApi, 'getDeckRevision').mockResolvedValue({
       revisionNumber: 2,
       createdAt: '2026-08-09T00:00:00Z',
-      snapshot: { id: 10, name: 'Deck', formatCode: 'commander', revisionNumber: 2, cards: [] },
+      snapshot: { id: 10, name: 'Deck', formatCode: 'commander', commanderCardId: null, revisionNumber: 2, cards: [] },
     });
 
     const req = new NextRequest('http://localhost/api/v1/decks/10/revisions/2');
@@ -74,7 +74,7 @@ describe('M3 BFF Proxy Routes', () => {
     vi.spyOn(revisionsApi, 'restoreDeckRevision').mockResolvedValue({
       revisionNumber: 4,
       createdAt: '2026-08-09T00:00:00Z',
-      snapshot: { id: 10, name: 'Restored', formatCode: 'commander', revisionNumber: 4, cards: [] },
+      snapshot: { id: 10, name: 'Restored', formatCode: 'commander', commanderCardId: null, revisionNumber: 4, cards: [] },
     });
 
     const req = new NextRequest('http://localhost/api/v1/decks/10/revisions/2/restore', {
@@ -184,7 +184,7 @@ describe('M3 BFF Proxy Routes', () => {
 
   it('POST /api/v1/shared/decks/:slug/fork forks shared deck', async () => {
     vi.spyOn(publishingApi, 'forkSharedDeck').mockResolvedValue({
-      newDeckId: 100, newDeck: { id: 100, name: 'Shared (Fork)', formatCode: 'commander' },
+      newDeckId: 100, newDeck: { id: 100, name: 'Shared (Fork)', formatCode: 'commander', commanderCardId: null },
     });
 
     const req = new NextRequest('http://localhost/api/v1/shared/decks/shared/fork', { method: 'POST' });

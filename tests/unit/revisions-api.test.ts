@@ -15,7 +15,7 @@ vi.mock('@/lib/auth0', () => ({
 describe('revisions-api', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    vi.mocked(global.fetch).resetMocks?.();
+    vi.mocked(global.fetch).mockReset?.();
   });
 
   it('should fetch paginated revisions list', async () => {
