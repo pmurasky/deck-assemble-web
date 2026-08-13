@@ -124,6 +124,10 @@ For architecture testing with ArchUnit (Java/Kotlin): @docs/ARCHUNIT_STANDARDS.m
 For SpotBugs bytecode bug detection (Java only): @docs/SPOTBUGS_STANDARDS.md
 For conversion/porting plan template (gated phases, behavioral baseline, quality gates): @docs/CONVERSION_PLAN_TEMPLATE.md
 
+### Cross-repo work
+
+For the multi-agent cross-repo workflow protocol (only when given a specs/work/<id> kickoff task): @docs/MULTI_AGENT_WORKFLOW.md
+
 ## Before Making ANY Code Changes
 
 1. Pull latest changes: `git pull`
