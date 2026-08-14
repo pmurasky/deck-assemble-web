@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { User, Settings, Save, CheckCircle2, RefreshCw, Mail, Shield, Sparkles } from 'lucide-react';
+import { User, Settings, Save, CheckCircle2, RefreshCw, Mail } from 'lucide-react';
 import { fetchProfile, saveProfile } from '@/lib/api/profile';
 import type { ProfileResponse } from '@/types/profile';
 
@@ -16,25 +16,29 @@ export function SettingsClient() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const loadProfile = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await fetchProfile();
-      setProfile(data);
-      setDisplayName(data.displayName || '');
-      setEmail(data.email || '');
-      setPreferredFormat(data.preferredFormat || 'Commander');
-      setExperienceLevel(data.experienceLevel || 'CASUAL');
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load profile');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadProfile();
+    let isMounted = true;
+    fetchProfile()
+      .then((data) => {
+        if (isMounted) {
+          setProfile(data);
+          setDisplayName(data.displayName || '');
+          setEmail(data.email || '');
+          setPreferredFormat(data.preferredFormat || 'Commander');
+          setExperienceLevel(data.experienceLevel || 'CASUAL');
+          setIsLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to load profile');
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

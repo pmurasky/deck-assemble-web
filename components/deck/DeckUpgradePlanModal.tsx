@@ -3,14 +3,9 @@
 import React, { useState } from 'react';
 import {
   Sparkles,
-  ArrowRight,
   TrendingUp,
   X,
   RefreshCw,
-  Layers,
-  CheckCircle2,
-  DollarSign,
-  ShieldAlert,
 } from 'lucide-react';
 import { requestDeckUpgradePlan } from '@/lib/api/decks';
 import type {

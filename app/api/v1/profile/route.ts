@@ -4,7 +4,7 @@ import { auth0 } from '@/lib/auth0';
 import { handleRouteError } from '@/lib/api/route-utils';
 import type { ProfileUpdateRequest } from '@/types/profile';
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     const { token } = await auth0.getAccessToken();
     const profile = await getProfile(token);

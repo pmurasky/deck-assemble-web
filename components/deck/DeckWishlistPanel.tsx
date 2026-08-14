@@ -8,16 +8,14 @@ import {
   FileText,
   DollarSign,
   RefreshCw,
-  Sparkles,
   ArrowLeft,
-  Layers,
 } from 'lucide-react';
 import {
   fetchDeckWishlist,
   syncDeckOwnershipClient,
   acquireDeckCardClient,
 } from '@/lib/api/decks';
-import type { DeckWishlistItem, DeckWishlistResponse } from '@/types/builder';
+import type { DeckWishlistResponse } from '@/types/builder';
 
 interface DeckWishlistPanelProps {
   deckId: number | string;
@@ -36,12 +34,10 @@ export function DeckWishlistPanel({ deckId, onBackToDeck }: DeckWishlistPanelPro
     setIsLoading(true);
     setError(null);
     try {
-      // Step 1: Sync deck ownership against user's collections
       setIsSyncing(true);
       await syncDeckOwnershipClient(Number(deckId)).catch(() => null);
       setIsSyncing(false);
 
-      // Step 2: Fetch latest wishlist
       const wishlist = await fetchDeckWishlist(Number(deckId));
       setData(wishlist);
     } catch (err: unknown) {
@@ -53,9 +49,30 @@ export function DeckWishlistPanel({ deckId, onBackToDeck }: DeckWishlistPanelPro
   };
 
   useEffect(() => {
-    if (deckId) {
-      loadWishlist();
-    }
+    let isMounted = true;
+    if (!deckId) return;
+
+    syncDeckOwnershipClient(Number(deckId))
+      .catch(() => null)
+      .then(() => fetchDeckWishlist(Number(deckId)))
+      .then((wishlist) => {
+        if (isMounted) {
+          setData(wishlist);
+          setIsLoading(false);
+          setIsSyncing(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to load deck wishlist');
+          setIsLoading(false);
+          setIsSyncing(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [deckId]);
 
   const handleAcquire = async (deckCardId: number) => {

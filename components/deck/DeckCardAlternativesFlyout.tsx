@@ -2,13 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  Sparkles,
-  CheckCircle2,
   X,
   RefreshCw,
   Layers,
   ArrowRightLeft,
-  DollarSign,
 } from 'lucide-react';
 import { fetchDeckCardAlternatives } from '@/lib/api/decks';
 import type { DeckCardAlternativeResponse } from '@/types/builder';
@@ -48,9 +45,26 @@ export function DeckCardAlternativesFlyout({
   };
 
   useEffect(() => {
-    if (isOpen && deckId && deckCardId) {
-      loadAlternatives();
-    }
+    let isMounted = true;
+    if (!isOpen || !deckId || !deckCardId) return;
+
+    fetchDeckCardAlternatives(Number(deckId), Number(deckCardId), 10, true)
+      .then((data) => {
+        if (isMounted) {
+          setAlternatives(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to load card alternatives');
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen, deckId, deckCardId]);
 
   if (!isOpen) return null;
