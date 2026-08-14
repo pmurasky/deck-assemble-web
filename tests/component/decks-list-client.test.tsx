@@ -27,12 +27,15 @@ vi.mock('@/lib/store/deck-store', () => ({
 describe('DecksListClient Component', () => {
   const mockLoadDeck = vi.fn();
   const mockFetchDeckCards = vi.fn();
+  const mockClearDeck = vi.fn();
+  const mockUpdateMetadata = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useDeckStore).mockReturnValue({
       loadDeck: mockLoadDeck,
-      clearDeck: vi.fn(),
+      clearDeck: mockClearDeck,
+      updateMetadata: mockUpdateMetadata,
       fetchDeckCards: mockFetchDeckCards,
     } as unknown as ReturnType<typeof useDeckStore>);
   });
@@ -120,6 +123,124 @@ describe('DecksListClient Component', () => {
     fireEvent.click(archiveBtn);
 
     expect(mockArchive).toHaveBeenCalledWith('42');
+  });
+
+  describe('Create New Deck Naming Modal', () => {
+    it('opens naming modal when Create New Deck is clicked without navigating immediately', () => {
+      vi.mocked(useDecksListStore).mockReturnValue({
+        decks: [],
+        deleteDeck: vi.fn(),
+        fetchDecks: vi.fn(),
+        isLoading: false,
+        error: null,
+      } as unknown as ReturnType<typeof useDecksListStore>);
+
+      render(<DecksListClient />);
+      const newDeckBtn = screen.getByRole('button', { name: /Create New Deck/i });
+      fireEvent.click(newDeckBtn);
+
+      expect(screen.getByRole('heading', { name: /Name Your Deck/i })).toBeDefined();
+      expect(screen.getByDisplayValue('New Deck')).toBeDefined();
+      expect(mockPush).not.toHaveBeenCalled();
+      expect(mockClearDeck).not.toHaveBeenCalled();
+    });
+
+    it('opens naming modal when Go to Deck Builder is clicked in empty state', () => {
+      vi.mocked(useDecksListStore).mockReturnValue({
+        decks: [],
+        deleteDeck: vi.fn(),
+        fetchDecks: vi.fn(),
+        isLoading: false,
+        error: null,
+      } as unknown as ReturnType<typeof useDecksListStore>);
+
+      render(<DecksListClient />);
+      const goToBuilderBtn = screen.getByRole('button', { name: /Go to Deck Builder/i });
+      fireEvent.click(goToBuilderBtn);
+
+      expect(screen.getByRole('heading', { name: /Name Your Deck/i })).toBeDefined();
+      expect(mockPush).not.toHaveBeenCalled();
+      expect(mockClearDeck).not.toHaveBeenCalled();
+    });
+
+    it('confirming modal with custom name calls clearDeck, updateMetadata, and routes to /deck-builder', () => {
+      const callOrder: string[] = [];
+      mockClearDeck.mockImplementation(() => { callOrder.push('clearDeck'); });
+      mockUpdateMetadata.mockImplementation(() => { callOrder.push('updateMetadata'); });
+      mockPush.mockImplementation(() => { callOrder.push('router.push'); });
+
+      vi.mocked(useDecksListStore).mockReturnValue({
+        decks: [],
+        deleteDeck: vi.fn(),
+        fetchDecks: vi.fn(),
+        isLoading: false,
+        error: null,
+      } as unknown as ReturnType<typeof useDecksListStore>);
+
+      render(<DecksListClient />);
+      const newDeckBtn = screen.getByRole('button', { name: /Create New Deck/i });
+      fireEvent.click(newDeckBtn);
+
+      const input = screen.getByDisplayValue('New Deck');
+      fireEvent.change(input, { target: { value: 'Sliver Swarm' } });
+
+      const confirmBtn = screen.getByRole('button', { name: /^Create$/i });
+      fireEvent.click(confirmBtn);
+
+      expect(mockClearDeck).toHaveBeenCalled();
+      expect(mockUpdateMetadata).toHaveBeenCalledWith({ name: 'Sliver Swarm' });
+      expect(mockPush).toHaveBeenCalledWith('/deck-builder');
+      expect(callOrder).toEqual(['clearDeck', 'updateMetadata', 'router.push']);
+      expect(screen.queryByRole('heading', { name: /Name Your Deck/i })).toBeNull();
+    });
+
+    it('confirming modal with empty name falls back to "New Deck"', () => {
+      vi.mocked(useDecksListStore).mockReturnValue({
+        decks: [],
+        deleteDeck: vi.fn(),
+        fetchDecks: vi.fn(),
+        isLoading: false,
+        error: null,
+      } as unknown as ReturnType<typeof useDecksListStore>);
+
+      render(<DecksListClient />);
+      const newDeckBtn = screen.getByRole('button', { name: /Create New Deck/i });
+      fireEvent.click(newDeckBtn);
+
+      const input = screen.getByDisplayValue('New Deck');
+      fireEvent.change(input, { target: { value: '   ' } });
+
+      const confirmBtn = screen.getByRole('button', { name: /^Create$/i });
+      fireEvent.click(confirmBtn);
+
+      expect(mockClearDeck).toHaveBeenCalled();
+      expect(mockUpdateMetadata).toHaveBeenCalledWith({ name: 'New Deck' });
+      expect(mockPush).toHaveBeenCalledWith('/deck-builder');
+    });
+
+    it('canceling modal closes it without store calls or navigation', () => {
+      vi.mocked(useDecksListStore).mockReturnValue({
+        decks: [],
+        deleteDeck: vi.fn(),
+        fetchDecks: vi.fn(),
+        isLoading: false,
+        error: null,
+      } as unknown as ReturnType<typeof useDecksListStore>);
+
+      render(<DecksListClient />);
+      const newDeckBtn = screen.getByRole('button', { name: /Create New Deck/i });
+      fireEvent.click(newDeckBtn);
+
+      expect(screen.getByRole('heading', { name: /Name Your Deck/i })).toBeDefined();
+
+      const cancelBtn = screen.getByRole('button', { name: /Cancel/i });
+      fireEvent.click(cancelBtn);
+
+      expect(screen.queryByRole('heading', { name: /Name Your Deck/i })).toBeNull();
+      expect(mockClearDeck).not.toHaveBeenCalled();
+      expect(mockUpdateMetadata).not.toHaveBeenCalled();
+      expect(mockPush).not.toHaveBeenCalled();
+    });
   });
 });
 

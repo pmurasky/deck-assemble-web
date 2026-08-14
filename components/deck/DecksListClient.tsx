@@ -13,11 +13,13 @@ import { ExportDeckModal } from '@/components/export/ExportDeckModal';
 export function DecksListClient() {
   const { user, isLoading: isUserLoading } = useUser();
   const { decks, deleteDeck, duplicateDeck, archiveDeck, fetchDecks, isLoading, error } = useDecksListStore();
-  const { loadDeck, clearDeck, fetchDeckCards } = useDeckStore();
+  const { loadDeck, clearDeck, updateMetadata, fetchDeckCards } = useDeckStore();
   const router = useRouter();
 
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [exportDeckTarget, setExportDeckTarget] = useState<{ id: number | string; name: string } | null>(null);
+  const [isNamingNewDeck, setIsNamingNewDeck] = useState(false);
+  const [newDeckName, setNewDeckName] = useState('New Deck');
 
   useEffect(() => {
     fetchDecks();
@@ -56,8 +58,21 @@ export function DecksListClient() {
   };
 
   const handleNewDeck = () => {
+    setNewDeckName('New Deck');
+    setIsNamingNewDeck(true);
+  };
+
+  const handleCreateDeckSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const finalName = newDeckName.trim() || 'New Deck';
     clearDeck();
+    updateMetadata({ name: finalName });
+    setIsNamingNewDeck(false);
     router.push('/deck-builder');
+  };
+
+  const handleCancelNewDeck = () => {
+    setIsNamingNewDeck(false);
   };
 
   return (
@@ -220,6 +235,55 @@ export function DecksListClient() {
           deckId={exportDeckTarget.id}
           deckName={exportDeckTarget.name}
         />
+      )}
+
+      {/* Create New Deck Naming Modal */}
+      {isNamingNewDeck && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 text-zinc-100 shadow-2xl relative">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-zinc-800">
+              <h3 className="text-lg font-bold text-white">Name Your Deck</h3>
+              <button
+                type="button"
+                onClick={handleCancelNewDeck}
+                className="text-zinc-400 hover:text-zinc-200 text-sm font-medium transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleCreateDeckSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="new-deck-name" className="block text-xs font-semibold text-zinc-400 mb-1.5 uppercase tracking-wider">
+                  Deck Name
+                </label>
+                <input
+                  id="new-deck-name"
+                  type="text"
+                  value={newDeckName}
+                  onChange={(e) => setNewDeckName(e.target.value)}
+                  placeholder="e.g. Atraxa Proliferation"
+                  autoFocus
+                  className="w-full px-3.5 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-purple-500 transition-colors"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleCancelNewDeck}
+                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-sm font-semibold transition-colors border border-zinc-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-green-600 hover:bg-green-500 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-green-950/40"
+                >
+                  Create
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}

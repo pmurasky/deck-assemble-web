@@ -13,7 +13,7 @@ import { DeckCardAlternativesFlyout } from '@/components/deck/DeckCardAlternativ
 import { DeckUpgradePlanModal } from '@/components/deck/DeckUpgradePlanModal';
 
 export function DeckWorkspace() {
-  const { id, cards, metadata, commander, addCard, removeCard, isLoading } = useDeckStore();
+  const { id, cards, metadata, commander, addCard, removeCard, updateMetadata, isLoading } = useDeckStore();
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
@@ -22,6 +22,36 @@ export function DeckWorkspace() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isSimOpen, setIsSimOpen] = useState(false);
   const [isPublishOpen, setIsPublishOpen] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+
+  const handleStartEditName = () => {
+    setNameDraft(metadata.name);
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = () => {
+    const trimmed = nameDraft.trim();
+    if (trimmed) {
+      updateMetadata({ name: trimmed });
+    }
+    setIsEditingName(false);
+  };
+
+  const handleCancelName = () => {
+    setNameDraft(metadata.name);
+    setIsEditingName(false);
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveName();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancelName();
+    }
+  };
 
   const groupedCards = useMemo(() => {
     return cards.reduce((acc, deckCard) => {
@@ -63,7 +93,25 @@ export function DeckWorkspace() {
     <div className="bg-zinc-900/90 rounded-2xl border border-zinc-800 p-5 flex flex-col h-full overflow-hidden shadow-xl">
       <div className="flex justify-between items-start mb-4 pb-4 border-b border-zinc-800">
         <div className="space-y-1 max-w-[50%]">
-          <h2 className="text-xl font-extrabold text-zinc-100 truncate tracking-tight">{metadata.name}</h2>
+          {isEditingName ? (
+            <input
+              type="text"
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              onBlur={handleSaveName}
+              onKeyDown={handleNameKeyDown}
+              autoFocus
+              className="w-full px-2 py-0.5 bg-zinc-950 border border-purple-500 rounded-lg text-xl font-extrabold text-zinc-100 focus:outline-none tracking-tight shadow-inner"
+            />
+          ) : (
+            <h2
+              onClick={handleStartEditName}
+              className="text-xl font-extrabold text-zinc-100 truncate tracking-tight cursor-pointer hover:text-purple-300 transition-colors"
+              title="Click to edit deck name"
+            >
+              {metadata.name}
+            </h2>
+          )}
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-zinc-300 bg-zinc-800/80 px-2.5 py-0.5 rounded-lg border border-zinc-700/50">
               {totalCards} Cards
