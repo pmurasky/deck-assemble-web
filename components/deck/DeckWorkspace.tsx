@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Loader2, Crown, Layers, Plus, Minus, Download, BarChart2, ShoppingCart } from 'lucide-react';
+import { Loader2, Crown, Layers, Plus, Minus, Download, BarChart2, ShoppingCart, ArrowRightLeft } from 'lucide-react';
 import { useDeckStore, type DeckCard } from '@/lib/store/deck-store';
 import { ExportDeckModal } from '@/components/export/ExportDeckModal';
 import { DeckAnalysisPanel } from '@/components/deck/DeckAnalysisPanel';
@@ -9,12 +9,14 @@ import { DeckHistoryPanel } from '@/components/deck/DeckHistoryPanel';
 import { DeckSimulationPanel } from '@/components/deck/DeckSimulationPanel';
 import { DeckPublishingModal } from '@/components/deck/DeckPublishingModal';
 import { DeckWishlistPanel } from '@/components/deck/DeckWishlistPanel';
+import { DeckCardAlternativesFlyout } from '@/components/deck/DeckCardAlternativesFlyout';
 
 export function DeckWorkspace() {
   const { id, cards, metadata, commander, addCard, removeCard, isLoading } = useDeckStore();
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [alternativesTarget, setAlternativesTarget] = useState<{ deckCardId: number | string; name: string } | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isSimOpen, setIsSimOpen] = useState(false);
   const [isPublishOpen, setIsPublishOpen] = useState(false);
@@ -176,6 +178,15 @@ export function DeckWorkspace() {
                     <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button
                         type="button"
+                        onClick={() => setAlternativesTarget({ deckCardId, name: card.name })}
+                        className="w-6 h-6 sm:w-5 sm:h-5 rounded flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-purple-400 hover:text-purple-200 transition-colors active:scale-95"
+                        title="Find Alternatives"
+                        aria-label={`Alternatives for ${card.name}`}
+                      >
+                        <ArrowRightLeft className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => removeCard(deckCardId)}
                         className="w-6 h-6 sm:w-5 sm:h-5 rounded flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors active:scale-95"
                         aria-label="Remove one"
@@ -276,6 +287,16 @@ export function DeckWorkspace() {
           deckId={id}
           isOpen={isPublishOpen}
           onClose={() => setIsPublishOpen(false)}
+        />
+      )}
+
+      {alternativesTarget && id && (
+        <DeckCardAlternativesFlyout
+          isOpen={Boolean(alternativesTarget)}
+          onClose={() => setAlternativesTarget(null)}
+          deckId={id}
+          deckCardId={alternativesTarget.deckCardId}
+          cardName={alternativesTarget.name}
         />
       )}
     </div>
