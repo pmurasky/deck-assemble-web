@@ -1,0 +1,39 @@
+name: Feature
+description: A new frontend capability or view
+title: "[Feature] "
+labels: ["type:feature", "status:awaiting-approval"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: One paragraph — what this builds and why.
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Contract
+      description: If this depends on a deck-assemble-api endpoint, paste the relevant OpenAPI spec (request/response shape, status codes, error format) here. Leave blank if not applicable.
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+  - type: textarea
+    id: files
+    attributes:
+      label: Files to touch
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps
+  - type: textarea
+    id: test-strategy
+    attributes:
+      label: Test strategy
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
