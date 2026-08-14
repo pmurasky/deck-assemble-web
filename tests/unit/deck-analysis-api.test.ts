@@ -8,50 +8,79 @@ describe('Deck Analysis API Client', () => {
 
   it('should fetch deck analysis data from GET /api/v1/decks/:deckId/analysis', async () => {
     const mockAnalysisData = {
-      deckId: 10,
-      totalCards: 100,
-      manaCurve: [
-        { cmc: '0', count: 2 },
-        { cmc: '1', count: 12 },
-        { cmc: '2', count: 25 },
-        { cmc: '3', count: 20 },
-        { cmc: '4', count: 15 },
-        { cmc: '5', count: 10 },
-        { cmc: '6+', count: 16 },
-      ],
-      colorDemand: [
-        { color: 'W', count: 25 },
-        { color: 'U', count: 40 },
-        { color: 'B', count: 15 },
-        { color: 'R', count: 0 },
-        { color: 'G', count: 10 },
-        { color: 'C', count: 10 },
-      ],
-      typeDistribution: [
-        { type: 'Creature', count: 30 },
-        { type: 'Instant', count: 20 },
-        { type: 'Sorcery', count: 15 },
-        { type: 'Artifact', count: 10 },
-        { type: 'Enchantment', count: 5 },
-        { type: 'Land', count: 35 },
-      ],
-      ownership: {
-        ownedCount: 85,
-        missingCount: 15,
-        ownedPercentage: 85,
+      manaCurve: {
+        '0': 2,
+        '1': 12,
+        '2': 25,
+        '3': 20,
+        '4': 15,
+        '5': 10,
+        '6+': 16,
+      },
+      typeDistribution: {
+        Creature: 30,
+        Instant: 20,
+        Sorcery: 15,
+        Artifact: 10,
+        Enchantment: 5,
+        Land: 35,
+      },
+      colorDemand: {
+        W: 25,
+        U: 40,
+        B: 15,
+        R: 0,
+        G: 10,
+        C: 10,
+      },
+      colorProduction: {
+        W: 10,
+        U: 20,
+        B: 10,
+        R: 0,
+        G: 5,
+        C: 5,
+      },
+      landCount: 35,
+      averageManaValue: 2.85,
+      ownershipBreakdown: {
+        OWNED: 85,
+        WISHLIST: 10,
+        PROXY: 5,
       },
       valueByCurrency: {
         USD: 45.5,
         EUR: 39.9,
       },
-      categories: [
-        { name: 'Ramp', count: 10 },
-        { name: 'Card Draw', count: 12 },
-        { name: 'Removal', count: 8 },
-      ],
-      combos: [
-        { name: 'Thassa\'s Oracle + Demonic Consultation', cards: ['Thassa\'s Oracle', 'Demonic Consultation'], description: 'Wins the game on ETB.' },
-      ],
+      missingCostByCurrency: {
+        USD: 12.0,
+        EUR: 10.5,
+      },
+      unpricedCardCount: 0,
+      functionalCategories: {
+        Ramp: 10,
+        'Card Draw': 12,
+        Removal: 8,
+      },
+      tokenProducers: [],
+      gameChangers: [],
+      legality: {
+        legal: true,
+        violations: [],
+      },
+      combos: {
+        available: true,
+        count: 1,
+        combos: [
+          {
+            id: 'combo-1',
+            cards: ["Thassa's Oracle", 'Demonic Consultation'],
+            produces: ['Win the game'],
+            description: 'Wins the game on ETB.',
+            prerequisites: 'Both cards in hand and sufficient mana.',
+          },
+        ],
+      },
     };
 
     globalThis.fetch = vi.fn().mockResolvedValue({
@@ -66,15 +95,32 @@ describe('Deck Analysis API Client', () => {
 
   it('should return zeroed response structure when deck is empty', async () => {
     const mockZeroedResponse = {
-      deckId: 99,
-      totalCards: 0,
-      manaCurve: [],
-      colorDemand: [],
-      typeDistribution: [],
-      ownership: { ownedCount: 0, missingCount: 0, ownedPercentage: 0 },
-      valueByCurrency: { USD: 0 },
-      categories: [],
-      combos: [],
+      manaCurve: {},
+      typeDistribution: {},
+      colorDemand: {},
+      colorProduction: {},
+      landCount: 0,
+      averageManaValue: 0,
+      ownershipBreakdown: {
+        OWNED: 0,
+        WISHLIST: 0,
+        PROXY: 0,
+      },
+      valueByCurrency: {},
+      missingCostByCurrency: {},
+      unpricedCardCount: 0,
+      functionalCategories: {},
+      tokenProducers: [],
+      gameChangers: [],
+      legality: {
+        legal: true,
+        violations: [],
+      },
+      combos: {
+        available: false,
+        count: 0,
+        combos: [],
+      },
     };
 
     globalThis.fetch = vi.fn().mockResolvedValue({
@@ -83,7 +129,7 @@ describe('Deck Analysis API Client', () => {
     } as Response);
 
     const result = await getDeckAnalysis(99);
-    expect(result.totalCards).toBe(0);
-    expect(result.manaCurve).toEqual([]);
+    expect(result.ownershipBreakdown).toEqual({ OWNED: 0, WISHLIST: 0, PROXY: 0 });
+    expect(result.manaCurve).toEqual({});
   });
 });

@@ -4,6 +4,7 @@ import type {
   DeckComparisonResponse,
   DeckLegalityResponse,
   DeckComboResponse,
+  SpellbookCombo,
   DeckWishlistResponse,
   OwnershipSyncResponse,
   DeckCardAlternativeResponse,
@@ -118,56 +119,26 @@ export async function removeDeckCard(deckId: number, deckCardId: number): Promis
   if (!res.ok) throw new Error('Failed to remove deck card');
 }
 
-export interface ManaCurveItem {
-  cmc: string;
-  count: number;
-}
-
-export interface ColorDemandItem {
-  color: string;
-  count: number;
-}
-
-export interface TypeDistributionItem {
-  type: string;
-  count: number;
-}
-
-export interface OwnershipBreakdown {
-  ownedCount: number;
-  missingCount: number;
-  ownedPercentage: number;
-}
-
-export interface CategoryItem {
-  name: string;
-  count: number;
-  isCustom?: boolean;
-}
-
-export interface FunctionalCategoryItem {
-  name: string;
-  count: number;
-  isCustom?: boolean;
-}
-
-export interface ComboItem {
-  name: string;
-  cards: string[];
-  description?: string;
-}
-
 export interface DeckAnalysisData {
-  deckId: number;
-  totalCards: number;
-  manaCurve: ManaCurveItem[];
-  colorDemand: ColorDemandItem[];
-  typeDistribution: TypeDistributionItem[];
-  ownership: OwnershipBreakdown;
+  manaCurve: Record<string, number>;
+  typeDistribution: Record<string, number>;
+  colorDemand: Record<string, number>;
+  colorProduction: Record<string, number>;
+  landCount: number;
+  averageManaValue: number;
+  ownershipBreakdown: Record<string, number>;
   valueByCurrency: Record<string, number>;
-  categories: CategoryItem[];
-  functionalCategories?: FunctionalCategoryItem[];
-  combos: ComboItem[];
+  missingCostByCurrency: Record<string, number>;
+  unpricedCardCount: number;
+  functionalCategories: Record<string, number>;
+  tokenProducers: string[];
+  gameChangers: string[];
+  legality: DeckLegalityResponse;
+  combos: {
+    available: boolean;
+    count: number;
+    combos: SpellbookCombo[];
+  };
 }
 
 export async function getDeckAnalysis(deckId: number): Promise<DeckAnalysisData> {
