@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Loader2, Crown, Layers, Plus, Minus, Download, BarChart2, ShoppingCart, ArrowRightLeft } from 'lucide-react';
+import { Loader2, Crown, Layers, Plus, Minus, Download, BarChart2, ShoppingCart, ArrowRightLeft, TrendingUp } from 'lucide-react';
 import { useDeckStore, type DeckCard } from '@/lib/store/deck-store';
 import { ExportDeckModal } from '@/components/export/ExportDeckModal';
 import { DeckAnalysisPanel } from '@/components/deck/DeckAnalysisPanel';
@@ -10,12 +10,14 @@ import { DeckSimulationPanel } from '@/components/deck/DeckSimulationPanel';
 import { DeckPublishingModal } from '@/components/deck/DeckPublishingModal';
 import { DeckWishlistPanel } from '@/components/deck/DeckWishlistPanel';
 import { DeckCardAlternativesFlyout } from '@/components/deck/DeckCardAlternativesFlyout';
+import { DeckUpgradePlanModal } from '@/components/deck/DeckUpgradePlanModal';
 
 export function DeckWorkspace() {
   const { id, cards, metadata, commander, addCard, removeCard, isLoading } = useDeckStore();
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [alternativesTarget, setAlternativesTarget] = useState<{ deckCardId: number | string; name: string } | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isSimOpen, setIsSimOpen] = useState(false);
@@ -105,6 +107,15 @@ export function DeckWorkspace() {
           >
             <ShoppingCart className="w-3.5 h-3.5" />
             Wishlist
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsUpgradeOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-300 rounded-xl text-xs font-bold transition-colors border border-zinc-700"
+            title="Deck Upgrade Plan"
+          >
+            <TrendingUp className="w-3.5 h-3.5" />
+            Upgrade
           </button>
           <button
             type="button"
@@ -287,6 +298,14 @@ export function DeckWorkspace() {
           deckId={id}
           isOpen={isPublishOpen}
           onClose={() => setIsPublishOpen(false)}
+        />
+      )}
+
+      {isUpgradeOpen && id && (
+        <DeckUpgradePlanModal
+          deckId={id}
+          isOpen={isUpgradeOpen}
+          onClose={() => setIsUpgradeOpen(false)}
         />
       )}
 
