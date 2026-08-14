@@ -10,10 +10,14 @@ vi.mock('@/lib/api/decks', () => ({
   fetchDeckCombos: vi.fn().mockResolvedValue({ available: true, combos: [] }),
 }));
 
-// Mock Recharts components to simplify test rendering
+// Mock Recharts components to simplify test rendering and inspect passed data
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  BarChart: ({ children }: { children: React.ReactNode }) => <div data-testid="bar-chart">{children}</div>,
+  BarChart: ({ children, data }: { children: React.ReactNode; data?: unknown[] }) => (
+    <div data-testid="bar-chart" data-chart-data={JSON.stringify(data)}>
+      {children}
+    </div>
+  ),
   Bar: () => <div />,
   XAxis: () => <div />,
   YAxis: () => <div />,
@@ -30,15 +34,21 @@ describe('DeckAnalysisPanel Component', () => {
 
   it('renders zeroed "Add cards to analyze your deck" empty state when deck is empty', async () => {
     vi.mocked(decksApi.getDeckAnalysis).mockResolvedValueOnce({
-      deckId: 99,
-      totalCards: 0,
-      manaCurve: [],
-      colorDemand: [],
-      typeDistribution: [],
-      ownership: { ownedCount: 0, missingCount: 0, ownedPercentage: 0 },
+      manaCurve: {},
+      typeDistribution: {},
+      colorDemand: {},
+      colorProduction: {},
+      landCount: 0,
+      averageManaValue: 0,
+      ownershipBreakdown: { OWNED: 0, WISHLIST: 0, PROXY: 0 },
       valueByCurrency: { USD: 0 },
-      categories: [],
-      combos: [],
+      missingCostByCurrency: {},
+      unpricedCardCount: 0,
+      functionalCategories: {},
+      tokenProducers: [],
+      gameChangers: [],
+      legality: { legal: true, violations: [] },
+      combos: { available: false, count: 0, combos: [] },
     });
 
     render(<DeckAnalysisPanel deckId={99} />);
@@ -50,39 +60,54 @@ describe('DeckAnalysisPanel Component', () => {
     expect(screen.getByText(/Your deck is currently empty/i)).toBeInTheDocument();
   });
 
-  it('renders full analysis charts, badges, valueByCurrency, categories, and combos when deck has cards', async () => {
+  it('renders full analysis charts, badges, valueByCurrency, and categories from real backend contract shape', async () => {
     vi.mocked(decksApi.getDeckAnalysis).mockResolvedValueOnce({
-      deckId: 10,
-      totalCards: 100,
-      manaCurve: [
-        { cmc: '0', count: 2 },
-        { cmc: '1', count: 12 },
-        { cmc: '2', count: 25 },
-      ],
-      colorDemand: [
-        { color: 'W', count: 25 },
-        { color: 'U', count: 40 },
-      ],
-      typeDistribution: [
-        { type: 'Creature', count: 30 },
-        { type: 'Land', count: 35 },
-      ],
-      ownership: {
-        ownedCount: 85,
-        missingCount: 15,
-        ownedPercentage: 85,
+      manaCurve: {
+        '2': 25,
+        '0': 2,
+        '6+': 16,
+        '1': 12,
+      },
+      typeDistribution: {
+        Creature: 30,
+        Land: 35,
+      },
+      colorDemand: {
+        W: 25,
+        U: 40,
+      },
+      colorProduction: {
+        W: 10,
+        U: 20,
+      },
+      landCount: 35,
+      averageManaValue: 2.85,
+      ownershipBreakdown: {
+        OWNED: 85,
+        WISHLIST: 10,
+        PROXY: 5,
       },
       valueByCurrency: {
         USD: 45.5,
         EUR: 39.9,
       },
-      categories: [
-        { name: 'Ramp', count: 10 },
-        { name: 'Card Draw', count: 12 },
-      ],
-      combos: [
-        { name: 'Thassa\'s Oracle + Demonic Consultation', cards: ['Thassa\'s Oracle', 'Demonic Consultation'], description: 'Wins on ETB' },
-      ],
+      missingCostByCurrency: {
+        USD: 12.0,
+        EUR: 10.5,
+      },
+      unpricedCardCount: 0,
+      functionalCategories: {
+        Ramp: 10,
+        'Card Draw': 12,
+      },
+      tokenProducers: [],
+      gameChangers: [],
+      legality: { legal: true, violations: [] },
+      combos: {
+        available: false,
+        count: 0,
+        combos: [],
+      },
     });
 
     render(<DeckAnalysisPanel deckId={10} />);
@@ -91,55 +116,56 @@ describe('DeckAnalysisPanel Component', () => {
       expect(screen.getByText(/Mana Curve \(CMC\)/i)).toBeInTheDocument();
     });
 
-    // Check ownership badges
+    // Derived ownership badges
     expect(screen.getByText('85% Owned')).toBeInTheDocument();
+    expect(screen.getByText('(85/100)')).toBeInTheDocument();
     expect(screen.getByText(/15 Missing/i)).toBeInTheDocument();
 
-    // Check valueByCurrency badges
+    // Value by currency
     expect(screen.getByText(/USD: \$45.50/i)).toBeInTheDocument();
     expect(screen.getByText(/EUR: €39.90/i)).toBeInTheDocument();
 
-    // Check categories and combo summary
+    // Functional categories
     expect(screen.getByText('Ramp')).toBeInTheDocument();
-    expect(screen.getByText("Thassa's Oracle + Demonic Consultation")).toBeInTheDocument();
-  });
+    expect(screen.getByText('10')).toBeInTheDocument();
+    expect(screen.getByText('Card Draw')).toBeInTheDocument();
+    expect(screen.getByText('12')).toBeInTheDocument();
 
-  it('renders user-assigned functionalCategories when present', async () => {
-    vi.mocked(decksApi.getDeckAnalysis).mockResolvedValueOnce({
-      deckId: 10,
-      totalCards: 100,
-      manaCurve: [],
-      colorDemand: [],
-      typeDistribution: [],
-      ownership: { ownedCount: 100, missingCount: 0, ownedPercentage: 100 },
-      valueByCurrency: { USD: 0 },
-      categories: [],
-      functionalCategories: [
-        { name: 'Custom Win-Condition', count: 4, isCustom: true },
-        { name: 'Fast Mana', count: 8, isCustom: true },
-      ],
-      combos: [],
-    });
+    // Mana curve chart data sorted numerically with 6+ last
+    const barCharts = screen.getAllByTestId('bar-chart');
+    const manaCurveChartData = JSON.parse(barCharts[0].getAttribute('data-chart-data') || '[]');
+    expect(manaCurveChartData).toEqual([
+      { cmc: '0', count: 2 },
+      { cmc: '1', count: 12 },
+      { cmc: '2', count: 25 },
+      { cmc: '6+', count: 16 },
+    ]);
 
-    render(<DeckAnalysisPanel deckId={10} />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Custom Win-Condition')).toBeInTheDocument();
-      expect(screen.getByText('Fast Mana')).toBeInTheDocument();
-    });
+    // Color demand chart data
+    const colorDemandChartData = JSON.parse(barCharts[1].getAttribute('data-chart-data') || '[]');
+    expect(colorDemandChartData).toEqual([
+      { color: 'W', count: 25 },
+      { color: 'U', count: 40 },
+    ]);
   });
 
   it('renders format legality violations badge when deck is illegal', async () => {
     vi.mocked(decksApi.getDeckAnalysis).mockResolvedValueOnce({
-      deckId: 10,
-      totalCards: 100,
-      manaCurve: [],
-      colorDemand: [],
-      typeDistribution: [],
-      ownership: { ownedCount: 100, missingCount: 0, ownedPercentage: 100 },
+      manaCurve: {},
+      typeDistribution: {},
+      colorDemand: {},
+      colorProduction: {},
+      landCount: 0,
+      averageManaValue: 0,
+      ownershipBreakdown: { OWNED: 100, WISHLIST: 0, PROXY: 0 },
       valueByCurrency: { USD: 0 },
-      categories: [],
-      combos: [],
+      missingCostByCurrency: {},
+      unpricedCardCount: 0,
+      functionalCategories: {},
+      tokenProducers: [],
+      gameChangers: [],
+      legality: { legal: true, violations: [] },
+      combos: { available: false, count: 0, combos: [] },
     });
     vi.mocked(decksApi.fetchDeckLegality).mockResolvedValueOnce({
       legal: false,
@@ -153,17 +179,23 @@ describe('DeckAnalysisPanel Component', () => {
     });
   });
 
-  it('renders verified Commander Spellbook combos with prerequisites', async () => {
+  it('renders verified Commander Spellbook combos with prerequisites from dedicated endpoint', async () => {
     vi.mocked(decksApi.getDeckAnalysis).mockResolvedValueOnce({
-      deckId: 10,
-      totalCards: 100,
-      manaCurve: [],
-      colorDemand: [],
-      typeDistribution: [],
-      ownership: { ownedCount: 100, missingCount: 0, ownedPercentage: 100 },
+      manaCurve: {},
+      typeDistribution: {},
+      colorDemand: {},
+      colorProduction: {},
+      landCount: 0,
+      averageManaValue: 0,
+      ownershipBreakdown: { OWNED: 100, WISHLIST: 0, PROXY: 0 },
       valueByCurrency: { USD: 0 },
-      categories: [],
-      combos: [],
+      missingCostByCurrency: {},
+      unpricedCardCount: 0,
+      functionalCategories: {},
+      tokenProducers: [],
+      gameChangers: [],
+      legality: { legal: true, violations: [] },
+      combos: { available: false, count: 0, combos: [] },
     });
     vi.mocked(decksApi.fetchDeckCombos).mockResolvedValueOnce({
       available: true,
@@ -187,5 +219,3 @@ describe('DeckAnalysisPanel Component', () => {
     });
   });
 });
-
-
