@@ -1,18 +1,20 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Loader2, Crown, Layers, Plus, Minus, Download, BarChart2 } from 'lucide-react';
+import { Loader2, Crown, Layers, Plus, Minus, Download, BarChart2, ShoppingCart } from 'lucide-react';
 import { useDeckStore, type DeckCard } from '@/lib/store/deck-store';
 import { ExportDeckModal } from '@/components/export/ExportDeckModal';
 import { DeckAnalysisPanel } from '@/components/deck/DeckAnalysisPanel';
 import { DeckHistoryPanel } from '@/components/deck/DeckHistoryPanel';
 import { DeckSimulationPanel } from '@/components/deck/DeckSimulationPanel';
 import { DeckPublishingModal } from '@/components/deck/DeckPublishingModal';
+import { DeckWishlistPanel } from '@/components/deck/DeckWishlistPanel';
 
 export function DeckWorkspace() {
   const { id, cards, metadata, commander, addCard, removeCard, isLoading } = useDeckStore();
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isSimOpen, setIsSimOpen] = useState(false);
   const [isPublishOpen, setIsPublishOpen] = useState(false);
@@ -92,6 +94,15 @@ export function DeckWorkspace() {
             title="Publish & Share Primer"
           >
             Share
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsWishlistOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-300 rounded-xl text-xs font-bold transition-colors border border-zinc-700"
+            title="Deck Wishlist"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" />
+            Wishlist
           </button>
           <button
             type="button"
@@ -214,6 +225,14 @@ export function DeckWorkspace() {
               </button>
             </div>
             <DeckAnalysisPanel deckId={id} />
+          </div>
+        </div>
+      )}
+
+      {isWishlistOpen && id && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-4xl w-full p-6 text-zinc-100 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <DeckWishlistPanel deckId={id} onBackToDeck={() => setIsWishlistOpen(false)} />
           </div>
         </div>
       )}
