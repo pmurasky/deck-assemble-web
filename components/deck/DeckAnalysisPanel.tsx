@@ -21,7 +21,13 @@ import {
   Tooltip,
   Cell,
 } from 'recharts';
-import { getDeckAnalysis, type DeckAnalysisData } from '@/lib/api/decks';
+import {
+  getDeckAnalysis,
+  fetchDeckLegality,
+  fetchDeckCombos,
+  type DeckAnalysisData,
+} from '@/lib/api/decks';
+import type { DeckLegalityResponse, DeckComboResponse } from '@/types/builder';
 
 interface DeckAnalysisPanelProps {
   deckId: number | string;
@@ -47,6 +53,8 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 
 export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps) {
   const [data, setData] = useState<DeckAnalysisData | null>(null);
+  const [legality, setLegality] = useState<DeckLegalityResponse | null>(null);
+  const [combos, setCombos] = useState<DeckComboResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,8 +62,14 @@ export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps
     setIsLoading(true);
     setError(null);
     try {
-      const resData = await getDeckAnalysis(Number(deckId));
+      const [resData, resLegality, resCombos] = await Promise.all([
+        getDeckAnalysis(Number(deckId)),
+        fetchDeckLegality(Number(deckId)).catch(() => null),
+        fetchDeckCombos(Number(deckId)).catch(() => null),
+      ]);
       setData(resData);
+      setLegality(resLegality);
+      setCombos(resCombos);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load deck analysis');
     } finally {
@@ -66,10 +80,16 @@ export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps
   useEffect(() => {
     let isMounted = true;
     if (!deckId) return;
-    getDeckAnalysis(Number(deckId))
-      .then((resData) => {
+    Promise.all([
+      getDeckAnalysis(Number(deckId)),
+      fetchDeckLegality(Number(deckId)).catch(() => null),
+      fetchDeckCombos(Number(deckId)).catch(() => null),
+    ])
+      .then(([resData, resLegality, resCombos]) => {
         if (isMounted) {
           setData(resData);
+          setLegality(resLegality);
+          setCombos(resCombos);
           setIsLoading(false);
         }
       })
@@ -83,6 +103,7 @@ export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps
       isMounted = false;
     };
   }, [deckId]);
+
 
   if (isLoading) {
     return (
@@ -135,7 +156,7 @@ export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps
 
   return (
     <div className="space-y-8 text-zinc-100">
-      {/* Header Badges: Ownership & Missing Cost by Currency */}
+      {/* Header Badges: Ownership, Format Legality & Missing Cost */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-4 flex items-center gap-3">
           <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400">
@@ -160,87 +181,88 @@ export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps
           </div>
         </div>
 
-        <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-4 flex items-center gap-3 md:col-span-2">
+        <div className={`border rounded-2xl p-4 flex items-center gap-3 ${
+          legality?.legal !== false
+            ? 'bg-zinc-900/90 border-zinc-800'
+            : 'bg-red-950/20 border-red-800/50'
+        }`}>
+          <div className={`p-3 rounded-xl border ${
+            legality?.legal !== false
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+              : 'bg-red-500/10 border-red-500/30 text-red-400'
+          }`}>
+            {legality?.legal !== false ? <CheckCircle2 className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
+          </div>
+          <div>
+            <span className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Format Legality</span>
+            <div className={`text-xl font-extrabold mt-0.5 ${legality?.legal !== false ? 'text-emerald-400' : 'text-red-400'}`}>
+              {legality ? (legality.legal ? 'Format Legal' : `${legality.violations.length} Violation${legality.violations.length === 1 ? '' : 's'}`) : 'Validated'}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-4 flex items-center gap-3">
           <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-400">
             <DollarSign className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Missing Cards Cost</span>
-            <div className="flex flex-wrap items-center gap-3 mt-1">
-              {Object.entries(data.valueByCurrency || {}).map(([currency, val]) => (
-                <span
-                  key={currency}
-                  className="px-3 py-1 bg-zinc-950 border border-zinc-800 rounded-lg text-sm font-mono font-bold text-purple-300"
-                >
-                  {currency}: {CURRENCY_SYMBOLS[currency] || ''}{val.toFixed(2)}
-                </span>
+            <span className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Deck Value</span>
+            <div className="text-sm font-extrabold text-white mt-0.5 space-y-0.5">
+              {Object.entries(data.valueByCurrency || {}).map(([curr, val]) => (
+                <div key={curr} className="text-xs text-zinc-300">
+                  {curr}: {CURRENCY_SYMBOLS[curr] || '$'}{Number(val).toFixed(2)}
+                </div>
               ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Charts Grid: Mana Curve & Color Demand */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Mana Curve Chart */}
         <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart2 className="w-5 h-5 text-purple-400" />
-            <h4 className="text-base font-bold text-white">Mana Curve (CMC)</h4>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <BarChart2 className="w-5 h-5 text-purple-400" />
+              <h4 className="text-base font-bold text-white">Mana Curve (CMC)</h4>
+            </div>
           </div>
-          <div className="h-56">
+          <div className="h-60">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.manaCurve}>
-                <XAxis dataKey="cmc" stroke="#71717a" fontSize={12} />
-                <YAxis stroke="#71717a" fontSize={12} allowDecimals={false} />
+                <XAxis dataKey="cmc" stroke="#71717a" fontSize={12} tickLine={false} />
+                <YAxis stroke="#71717a" fontSize={12} tickLine={false} allowDecimals={false} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
+                  contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '0.75rem', fontSize: '12px' }}
                 />
-                <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="#a855f7" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Color Demand Distribution */}
+        {/* Color Demand Chart */}
         <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <PieIcon className="w-5 h-5 text-blue-400" />
-            <h4 className="text-base font-bold text-white">Color Demand</h4>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <PieIcon className="w-5 h-5 text-blue-400" />
+              <h4 className="text-base font-bold text-white">Color Demand / Pips</h4>
+            </div>
           </div>
-          <div className="h-56">
+          <div className="h-60">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.colorDemand}>
-                <XAxis dataKey="color" stroke="#71717a" fontSize={12} />
-                <YAxis stroke="#71717a" fontSize={12} allowDecimals={false} />
+                <XAxis dataKey="color" stroke="#71717a" fontSize={12} tickLine={false} />
+                <YAxis stroke="#71717a" fontSize={12} tickLine={false} allowDecimals={false} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
+                  contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '0.75rem', fontSize: '12px' }}
                 />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {data.colorDemand.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLOR_MAP[entry.color] || '#a855f7'} />
+                  {data.colorDemand.map((entry) => (
+                    <Cell key={entry.color} fill={COLOR_MAP[entry.color] || '#a855f7'} />
                   ))}
                 </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Card Type Distribution */}
-        <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Layers className="w-5 h-5 text-emerald-400" />
-            <h4 className="text-base font-bold text-white">Type Distribution</h4>
-          </div>
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.typeDistribution} layout="vertical">
-                <XAxis type="number" stroke="#71717a" fontSize={12} allowDecimals={false} />
-                <YAxis type="category" dataKey="type" stroke="#71717a" fontSize={11} width={80} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
-                />
-                <Bar dataKey="count" fill="#10b981" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -283,13 +305,38 @@ export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps
 
         {/* Combo Summary */}
         <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="w-5 h-5 text-amber-400" />
-            <h4 className="text-base font-bold text-white">Combo & Synergies</h4>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-400" />
+              <h4 className="text-base font-bold text-white">Commander Spellbook Combos</h4>
+            </div>
+            {combos?.available && (
+              <span className="text-[10px] uppercase font-semibold text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/50">
+                Verified Combos
+              </span>
+            )}
           </div>
-          {data.combos && data.combos.length > 0 ? (
+          {((combos?.combos && combos.combos.length > 0) || (data.combos && data.combos.length > 0)) ? (
             <div className="space-y-3 max-h-56 overflow-y-auto">
-              {data.combos.map((combo) => (
+              {(combos?.combos || []).map((combo) => (
+                <div key={combo.id} className="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800/80">
+                  <span className="text-xs font-bold text-amber-300 block mb-1">
+                    {combo.produces?.join(', ') || 'Combo'}
+                  </span>
+                  {combo.description && <p className="text-xs text-zinc-400 mb-1">{combo.description}</p>}
+                  {combo.prerequisites && (
+                    <p className="text-[10px] text-zinc-500 mb-2 font-mono">Prereq: {combo.prerequisites}</p>
+                  )}
+                  <div className="flex flex-wrap gap-1.5">
+                    {combo.cards.map((card) => (
+                      <span key={card} className="text-[10px] bg-zinc-900 text-zinc-300 px-2 py-0.5 rounded border border-zinc-800 font-mono">
+                        {card}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {(!combos?.combos || combos.combos.length === 0) && data.combos?.map((combo) => (
                 <div key={combo.name} className="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800/80">
                   <span className="text-xs font-bold text-amber-300 block mb-1">{combo.name}</span>
                   {combo.description && <p className="text-xs text-zinc-400 mb-2">{combo.description}</p>}
