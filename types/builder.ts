@@ -154,3 +154,111 @@ export interface WishlistItem {
   acquired: boolean;
   quantity: number;
 }
+
+export interface DeckLegalityViolation {
+  code: string;
+  message: string;
+}
+
+export interface DeckLegalityResponse {
+  legal: boolean;
+  violations: DeckLegalityViolation[];
+}
+
+export interface SpellbookCombo {
+  id: string;
+  cards: string[];
+  produces: string[];
+  description: string;
+  prerequisites: string;
+}
+
+export interface DeckComboResponse {
+  available: boolean;
+  combos: SpellbookCombo[];
+}
+
+export interface DeckWishlistItem {
+  deckCardId: number;
+  cardPrintingId: number;
+  cardName: string;
+  quantity: number;
+  unitPriceUsd?: number | null;
+  lineTotalUsd?: number | null;
+}
+
+export interface DeckWishlistResponse {
+  items: DeckWishlistItem[];
+  totalUsd?: number | null;
+}
+
+export interface OwnershipSyncChange {
+  deckCardId: number;
+  cardPrintingId: number;
+  fromStatus: string;
+  toStatus: string;
+}
+
+export interface OwnershipSyncResponse {
+  changedCount: number;
+  changes: OwnershipSyncChange[];
+}
+
+export interface DeckCardAlternativeReason {
+  code: string;
+  points: number;
+  evidence: Record<string, string>;
+}
+
+export interface DeckCardAlternativeResponse {
+  cardPrintingId: number;
+  name: string;
+  owned: boolean;
+  priceUsd?: number | null;
+  total: number;
+  reasons: DeckCardAlternativeReason[];
+}
+
+export type DeckUpgradeObjective =
+  | 'REPLACE_PROXIES_WITH_OWNED'
+  | 'IMPROVE_UNDER_BUDGET'
+  | 'CLOSE_CATEGORY_GAPS';
+
+export interface DeckUpgradeRequest {
+  objective: DeckUpgradeObjective;
+  budget?: number | null;
+  currency?: 'usd' | 'usdFoil' | 'eur' | 'tix' | string | null;
+  maxChanges?: number | null;
+}
+
+export interface UpgradeSubstitutionResponse {
+  deckCardId: number;
+  removedPrintingId: number;
+  removedName: string;
+  removedOwnershipStatus: string;
+  quantity: number;
+  addedPrintingId: number;
+  addedName: string;
+  addedOwned: boolean;
+  cost?: number | null;
+  reasons: DeckCardAlternativeReason[];
+}
+
+export interface UpgradeMetricsResponse {
+  ownershipBreakdown: Record<string, number>;
+  valueByCurrency: Record<string, number>;
+  missingCostByCurrency: Record<string, number>;
+  functionalCategories: Record<string, number>;
+  legal: boolean;
+}
+
+export interface DeckUpgradePlanResponse {
+  objective: DeckUpgradeObjective;
+  currency: string;
+  budget?: number | null;
+  maxChanges: number;
+  substitutions: UpgradeSubstitutionResponse[];
+  before: UpgradeMetricsResponse;
+  after: UpgradeMetricsResponse;
+}
+
