@@ -5,14 +5,14 @@ import { useUser } from '@auth0/nextjs-auth0/client';
 import { useDecksListStore, type SavedDeck } from '@/lib/store/useDecksListStore';
 import { useDeckStore } from '@/lib/store/deck-store';
 import { AuthGate } from '@/components/auth/AuthGate';
-import { BookOpen, Edit2, Trash2, Plus, Layers, Upload, Download } from 'lucide-react';
+import { BookOpen, Edit2, Trash2, Plus, Layers, Upload, Download, Copy, Archive } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ImportWizardModal } from '@/components/import/ImportWizardModal';
 import { ExportDeckModal } from '@/components/export/ExportDeckModal';
 
 export function DecksListClient() {
   const { user, isLoading: isUserLoading } = useUser();
-  const { decks, deleteDeck, fetchDecks, isLoading, error } = useDecksListStore();
+  const { decks, deleteDeck, duplicateDeck, archiveDeck, fetchDecks, isLoading, error } = useDecksListStore();
   const { loadDeck, clearDeck, fetchDeckCards } = useDeckStore();
   const router = useRouter();
 
@@ -153,6 +153,24 @@ export function DecksListClient() {
                     Updated {new Date(deck.updatedAt).toLocaleDateString()}
                   </span>
                   <div className="flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => duplicateDeck(deck.id)}
+                      className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors"
+                      title="Duplicate Deck"
+                    >
+                      <Copy className="w-4 h-4 text-emerald-400" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm('Are you sure you want to archive this deck?')) {
+                          archiveDeck(deck.id);
+                        }
+                      }}
+                      className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors"
+                      title="Archive Deck"
+                    >
+                      <Archive className="w-4 h-4 text-amber-400" />
+                    </button>
                     <button
                       onClick={() => setExportDeckTarget({ id: deck.id, name: deck.metadata.name })}
                       className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors"

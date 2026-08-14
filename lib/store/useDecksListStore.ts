@@ -123,6 +123,8 @@ interface DecksListState {
   error: string | null;
   fetchDecks: () => Promise<void>;
   saveDeck: (deck: DeckInput) => Promise<SavedDeck>;
+  duplicateDeck: (id: string) => Promise<SavedDeck>;
+  archiveDeck: (id: string) => Promise<void>;
   deleteDeck: (id: string) => Promise<void>;
   getDeckById: (id: string) => SavedDeck | undefined;
 }
@@ -197,6 +199,27 @@ export const useDecksListStore = create<DecksListState>((set, get) => ({
     }
   },
 
+  duplicateDeck: async (id) => {
+    const data = await readJsonData(
+      await fetch(`/api/v1/decks/${id}/duplicate`, { method: 'POST' }),
+      'Duplicate deck'
+    );
+    const apiDeck = readDeckResponse(data);
+    const savedDeck = toSavedDeck(apiDeck);
+    set((state) => ({ decks: upsertDeck(state.decks, savedDeck) }));
+    return savedDeck;
+  },
+
+  archiveDeck: async (id) => {
+    ensureOk(
+      await fetch(`/api/v1/decks/${id}/archive`, { method: 'POST' }),
+      'Archive deck'
+    );
+    set((state) => ({
+      decks: state.decks.filter((d) => d.id !== id),
+    }));
+  },
+
   deleteDeck: async (id) => {
     if (id.includes('-')) {
       set((state) => ({ decks: state.decks.filter(d => d.id !== id) }));
@@ -214,3 +237,4 @@ export const useDecksListStore = create<DecksListState>((set, get) => ({
     return get().decks.find(d => d.id === id);
   }
 }));
+
