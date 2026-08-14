@@ -3,7 +3,6 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { DeckComparisonView } from '@/components/deck/DeckComparisonView';
 import { GeneratedDeck, DeckComparisonResponse } from '@/types/builder';
-import { getDeckComparison } from '@/lib/api/decks';
 
 const mockComparisonResponseA: DeckComparisonResponse = {
   baseDeckId: 10,

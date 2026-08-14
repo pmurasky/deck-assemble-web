@@ -15,19 +15,15 @@ export const DeckComparisonView: React.FC<DeckComparisonViewProps> = ({
   onClose,
 }) => {
   const [comparisons, setComparisons] = useState<Record<string, DeckComparisonResponse>>({});
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(Boolean(otherDecks && otherDecks.length > 0));
   const [error, setError] = useState<string | null>(null);
   const [activeDiffTab, setActiveDiffTab] = useState<'added' | 'removed' | 'changed'>('added');
 
   useEffect(() => {
     let isMounted = true;
     if (!otherDecks || otherDecks.length === 0) {
-      setIsLoading(false);
       return;
     }
-
-    setIsLoading(true);
-    setError(null);
 
     const baseId = Number(baseDeck.id);
     const promises = otherDecks.map(async (other) => {

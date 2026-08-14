@@ -100,7 +100,7 @@ export function DeckStats() {
         </div>
         <div className="space-y-2 pt-1">
           {Object.entries(colorCounts)
-            .filter(([_, count]) => count > 0)
+            .filter(([, count]) => count > 0)
             .map(([color, count]) => {
               const percentage = (count / maxColorCount) * 100;
               const bgColors: Record<string, string> = {

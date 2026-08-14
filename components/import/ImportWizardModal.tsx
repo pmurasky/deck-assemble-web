@@ -47,7 +47,7 @@ export function ImportWizardModal({
   const [selectedPrintings, setSelectedPrintings] = useState<Record<number, number>>({});
 
   // Commit state
-  const [idempotencyKey, setIdempotencyKey] = useState<string>('');
+  const [idempotencyKey] = useState<string>('');
   const [isCommitLoading, setIsCommitLoading] = useState(false);
   const [commitError, setCommitError] = useState<string | null>(null);
   const [errorsUrl, setErrorsUrl] = useState<string | null>(null);
