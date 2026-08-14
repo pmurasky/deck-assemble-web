@@ -6,6 +6,8 @@ import * as decksApi from '@/lib/api/decks';
 
 vi.mock('@/lib/api/decks', () => ({
   getDeckAnalysis: vi.fn(),
+  fetchDeckLegality: vi.fn().mockResolvedValue({ legal: true, violations: [] }),
+  fetchDeckCombos: vi.fn().mockResolvedValue({ available: true, combos: [] }),
 }));
 
 // Mock Recharts components to simplify test rendering
@@ -126,5 +128,64 @@ describe('DeckAnalysisPanel Component', () => {
       expect(screen.getByText('Fast Mana')).toBeInTheDocument();
     });
   });
+
+  it('renders format legality violations badge when deck is illegal', async () => {
+    vi.mocked(decksApi.getDeckAnalysis).mockResolvedValueOnce({
+      deckId: 10,
+      totalCards: 100,
+      manaCurve: [],
+      colorDemand: [],
+      typeDistribution: [],
+      ownership: { ownedCount: 100, missingCount: 0, ownedPercentage: 100 },
+      valueByCurrency: { USD: 0 },
+      categories: [],
+      combos: [],
+    });
+    vi.mocked(decksApi.fetchDeckLegality).mockResolvedValueOnce({
+      legal: false,
+      violations: [{ code: 'COMMANDER_COLOR_IDENTITY', message: 'Contains off-color cards' }],
+    });
+
+    render(<DeckAnalysisPanel deckId={10} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('1 Violation')).toBeInTheDocument();
+    });
+  });
+
+  it('renders verified Commander Spellbook combos with prerequisites', async () => {
+    vi.mocked(decksApi.getDeckAnalysis).mockResolvedValueOnce({
+      deckId: 10,
+      totalCards: 100,
+      manaCurve: [],
+      colorDemand: [],
+      typeDistribution: [],
+      ownership: { ownedCount: 100, missingCount: 0, ownedPercentage: 100 },
+      valueByCurrency: { USD: 0 },
+      categories: [],
+      combos: [],
+    });
+    vi.mocked(decksApi.fetchDeckCombos).mockResolvedValueOnce({
+      available: true,
+      combos: [
+        {
+          id: 'combo-99',
+          cards: ['Dramatic Reversal', 'Isochron Scepter'],
+          produces: ['Infinite mana'],
+          description: 'Imprint Reversal on Scepter for loop',
+          prerequisites: 'Nonland mana rocks produce >= 3 mana',
+        },
+      ],
+    });
+
+    render(<DeckAnalysisPanel deckId={10} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Infinite mana')).toBeInTheDocument();
+      expect(screen.getByText('Verified Combos')).toBeInTheDocument();
+      expect(screen.getByText(/Nonland mana rocks produce >= 3 mana/i)).toBeInTheDocument();
+    });
+  });
 });
+
 

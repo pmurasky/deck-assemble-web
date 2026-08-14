@@ -1,6 +1,15 @@
 import { auth0 } from '@/lib/auth0';
 import type { ApiCard } from '@/lib/api/catalog';
-import type { DeckComparisonResponse } from '@/types/builder';
+import type {
+  DeckComparisonResponse,
+  DeckLegalityResponse,
+  DeckComboResponse,
+  DeckWishlistResponse,
+  OwnershipSyncResponse,
+  DeckCardAlternativeResponse,
+  DeckUpgradeRequest,
+  DeckUpgradePlanResponse,
+} from '@/types/builder';
 
 const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
 
@@ -428,6 +437,151 @@ export async function getDeckComparison(deckId: number, otherDeckId: number): Pr
 export async function getDeckComparisonBackend(deckId: number, otherDeckId: number): Promise<DeckComparisonResponse> {
   return json(fetchDecks(`/decks/${deckId}/comparison/${otherDeckId}`), 'Failed to fetch deck comparison');
 }
+
+export async function getDeckLegality(deckId: number): Promise<DeckLegalityResponse> {
+  return json(fetchDecks(`/decks/${deckId}/legality`), 'Failed to fetch deck legality');
+}
+
+export async function getDeckCombos(deckId: number): Promise<DeckComboResponse> {
+  return json(fetchDecks(`/decks/${deckId}/combos`), 'Failed to fetch deck combos');
+}
+
+export async function duplicateDeck(deckId: number): Promise<ApiDeck> {
+  return json(fetchDecks(`/decks/${deckId}/duplicate`, { method: 'POST' }), 'Failed to duplicate deck');
+}
+
+export async function archiveDeck(deckId: number): Promise<ApiDeck> {
+  return json(fetchDecks(`/decks/${deckId}/archive`, { method: 'POST' }), 'Failed to archive deck');
+}
+
+export async function syncDeckOwnership(deckId: number): Promise<OwnershipSyncResponse> {
+  return json(fetchDecks(`/decks/${deckId}/sync-ownership`, { method: 'POST' }), 'Failed to sync deck ownership');
+}
+
+export async function getDeckWishlist(deckId: number): Promise<DeckWishlistResponse> {
+  return json(fetchDecks(`/decks/${deckId}/wishlist`), 'Failed to fetch deck wishlist');
+}
+
+export async function acquireDeckCard(deckId: number, deckCardId: number): Promise<ApiDeckCard> {
+  return json(fetchDecks(`/decks/${deckId}/cards/${deckCardId}/acquire`, { method: 'POST' }), 'Failed to acquire deck card');
+}
+
+export async function getDeckCardAlternatives(
+  deckId: number,
+  deckCardId: number,
+  limit?: number,
+  ownedFirst?: boolean
+): Promise<DeckCardAlternativeResponse[]> {
+  const query = new URLSearchParams();
+  if (limit !== undefined) query.set('limit', String(limit));
+  if (ownedFirst !== undefined) query.set('ownedFirst', String(ownedFirst));
+  const queryString = query.toString();
+  const path = `/decks/${deckId}/cards/${deckCardId}/alternatives${queryString ? `?${queryString}` : ''}`;
+  return json(fetchDecks(path), 'Failed to fetch deck card alternatives');
+}
+
+export async function createDeckUpgradePlan(
+  deckId: number,
+  req: DeckUpgradeRequest
+): Promise<DeckUpgradePlanResponse> {
+  return json(
+    fetchDecks(`/decks/${deckId}/upgrade-plans`, {
+      method: 'POST',
+      body: JSON.stringify(req),
+    }),
+    'Failed to create deck upgrade plan'
+  );
+}
+
+// Client-side BFF wrappers
+export async function fetchDeckLegality(deckId: number): Promise<DeckLegalityResponse> {
+  const res = await fetch(`/api/v1/decks/${deckId}/legality`);
+  if (!res.ok) throw new Error('Failed to fetch deck legality');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as DeckLegalityResponse;
+}
+
+export async function fetchDeckCombos(deckId: number): Promise<DeckComboResponse> {
+  const res = await fetch(`/api/v1/decks/${deckId}/combos`);
+  if (!res.ok) throw new Error('Failed to fetch deck combos');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as DeckComboResponse;
+}
+
+export async function fetchDeckWishlist(deckId: number): Promise<DeckWishlistResponse> {
+  const res = await fetch(`/api/v1/decks/${deckId}/wishlist`);
+  if (!res.ok) throw new Error('Failed to fetch deck wishlist');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as DeckWishlistResponse;
+}
+
+export async function fetchDeckCardAlternatives(
+  deckId: number,
+  deckCardId: number,
+  limit?: number,
+  ownedFirst?: boolean
+): Promise<DeckCardAlternativeResponse[]> {
+  const query = new URLSearchParams();
+  if (limit !== undefined) query.set('limit', String(limit));
+  if (ownedFirst !== undefined) query.set('ownedFirst', String(ownedFirst));
+  const queryString = query.toString();
+  const res = await fetch(`/api/v1/decks/${deckId}/cards/${deckCardId}/alternatives${queryString ? `?${queryString}` : ''}`);
+  if (!res.ok) throw new Error('Failed to fetch deck card alternatives');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as DeckCardAlternativeResponse[];
+}
+
+export async function requestDeckUpgradePlan(
+  deckId: number,
+  req: DeckUpgradeRequest
+): Promise<DeckUpgradePlanResponse> {
+  const res = await fetch(`/api/v1/decks/${deckId}/upgrade-plans`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) throw new Error('Failed to create deck upgrade plan');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as DeckUpgradePlanResponse;
+}
+
+export async function acquireDeckCardClient(deckId: number, deckCardId: number): Promise<ApiDeckCard> {
+  const res = await fetch(`/api/v1/decks/${deckId}/cards/${deckCardId}/acquire`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to acquire deck card');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as ApiDeckCard;
+}
+
+export async function syncDeckOwnershipClient(deckId: number): Promise<OwnershipSyncResponse> {
+  const res = await fetch(`/api/v1/decks/${deckId}/sync-ownership`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to sync deck ownership');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as OwnershipSyncResponse;
+}
+
+export async function duplicateDeckClient(deckId: number): Promise<ApiDeck> {
+  const res = await fetch(`/api/v1/decks/${deckId}/duplicate`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to duplicate deck');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as ApiDeck;
+}
+
+export async function archiveDeckClient(deckId: number): Promise<ApiDeck> {
+  const res = await fetch(`/api/v1/decks/${deckId}/archive`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to archive deck');
+  const jsonRes = await res.json();
+  return (jsonRes.data ?? jsonRes) as ApiDeck;
+}
+
+
 
 
 

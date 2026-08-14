@@ -31,7 +31,7 @@ export async function generateMetadata({
       title: `${card.name} | Deck Assemble`,
       description: card.oracleText || `Details for ${card.name}`,
     };
-  } catch (e) {
+  } catch {
     return {
       title: 'Card Details | Deck Assemble',
     };

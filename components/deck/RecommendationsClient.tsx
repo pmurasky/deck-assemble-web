@@ -28,7 +28,6 @@ export function RecommendationsClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [buildError, setBuildError] = useState<string | null>(null);
-  const [isBuilding, setIsBuilding] = useState(false);
 
   // Missing Staples Modal state
   const [isMissingStaplesModalOpen, setIsMissingStaplesModalOpen] = useState(false);
@@ -135,7 +134,6 @@ export function RecommendationsClient() {
   const handleGenerateDeck = async (config: DeckBuildConfig) => {
     if (!selectedCommander) return;
 
-    setIsBuilding(true);
     setBuildError(null);
 
     const payload = {
@@ -148,7 +146,6 @@ export function RecommendationsClient() {
     };
 
     try {
-      setIsBuilding(true);
       const generated = await generateBuildDeck(payload);
 
       setActiveDeck(generated);
@@ -163,8 +160,6 @@ export function RecommendationsClient() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to generate build deck';
       setBuildError(msg);
-    } finally {
-      setIsBuilding(false);
     }
   };
 

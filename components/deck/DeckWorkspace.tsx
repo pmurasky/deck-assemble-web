@@ -1,18 +1,24 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Loader2, Crown, Layers, Plus, Minus, Download, BarChart2 } from 'lucide-react';
+import { Loader2, Crown, Layers, Plus, Minus, Download, BarChart2, ShoppingCart, ArrowRightLeft, TrendingUp } from 'lucide-react';
 import { useDeckStore, type DeckCard } from '@/lib/store/deck-store';
 import { ExportDeckModal } from '@/components/export/ExportDeckModal';
 import { DeckAnalysisPanel } from '@/components/deck/DeckAnalysisPanel';
 import { DeckHistoryPanel } from '@/components/deck/DeckHistoryPanel';
 import { DeckSimulationPanel } from '@/components/deck/DeckSimulationPanel';
 import { DeckPublishingModal } from '@/components/deck/DeckPublishingModal';
+import { DeckWishlistPanel } from '@/components/deck/DeckWishlistPanel';
+import { DeckCardAlternativesFlyout } from '@/components/deck/DeckCardAlternativesFlyout';
+import { DeckUpgradePlanModal } from '@/components/deck/DeckUpgradePlanModal';
 
 export function DeckWorkspace() {
   const { id, cards, metadata, commander, addCard, removeCard, isLoading } = useDeckStore();
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+  const [alternativesTarget, setAlternativesTarget] = useState<{ deckCardId: number | string; name: string } | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isSimOpen, setIsSimOpen] = useState(false);
   const [isPublishOpen, setIsPublishOpen] = useState(false);
@@ -95,6 +101,24 @@ export function DeckWorkspace() {
           </button>
           <button
             type="button"
+            onClick={() => setIsWishlistOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-300 rounded-xl text-xs font-bold transition-colors border border-zinc-700"
+            title="Deck Wishlist"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" />
+            Wishlist
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsUpgradeOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-300 rounded-xl text-xs font-bold transition-colors border border-zinc-700"
+            title="Deck Upgrade Plan"
+          >
+            <TrendingUp className="w-3.5 h-3.5" />
+            Upgrade
+          </button>
+          <button
+            type="button"
             onClick={() => setIsAnalysisOpen(true)}
             className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-purple-300 rounded-xl text-xs font-bold transition-colors border border-zinc-700"
             title="Deck Analysis"
@@ -165,6 +189,15 @@ export function DeckWorkspace() {
                     <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button
                         type="button"
+                        onClick={() => setAlternativesTarget({ deckCardId, name: card.name })}
+                        className="w-6 h-6 sm:w-5 sm:h-5 rounded flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-purple-400 hover:text-purple-200 transition-colors active:scale-95"
+                        title="Find Alternatives"
+                        aria-label={`Alternatives for ${card.name}`}
+                      >
+                        <ArrowRightLeft className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => removeCard(deckCardId)}
                         className="w-6 h-6 sm:w-5 sm:h-5 rounded flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors active:scale-95"
                         aria-label="Remove one"
@@ -218,6 +251,14 @@ export function DeckWorkspace() {
         </div>
       )}
 
+      {isWishlistOpen && id && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-4xl w-full p-6 text-zinc-100 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <DeckWishlistPanel deckId={id} onBackToDeck={() => setIsWishlistOpen(false)} />
+          </div>
+        </div>
+      )}
+
       {isHistoryOpen && id && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-3xl w-full p-6 text-zinc-100 shadow-2xl relative max-h-[90vh] overflow-y-auto">
@@ -257,6 +298,24 @@ export function DeckWorkspace() {
           deckId={id}
           isOpen={isPublishOpen}
           onClose={() => setIsPublishOpen(false)}
+        />
+      )}
+
+      {isUpgradeOpen && id && (
+        <DeckUpgradePlanModal
+          deckId={id}
+          isOpen={isUpgradeOpen}
+          onClose={() => setIsUpgradeOpen(false)}
+        />
+      )}
+
+      {alternativesTarget && id && (
+        <DeckCardAlternativesFlyout
+          isOpen={Boolean(alternativesTarget)}
+          onClose={() => setAlternativesTarget(null)}
+          deckId={id}
+          deckCardId={alternativesTarget.deckCardId}
+          cardName={alternativesTarget.name}
         />
       )}
     </div>
