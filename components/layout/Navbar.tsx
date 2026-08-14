@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useUser } from '@auth0/nextjs-auth0/client';
-import { LogOut, User, Menu, X, Hammer, Layers, Library, Sparkles, BookOpen } from 'lucide-react';
+import { LogOut, User, Menu, X, Hammer, Layers, Library, Sparkles, BookOpen, Settings } from 'lucide-react';
 import { isAdmin } from '@/lib/utils/permissions';
 
 export function Navbar() {
@@ -66,6 +66,13 @@ export function Navbar() {
                 </div>
                 {user.name}
               </span>
+              <Link
+                href="/settings"
+                className="text-zinc-400 hover:text-white transition-colors p-1 rounded-md"
+                title="Settings"
+              >
+                <Settings className="w-4 h-4" />
+              </Link>
               <a
                 href="/auth/logout"
                 className="text-zinc-500 hover:text-red-400 transition-colors p-1 rounded-md"
@@ -158,6 +165,14 @@ export function Navbar() {
             >
               <BookOpen className="w-4 h-4 text-blue-400" />
               Learn MTG
+            </Link>
+            <Link
+              href="/settings"
+              onClick={closeMobileMenu}
+              className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-zinc-900 text-zinc-200 hover:text-purple-400 transition-colors border border-transparent hover:border-zinc-800"
+            >
+              <Settings className="w-4 h-4 text-purple-400" />
+              Settings
             </Link>
             {isAdmin(user) && (
               <Link
