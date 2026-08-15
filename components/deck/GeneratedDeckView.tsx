@@ -20,9 +20,10 @@ import {
   Filter,
   CheckCircle2,
 } from 'lucide-react';
-import { GeneratedDeck, DeckCardRow, DeckRoleSection } from '@/types/builder';
+import { GeneratedDeck, DeckCardRow, DeckRoleSection, UpgradeSubstitutionResponse } from '@/types/builder';
 import { OwnershipBadge } from './OwnershipBadge';
 import { CardPreviewModal } from './CardPreviewModal';
+import { TopUpgradeSuggestionsPanel } from './TopUpgradeSuggestionsPanel';
 
 interface GeneratedDeckViewProps {
   deck: GeneratedDeck;
@@ -139,6 +140,33 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
     const metrics = calculateDeckMetrics(updatedCards);
     onUpdateDeck({ ...deck, cards: updatedCards, ...metrics });
     setSwappingCard(null);
+  };
+
+  const handleSwapSubstitution = (sub: UpgradeSubstitutionResponse) => {
+    const targetRow = deck.cards.find(
+      (c) =>
+        (c.card.printingId !== undefined && c.card.printingId === sub.removedPrintingId) ||
+        c.card.id === String(sub.deckCardId) ||
+        c.card.id === String(sub.removedPrintingId) ||
+        c.card.name.toLowerCase() === sub.removedName.toLowerCase()
+    );
+
+    if (!targetRow) return;
+
+    const newCardRow: DeckCardRow = {
+      ...targetRow,
+      card: {
+        ...targetRow.card,
+        id: String(sub.addedPrintingId),
+        printingId: sub.addedPrintingId,
+        name: sub.addedName,
+        imageUrl: `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(sub.addedName)}&format=image`,
+      },
+      ownership: sub.addedOwned ? 'owned' : 'wishlist',
+      estimatedPrice: sub.cost ?? (sub.addedOwned ? 0 : targetRow.estimatedPrice),
+    };
+
+    handleSwapReplacement(targetRow.card.id, newCardRow);
   };
 
   const ownedCount = deck.ownedCardsCount ?? deck.cards.filter((c) => c.ownership === 'owned').length;
@@ -297,6 +325,12 @@ export const GeneratedDeckView: React.FC<GeneratedDeckViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Top Upgrade Suggestions Panel */}
+      <TopUpgradeSuggestionsPanel
+        deckId={deck.id}
+        onSwapSubstitution={handleSwapSubstitution}
+      />
 
       {/* Functional Sections Decklist */}
       <div className="space-y-6">
