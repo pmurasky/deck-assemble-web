@@ -23,8 +23,7 @@ describe('Profile BFF Routes', () => {
     };
     vi.mocked(profileApi.getProfile).mockResolvedValue(mockProfile);
 
-    const req = new NextRequest('http://localhost:3000/api/v1/profile');
-    const res = await GET(req);
+    const res = await GET();
 
     expect(res.status).toBe(200);
     const body = await res.json();
