@@ -139,10 +139,30 @@ export async function fetchImportRuns(): Promise<ImportRun[]> {
   return res.json() as Promise<ImportRun[]>;
 }
 
-export async function triggerImport(query: string): Promise<ImportResult> {
+export interface CardSeries {
+  key: string;
+  label: string;
+}
+
+export async function fetchAvailableSeries(): Promise<CardSeries[]> {
+  const token = await auth0.getAccessToken();
+  const res = await fetch(new URL('/api/v1/admin/card-imports/series', API_BASE_URL), {
+    headers: { Authorization: `Bearer ${token.token}` },
+  });
+  if (!res.ok) {
+    throw new Error(`Available series returned ${res.status}`);
+  }
+  return res.json() as Promise<CardSeries[]>;
+}
+
+export async function triggerImport(input: string | string[]): Promise<ImportResult> {
   const token = await auth0.getAccessToken();
   const url = new URL('/api/v1/admin/card-imports', API_BASE_URL);
-  url.searchParams.set('query', query);
+  if (Array.isArray(input)) {
+    url.searchParams.set('seriesKeys', input.join(','));
+  } else {
+    url.searchParams.set('query', input);
+  }
   const res = await fetch(url, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token.token}` },

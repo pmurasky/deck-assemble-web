@@ -5,6 +5,8 @@ import {
   getImportErrorsDownloadUrl,
   triggerOracleTagsImport,
   fetchImportRunStatus,
+  fetchAvailableSeries,
+  triggerImport,
 } from '@/lib/api/imports';
 
 vi.mock('@/lib/auth0', () => ({
@@ -208,5 +210,95 @@ describe('Imports API Client', () => {
       await expect(fetchImportRunStatus(42)).rejects.toThrow('Import run status returned 404');
     });
   });
+
+  describe('fetchAvailableSeries', () => {
+    it('should fetch series list from /api/v1/admin/card-imports/series and return CardSeries array', async () => {
+      const mockSeries = [
+        { key: 'MARVEL', label: 'Marvel' },
+        { key: 'SPIDER_MAN', label: 'Spider-Man' },
+        { key: 'HOBBIT', label: 'The Hobbit' },
+        { key: 'TMNT', label: 'Teenage Mutant Ninja Turtles' },
+        { key: 'ASSASSINS_CREED', label: "Assassin's Creed" },
+      ];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockSeries,
+      } as Response);
+
+      const result = await fetchAvailableSeries();
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          href: expect.stringContaining('/api/v1/admin/card-imports/series'),
+        }),
+        expect.objectContaining({
+          headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
+        })
+      );
+      expect(result).toEqual(mockSeries);
+    });
+
+    it('should throw error when series endpoint returns non-ok', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      } as Response);
+
+      await expect(fetchAvailableSeries()).rejects.toThrow('Available series returned 500');
+    });
+  });
+
+  describe('triggerImport', () => {
+    it('should trigger POST /api/v1/admin/card-imports with seriesKeys param when array is passed', async () => {
+      const mockResult = { runId: 10, status: 'RUNNING' };
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 202,
+        json: async () => mockResult,
+      } as Response);
+
+      const result = await triggerImport(['MARVEL', 'TMNT']);
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          href: expect.stringContaining('/api/v1/admin/card-imports?seriesKeys=MARVEL%2CTMNT'),
+        }),
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
+        })
+      );
+      expect(result).toEqual(mockResult);
+    });
+
+    it('should trigger POST /api/v1/admin/card-imports with query param when string is passed', async () => {
+      const mockResult = { runId: 11, status: 'RUNNING' };
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 202,
+        json: async () => mockResult,
+      } as Response);
+
+      const result = await triggerImport('e:mar');
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          href: expect.stringContaining('/api/v1/admin/card-imports?query=e%3Amar'),
+        }),
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
+        })
+      );
+      expect(result).toEqual(mockResult);
+    });
+
+    it('should throw error when import trigger returns non-ok status', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      } as Response);
+
+      await expect(triggerImport(['MARVEL'])).rejects.toThrow('Import trigger returned 500');
+    });
+  });
 });
+
 
