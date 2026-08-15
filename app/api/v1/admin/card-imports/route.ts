@@ -13,16 +13,37 @@ export async function GET() {
   }
 }
 
+async function extractSeriesOrQuery(request: NextRequest): Promise<string | string[] | null> {
+  const seriesParam = request.nextUrl.searchParams.get('seriesKeys');
+  if (seriesParam) {
+    const keys = seriesParam.split(',').map((s) => s.trim()).filter(Boolean);
+    if (keys.length > 0) return keys;
+  }
+  const queryParam = request.nextUrl.searchParams.get('query')?.trim();
+  if (queryParam) return queryParam;
+
+  const body = await request.json().catch(() => null);
+  if (body?.seriesKeys) {
+    const keys = Array.isArray(body.seriesKeys) ? body.seriesKeys : [body.seriesKeys];
+    const filtered = keys.map((s: unknown) => String(s).trim()).filter(Boolean);
+    if (filtered.length > 0) return filtered;
+  }
+  if (typeof body?.query === 'string' && body.query.trim()) {
+    return body.query.trim();
+  }
+  return null;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const query = request.nextUrl.searchParams.get('query')?.trim() ?? '';
-    if (!query) {
+    const input = await extractSeriesOrQuery(request);
+    if (!input || (Array.isArray(input) && input.length === 0)) {
       return NextResponse.json(
-        { error: { message: 'Query parameter is required' } },
+        { error: { message: 'Series keys or query parameter is required' } },
         { status: 400 }
       );
     }
-    const result = await triggerImport(query);
+    const result = await triggerImport(input);
     return NextResponse.json({ data: result }, { status: 202 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to trigger import';
@@ -31,5 +52,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: { message } }, { status });
   }
 }
-
-

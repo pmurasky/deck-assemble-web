@@ -47,16 +47,52 @@ describe('API Route: /api/v1/admin/card-imports', () => {
   });
 
   describe('POST /api/v1/admin/card-imports', () => {
-    it('should return 400 bad request if query parameter is missing or blank', async () => {
+    it('should return 400 bad request if both seriesKeys and query parameters are missing or blank', async () => {
       const req = new NextRequest('http://localhost/api/v1/admin/card-imports');
       const res = await POST(req);
       expect(res.status).toBe(400);
 
       const json = await res.json();
-      expect(json.error.message).toBe('Query parameter is required');
+      expect(json.error.message).toBe('Series keys or query parameter is required');
     });
 
-    it('should trigger import and return 202 Accepted status with runId', async () => {
+    it('should trigger import with seriesKeys query param and return 202 Accepted', async () => {
+      const mockResult: importsApi.ImportResult = {
+        runId: 5,
+        status: 'RUNNING',
+      };
+      vi.spyOn(importsApi, 'triggerImport').mockResolvedValue(mockResult);
+
+      const req = new NextRequest('http://localhost/api/v1/admin/card-imports?seriesKeys=MARVEL%2CSPIDER_MAN');
+      const res = await POST(req);
+      expect(res.status).toBe(202);
+
+      const json = await res.json();
+      expect(json).toEqual({ data: mockResult });
+      expect(importsApi.triggerImport).toHaveBeenCalledWith(['MARVEL', 'SPIDER_MAN']);
+    });
+
+    it('should trigger import with JSON body containing seriesKeys and return 202 Accepted', async () => {
+      const mockResult: importsApi.ImportResult = {
+        runId: 6,
+        status: 'RUNNING',
+      };
+      vi.spyOn(importsApi, 'triggerImport').mockResolvedValue(mockResult);
+
+      const req = new NextRequest('http://localhost/api/v1/admin/card-imports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seriesKeys: ['HOBBIT', 'TMNT'] }),
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(202);
+
+      const json = await res.json();
+      expect(json).toEqual({ data: mockResult });
+      expect(importsApi.triggerImport).toHaveBeenCalledWith(['HOBBIT', 'TMNT']);
+    });
+
+    it('should trigger import and return 202 Accepted status with query param for backwards compatibility', async () => {
       const mockResult: importsApi.ImportResult = {
         runId: 3,
         status: 'RUNNING',
@@ -75,7 +111,7 @@ describe('API Route: /api/v1/admin/card-imports', () => {
     it('should handle authorization and execution errors gracefully', async () => {
       vi.spyOn(importsApi, 'triggerImport').mockRejectedValue(new Error('Import trigger returned 403'));
 
-      const req = new NextRequest('http://localhost/api/v1/admin/card-imports?query=e%3Amar');
+      const req = new NextRequest('http://localhost/api/v1/admin/card-imports?seriesKeys=MARVEL');
       const res = await POST(req);
       expect(res.status).toBe(403);
 
