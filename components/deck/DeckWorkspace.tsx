@@ -11,6 +11,38 @@ import { DeckPublishingModal } from '@/components/deck/DeckPublishingModal';
 import { DeckWishlistPanel } from '@/components/deck/DeckWishlistPanel';
 import { DeckCardAlternativesFlyout } from '@/components/deck/DeckCardAlternativesFlyout';
 import { DeckUpgradePlanModal } from '@/components/deck/DeckUpgradePlanModal';
+import { TopUpgradeSuggestionsPanel } from '@/components/deck/TopUpgradeSuggestionsPanel';
+import { getCardById } from '@/lib/api/cards';
+import type { Card } from '@/types/card';
+import type { UpgradeSubstitutionResponse } from '@/types/builder';
+
+async function resolveUpgradeCard(sub: UpgradeSubstitutionResponse): Promise<Card> {
+  try {
+    const cardData = await getCardById(String(sub.addedPrintingId));
+    if (cardData) {
+      return { ...cardData, printingId: sub.addedPrintingId };
+    }
+  } catch {
+    // Fallback if API lookup fails
+  }
+
+  return {
+    id: String(sub.addedPrintingId),
+    printingId: sub.addedPrintingId,
+    oracleId: '',
+    name: sub.addedName,
+    manaCost: '',
+    manaValue: 0,
+    colors: [],
+    colorIdentity: [],
+    typeLine: 'Card',
+    setCode: '',
+    setName: '',
+    rarity: '',
+    legalities: {},
+    imageUrl: `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(sub.addedName)}&format=image`,
+  };
+}
 
 export function DeckWorkspace() {
   const { id, cards, metadata, commander, addCard, removeCard, updateMetadata, isLoading } = useDeckStore();
@@ -41,6 +73,19 @@ export function DeckWorkspace() {
   const handleCancelName = () => {
     setNameDraft(metadata.name);
     setIsEditingName(false);
+  };
+
+  const isPersistedDeck = Boolean(id && !id.includes('-'));
+
+  const handleUpgradeSwap = async (sub: UpgradeSubstitutionResponse) => {
+    const originalCard = cards.find(
+      (c) => c.deckCardId === sub.deckCardId || c.cardPrintingId === sub.removedPrintingId
+    );
+    const deckSection = originalCard?.deckSection ?? 'MAIN_DECK';
+    const resolvedCard = await resolveUpgradeCard(sub);
+
+    await removeCard(sub.deckCardId);
+    await addCard(resolvedCard, deckSection);
   };
 
   const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -212,6 +257,13 @@ export function DeckWorkspace() {
               </div>
             </div>
           </div>
+        )}
+
+        {isPersistedDeck && (
+          <TopUpgradeSuggestionsPanel
+            deckId={id}
+            onSwapSubstitution={handleUpgradeSwap}
+          />
         )}
 
         {Object.entries(groupedCards).map(([type, typeCards]) => {
