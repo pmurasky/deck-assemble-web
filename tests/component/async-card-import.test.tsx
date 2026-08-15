@@ -33,6 +33,16 @@ describe('Async Card Import UI (202 + Polling)', () => {
         });
       }
 
+      if (urlStr.includes('/api/v1/admin/card-imports/series')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: [{ key: 'MARVEL', label: 'Marvel' }],
+          }),
+        });
+      }
+
       if (init?.method === 'POST') {
         return Promise.resolve({
           ok: true,
@@ -52,7 +62,7 @@ describe('Async Card Import UI (202 + Polling)', () => {
               {
                 id: 101,
                 provider: 'scryfall',
-                query: 'e:mar',
+                query: 'MARVEL',
                 status: 'RUNNING',
                 recordsRead: 0,
                 recordsCreated: 0,
@@ -72,7 +82,7 @@ describe('Async Card Import UI (202 + Polling)', () => {
               {
                 id: 101,
                 provider: 'scryfall',
-                query: 'e:mar',
+                query: 'MARVEL',
                 status: 'COMPLETED',
                 recordsRead: 150,
                 recordsCreated: 140,
@@ -101,14 +111,14 @@ describe('Async Card Import UI (202 + Polling)', () => {
 
     // Initial page load should fetch import history
     await waitFor(() => {
-      expect(screen.getByText('e:mar')).toBeInTheDocument();
+      expect(screen.getByText('MARVEL')).toBeInTheDocument();
     });
 
-    // Enter query and click Run Import
-    const input = screen.getByPlaceholderText(/Scryfall query/i);
+    // Check Marvel series checkbox and click Run Import
+    const marvelCheckbox = screen.getByLabelText('Marvel');
     const button = screen.getByRole('button', { name: /Run Import/i });
 
-    fireEvent.change(input, { target: { value: 'e:mar' } });
+    fireEvent.click(marvelCheckbox);
     fireEvent.click(button);
 
     // Should display polling banner upon HTTP 202 trigger response
@@ -139,6 +149,16 @@ describe('Async Card Import UI (202 + Polling)', () => {
         });
       }
 
+      if (urlStr.includes('/api/v1/admin/card-imports/series')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: [{ key: 'MARVEL', label: 'Marvel' }],
+          }),
+        });
+      }
+
       if (init?.method === 'POST' && urlStr.includes('/oracle-tags')) {
         return Promise.resolve({
           ok: true,
@@ -149,48 +169,52 @@ describe('Async Card Import UI (202 + Polling)', () => {
         });
       }
 
-      fetchCount++;
-      if (fetchCount <= 2) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({
-            data: [
-              {
-                id: 202,
-                provider: 'oracle-tags',
-                query: 'oracle-tags',
-                status: 'RUNNING',
-                recordsRead: 0,
-                recordsCreated: 0,
-                recordsUpdated: 0,
-                recordsFailed: 0,
-                startedAt: '2026-08-10T20:00:00Z',
-                completedAt: null,
-              },
-            ],
-          }),
-        });
-      } else {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({
-            data: [
-              {
-                id: 202,
-                provider: 'oracle-tags',
-                query: 'oracle-tags',
-                status: 'COMPLETED',
-                recordsRead: 300,
-                recordsCreated: 280,
-                recordsUpdated: 20,
-                recordsFailed: 0,
-                startedAt: '2026-08-10T20:00:00Z',
-                completedAt: '2026-08-10T20:01:00Z',
-              },
-            ],
-          }),
-        });
+      if (urlStr.includes('/api/v1/admin/card-imports')) {
+        fetchCount++;
+        if (fetchCount <= 2) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              data: [
+                {
+                  id: 202,
+                  provider: 'oracle-tags',
+                  query: 'oracle-tags',
+                  status: 'RUNNING',
+                  recordsRead: 0,
+                  recordsCreated: 0,
+                  recordsUpdated: 0,
+                  recordsFailed: 0,
+                  startedAt: '2026-08-10T20:00:00Z',
+                  completedAt: null,
+                },
+              ],
+            }),
+          });
+        } else {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              data: [
+                {
+                  id: 202,
+                  provider: 'oracle-tags',
+                  query: 'oracle-tags',
+                  status: 'COMPLETED',
+                  recordsRead: 300,
+                  recordsCreated: 280,
+                  recordsUpdated: 20,
+                  recordsFailed: 0,
+                  startedAt: '2026-08-10T20:00:00Z',
+                  completedAt: '2026-08-10T20:01:00Z',
+                },
+              ],
+            }),
+          });
+        }
       }
+
+      return Promise.reject(new Error(`Unhandled fetch to ${urlStr}`));
     }) as unknown as typeof fetch);
 
     const queryClient = new QueryClient({
