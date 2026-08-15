@@ -324,6 +324,10 @@ describe('DeckWorkspace Component', () => {
         colors: ['U'],
         colorIdentity: ['U'],
         typeLine: 'Instant',
+        setCode: 'EDH',
+        setName: 'Commander Essentials',
+        rarity: 'common',
+        legalities: { commander: 'legal' },
       });
 
       vi.mocked(useDeckStore).mockReturnValue({
