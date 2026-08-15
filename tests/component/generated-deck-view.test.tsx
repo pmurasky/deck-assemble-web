@@ -1,10 +1,13 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { GeneratedDeckView } from '@/components/deck/GeneratedDeckView';
 import { GeneratedDeck } from '@/types/builder';
+import * as decksApi from '@/lib/api/decks';
+
+vi.mock('@/lib/api/decks');
 
 const mockDeck: GeneratedDeck = {
-  id: 'deck-101',
+  id: '101',
   name: "Atraxa's Proliferate Engine",
   commander: {
     id: 'cmd-1',
@@ -37,6 +40,7 @@ const mockDeck: GeneratedDeck = {
     {
       card: {
         id: 'c-1',
+        printingId: 1001,
         oracleId: 'o-1',
         name: 'Sol Ring',
         manaCost: '{1}',
@@ -59,6 +63,7 @@ const mockDeck: GeneratedDeck = {
     {
       card: {
         id: 'c-2',
+        printingId: 1002,
         oracleId: 'o-2',
         name: 'Doubling Season',
         manaCost: '{4}{G}',
@@ -82,6 +87,31 @@ const mockDeck: GeneratedDeck = {
 };
 
 describe('GeneratedDeckView Component', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.mocked(decksApi.requestDeckUpgradePlan).mockResolvedValue({
+      objective: 'IMPROVE_UNDER_BUDGET',
+      currency: 'USD',
+      budget: null,
+      maxChanges: 5,
+      substitutions: [],
+      before: {
+        ownershipBreakdown: {},
+        valueByCurrency: {},
+        missingCostByCurrency: {},
+        functionalCategories: {},
+        legal: true,
+      },
+      after: {
+        ownershipBreakdown: {},
+        valueByCurrency: {},
+        missingCostByCurrency: {},
+        functionalCategories: {},
+        legal: true,
+      },
+    });
+  });
+
   it('renders header stats, build score, sections, and ownership badges', () => {
     render(<GeneratedDeckView deck={mockDeck} onUpdateDeck={() => {}} onOpenWishlist={() => {}} />);
 
@@ -229,6 +259,72 @@ describe('GeneratedDeckView Component', () => {
     expect(screen.getByText('Heroic Intervention')).toBeInTheDocument();
     expect(screen.getByText('Finisher')).toBeInTheDocument();
     expect(screen.getByText('Craterhoof Behemoth')).toBeInTheDocument();
+  });
+
+  it('renders top upgrade suggestions panel and performs swap when requested', async () => {
+    const handleUpdate = vi.fn();
+    vi.mocked(decksApi.requestDeckUpgradePlan).mockResolvedValue({
+      objective: 'IMPROVE_UNDER_BUDGET',
+      currency: 'USD',
+      budget: null,
+      maxChanges: 5,
+      substitutions: [
+        {
+          deckCardId: 1,
+          removedPrintingId: 1001,
+          removedName: 'Sol Ring',
+          removedOwnershipStatus: 'OWNED',
+          quantity: 1,
+          addedPrintingId: 9999,
+          addedName: 'Mana Crypt',
+          addedOwned: true,
+          cost: 0,
+          reasons: [{ code: 'FAST_MANA', points: 60, evidence: {} }],
+        },
+      ],
+      before: {
+        ownershipBreakdown: {},
+        valueByCurrency: {},
+        missingCostByCurrency: {},
+        functionalCategories: {},
+        legal: true,
+      },
+      after: {
+        ownershipBreakdown: {},
+        valueByCurrency: {},
+        missingCostByCurrency: {},
+        functionalCategories: {},
+        legal: true,
+      },
+    });
+
+    render(
+      <GeneratedDeckView
+        deck={mockDeck}
+        onUpdateDeck={handleUpdate}
+        onOpenWishlist={() => {}}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Mana Crypt')).toBeInTheDocument();
+    });
+
+    const swapBtn = screen.getByRole('button', { name: /Swap In/i });
+    fireEvent.click(swapBtn);
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cards: expect.arrayContaining([
+          expect.objectContaining({
+            card: expect.objectContaining({
+              name: 'Mana Crypt',
+              id: '9999',
+            }),
+          }),
+        ]),
+      })
+    );
   });
 });
 
