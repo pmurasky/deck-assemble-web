@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton';
 import { isAdmin } from '@/lib/utils/permissions';
 import { ShieldAlert, Play, Tag } from 'lucide-react';
+import { CommanderRanksSection } from '@/components/admin/CommanderRanksSection';
 import type { ApiResponse } from '@/types/api';
 import type { ImportRun } from '@/lib/api/imports';
 
@@ -248,6 +249,8 @@ export default function AdminImportsPage() {
           </button>
         </div>
       </div>
+
+      <CommanderRanksSection />
 
       {isImporting && (
         <div className="mb-6 rounded-xl border border-green-500/30 bg-green-950/20 p-4 text-green-300 flex items-center gap-3 animate-pulse">

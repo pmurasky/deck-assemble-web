@@ -23,7 +23,16 @@ describe('Async Card Import UI (202 + Polling)', () => {
   it('handles 202 Accepted trigger response and polls until COMPLETED', async () => {
     let fetchCount = 0;
 
-    vi.spyOn(global, 'fetch').mockImplementation(((_input: RequestInfo | URL, init?: RequestInit) => {
+    vi.spyOn(global, 'fetch').mockImplementation(((input: RequestInfo | URL, init?: RequestInit) => {
+      const urlStr = input.toString();
+      if (urlStr.includes('/api/v1/admin/commander-ranks/latest')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({ data: null }),
+        });
+      }
+
       if (init?.method === 'POST') {
         return Promise.resolve({
           ok: true,
@@ -122,6 +131,14 @@ describe('Async Card Import UI (202 + Polling)', () => {
 
     vi.spyOn(global, 'fetch').mockImplementation(((input: RequestInfo | URL, init?: RequestInit) => {
       const urlStr = input.toString();
+      if (urlStr.includes('/api/v1/admin/commander-ranks/latest')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({ data: null }),
+        });
+      }
+
       if (init?.method === 'POST' && urlStr.includes('/oracle-tags')) {
         return Promise.resolve({
           ok: true,
