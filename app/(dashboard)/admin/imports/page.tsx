@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton';
 import { isAdmin } from '@/lib/utils/permissions';
-import { ShieldAlert, Play, Tag } from 'lucide-react';
+import { ShieldAlert, Play, Tag, AlertCircle } from 'lucide-react';
 import { CommanderRanksSection } from '@/components/admin/CommanderRanksSection';
 import { SeriesCheckboxPicker } from '@/components/admin/SeriesCheckboxPicker';
 import { ImportRunsTable } from '@/components/admin/ImportRunsTable';
@@ -216,7 +216,7 @@ export default function AdminImportsPage() {
     },
   });
 
-  const { data: seriesList, isLoading: isSeriesLoading } = useQuery({
+  const { data: seriesList, isLoading: isSeriesLoading, error: seriesError } = useQuery({
     queryKey: ['adminCardImportSeries'],
     queryFn: getAvailableSeries,
   });
@@ -293,6 +293,11 @@ export default function AdminImportsPage() {
         <h2 className="text-sm font-semibold text-zinc-300 mb-3">Available Series</h2>
         {isSeriesLoading ? (
           <div className="text-xs text-zinc-500">Loading series...</div>
+        ) : seriesError ? (
+          <div className="rounded-lg border border-red-500/30 bg-red-950/20 p-3 text-xs text-red-300 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+            <span>{seriesError instanceof Error ? seriesError.message : 'Failed to load available series'}</span>
+          </div>
         ) : (
           <SeriesCheckboxPicker
             series={seriesList || []}

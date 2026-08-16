@@ -218,4 +218,46 @@ describe('Admin Card Imports - Series Checkbox Picker', () => {
     expect(hobbitCheckbox).not.toBeChecked();
     expect(importBtn).toBeDisabled();
   });
+
+  it('renders visible error state when available series fetch fails', async () => {
+    vi.spyOn(global, 'fetch').mockImplementation(((input: RequestInfo | URL) => {
+      const url = input.toString();
+      if (url.includes('/api/v1/admin/card-imports/series')) {
+        return Promise.resolve({
+          ok: false,
+          status: 500,
+          json: async () => ({ error: { message: 'Failed to fetch available series' } }),
+        });
+      }
+      if (url.includes('/api/v1/admin/card-imports')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({ data: [] }),
+        });
+      }
+      if (url.includes('/api/v1/admin/commander-ranks/latest')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({ data: null }),
+        });
+      }
+      return Promise.reject(new Error(`Unhandled fetch: ${url}`));
+    }) as unknown as typeof fetch);
+
+    const queryClient = createTestQueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AdminImportsPage />
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Failed to fetch available series/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByLabelText('Marvel')).not.toBeInTheDocument();
+  });
 });
+
