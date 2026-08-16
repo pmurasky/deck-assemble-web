@@ -4,6 +4,8 @@ import { ColorPieSection } from '@/components/learn/ColorPieSection';
 import { CardTypesSection } from '@/components/learn/CardTypesSection';
 import { TurnStructureSection } from '@/components/learn/TurnStructureSection';
 import { CommanderBasicsSection } from '@/components/learn/CommanderBasicsSection';
+import { KeywordGlossarySection } from '@/components/learn/KeywordGlossarySection';
+import { ResourcesSection } from '@/components/learn/ResourcesSection';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -37,6 +39,8 @@ export default function LearnPage() {
           <CardTypesSection />
           <TurnStructureSection />
           <CommanderBasicsSection />
+          <KeywordGlossarySection />
+          <ResourcesSection />
         </div>
       </div>
     </div>
