@@ -248,7 +248,7 @@ describe('Imports API Client', () => {
   });
 
   describe('triggerImport', () => {
-    it('should trigger POST /api/v1/admin/card-imports with seriesKeys param when array is passed', async () => {
+    it('should trigger POST /api/v1/admin/card-imports with series param when array is passed', async () => {
       const mockResult = { runId: 10, status: 'RUNNING' };
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -259,7 +259,7 @@ describe('Imports API Client', () => {
       const result = await triggerImport(['MARVEL', 'TMNT']);
       expect(globalThis.fetch).toHaveBeenCalledWith(
         expect.objectContaining({
-          href: expect.stringContaining('/api/v1/admin/card-imports?seriesKeys=MARVEL%2CTMNT'),
+          href: expect.stringContaining('/api/v1/admin/card-imports?series=MARVEL%2CTMNT'),
         }),
         expect.objectContaining({
           method: 'POST',

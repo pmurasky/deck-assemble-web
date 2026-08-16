@@ -159,7 +159,7 @@ export async function triggerImport(input: string | string[]): Promise<ImportRes
   const token = await auth0.getAccessToken();
   const url = new URL('/api/v1/admin/card-imports', API_BASE_URL);
   if (Array.isArray(input)) {
-    url.searchParams.set('seriesKeys', input.join(','));
+    url.searchParams.set('series', input.join(','));
   } else {
     url.searchParams.set('query', input);
   }
