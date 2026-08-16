@@ -9,6 +9,8 @@ const sections = [
   { id: 'types', label: 'Card Types' },
   { id: 'turns', label: 'Turn Structure' },
   { id: 'commander', label: 'Commander Basics' },
+  { id: 'keywords', label: 'Keyword Glossary' },
+  { id: 'resources', label: 'Learn More Resources' },
 ];
 
 export function LearnSidebar() {
