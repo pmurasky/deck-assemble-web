@@ -11,6 +11,7 @@ import { AddToCollectionModal } from '@/components/collection/AddToCollectionMod
 import { ManaCost } from './ManaCost';
 import { ColorIdentityBadge } from './ColorIdentityBadge';
 import { LegalityBadge } from './LegalityBadge';
+import { BeginnerGuideSection } from './BeginnerGuideSection';
 import { RefreshCw } from 'lucide-react';
 
 export function CardDetailClient({ cardId }: { cardId: string }) {
@@ -145,6 +146,12 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
             <ColorIdentityBadge colors={card.colorIdentity} />
             <LegalityBadge format="Commander" status={card.legalities?.commander || 'not_legal'} />
           </div>
+
+          <BeginnerGuideSection
+            cardId={card.id}
+            faceIndex={faceIndex}
+            faceName={activeFace?.name}
+          />
 
           <div className="flex gap-4 mt-auto pt-8">
             <button 
