@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton';
@@ -279,14 +280,22 @@ export default function AdminImportsPage() {
           </p>
         </div>
 
-        <ActionButtons
-          isImporting={isImporting}
-          isImportPending={importMutation.isPending}
-          selectedCount={selectedSeries.length}
-          isOracleTagsPending={oracleTagsMutation.isPending}
-          onRunImport={() => importMutation.mutate(selectedSeries)}
-          onSyncOracleTags={() => oracleTagsMutation.mutate()}
-        />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <Link
+            href="/admin/beginner-guides"
+            className="px-3.5 py-2 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 transition-colors flex items-center justify-center"
+          >
+            Beginner Guides Queue
+          </Link>
+          <ActionButtons
+            isImporting={isImporting}
+            isImportPending={importMutation.isPending}
+            selectedCount={selectedSeries.length}
+            isOracleTagsPending={oracleTagsMutation.isPending}
+            onRunImport={() => importMutation.mutate(selectedSeries)}
+            onSyncOracleTags={() => oracleTagsMutation.mutate()}
+          />
+        </div>
       </div>
 
       <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
