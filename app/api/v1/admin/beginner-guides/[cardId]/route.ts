@@ -1,0 +1,39 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { auth0 } from '@/lib/auth0';
+
+const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ cardId: string }> }
+) {
+  try {
+    const { cardId } = await params;
+    const token = await auth0.getAccessToken();
+    const body = await req.json();
+
+    const url = new URL(`/admin/beginner-guides/${encodeURIComponent(cardId)}`, API_BASE_URL);
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token.token}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => null);
+      return NextResponse.json(
+        { error: { message: errData?.message || `Upstream returned ${res.status}` } },
+        { status: res.status }
+      );
+    }
+
+    const data = await res.json();
+    return NextResponse.json({ data });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to update beginner guide';
+    return NextResponse.json({ error: { message } }, { status: 502 });
+  }
+}
