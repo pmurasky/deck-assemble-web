@@ -35,4 +35,9 @@ describe('CardTile Component', () => {
       'https://cards.scryfall.io/normal/front/a/b/card.jpg',
     );
   });
+
+  it('renders owned badge when card.ownedQuantity is present on the Card object', () => {
+    render(<CardTile card={{ ...sampleCard, ownedQuantity: 4 }} />);
+    expect(screen.getByText('Owned: 4')).toBeInTheDocument();
+  });
 });
