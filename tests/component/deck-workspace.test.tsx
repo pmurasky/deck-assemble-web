@@ -24,6 +24,7 @@ describe('DeckWorkspace Component', () => {
       before: { ownershipBreakdown: {}, valueByCurrency: {}, missingCostByCurrency: {}, functionalCategories: {}, legal: true },
       after: { ownershipBreakdown: {}, valueByCurrency: {}, missingCostByCurrency: {}, functionalCategories: {}, legal: true },
     });
+    vi.mocked(decksApi.fetchDeckCardAlternatives).mockResolvedValue([]);
   });
 
   it('renders empty state when no cards', () => {
@@ -368,4 +369,66 @@ describe('DeckWorkspace Component', () => {
       });
     });
   });
+
+  describe('Card Alternatives Trigger Visibility', () => {
+    it('renders the alternatives button visible by default without hover-only opacity classes', () => {
+      vi.mocked(useDeckStore).mockReturnValue({
+        id: '42',
+        metadata: { name: 'Test Deck', format: 'Commander' },
+        cards: [
+          {
+            deckCardId: 1,
+            cardPrintingId: 100,
+            card: { id: '1', name: 'Sol Ring', typeLine: 'Artifact' },
+            quantity: 1,
+            deckSection: 'MAIN_DECK',
+          },
+        ],
+        removeCard: vi.fn(),
+        addCard: vi.fn(),
+        updateMetadata: vi.fn(),
+      });
+
+      render(<DeckWorkspace />);
+
+      const altButton = screen.getByRole('button', { name: 'Alternatives for Sol Ring' });
+      expect(altButton).toBeInTheDocument();
+
+      const actionContainer = altButton.parentElement;
+      expect(actionContainer).toBeInTheDocument();
+      // Must not be hidden by default on desktop via sm:opacity-0 or opacity-0
+      expect(actionContainer?.className).not.toContain('sm:opacity-0');
+      expect(actionContainer?.className).not.toContain('opacity-0');
+      expect(actionContainer?.className).toContain('opacity-100');
+    });
+
+    it('opens DeckCardAlternativesFlyout when the alternatives button is clicked', async () => {
+      vi.mocked(useDeckStore).mockReturnValue({
+        id: '42',
+        metadata: { name: 'Test Deck', format: 'Commander' },
+        cards: [
+          {
+            deckCardId: 1,
+            cardPrintingId: 100,
+            card: { id: '1', name: 'Sol Ring', typeLine: 'Artifact' },
+            quantity: 1,
+            deckSection: 'MAIN_DECK',
+          },
+        ],
+        removeCard: vi.fn(),
+        addCard: vi.fn(),
+        updateMetadata: vi.fn(),
+      });
+
+      render(<DeckWorkspace />);
+
+      const altButton = screen.getByRole('button', { name: 'Alternatives for Sol Ring' });
+      fireEvent.click(altButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Alternatives for/i)).toBeInTheDocument();
+      });
+    });
+  });
 });
+
