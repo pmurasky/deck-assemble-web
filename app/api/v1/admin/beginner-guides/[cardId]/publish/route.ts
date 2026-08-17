@@ -11,7 +11,7 @@ export async function POST(
     const { cardId } = await params;
     const token = await auth0.getAccessToken();
 
-    const url = new URL(`/admin/beginner-guides/${encodeURIComponent(cardId)}/publish`, API_BASE_URL);
+    const url = new URL(`/api/v1/admin/beginner-guides/${encodeURIComponent(cardId)}/publish`, API_BASE_URL);
     const res = await fetch(url, {
       method: 'POST',
       headers: {

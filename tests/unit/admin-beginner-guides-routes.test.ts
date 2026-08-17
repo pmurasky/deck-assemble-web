@@ -42,7 +42,7 @@ describe('Admin Beginner Guides BFF Route Handlers', () => {
       expect(json.data).toEqual(mockResult);
       expect(fetch).toHaveBeenCalled();
       const [calledUrl, calledInit] = vi.mocked(fetch).mock.calls[0];
-      expect(calledUrl.toString()).toContain('/admin/beginner-guides?status=DRAFT&page=0&size=10');
+      expect(calledUrl.toString()).toContain('/api/v1/admin/beginner-guides?status=DRAFT&page=0&size=10');
       expect((calledInit?.headers as Record<string, string>)?.Authorization).toBe('Bearer mock-jwt-token');
     });
 
@@ -83,7 +83,7 @@ describe('Admin Beginner Guides BFF Route Handlers', () => {
       const json = await res.json();
       expect(json.data).toEqual(mockUpdated);
       const [calledUrl, calledInit] = vi.mocked(fetch).mock.calls[0];
-      expect(calledUrl.toString()).toContain('/admin/beginner-guides/sol-ring');
+      expect(calledUrl.toString()).toContain('/api/v1/admin/beginner-guides/sol-ring');
       expect((calledInit?.headers as Record<string, string>)?.Authorization).toBe('Bearer mock-jwt-token');
     });
   });
@@ -107,7 +107,7 @@ describe('Admin Beginner Guides BFF Route Handlers', () => {
       const json = await res.json();
       expect(json.data).toEqual(mockPublished);
       const [calledUrl, calledInit] = vi.mocked(fetch).mock.calls[0];
-      expect(calledUrl.toString()).toContain('/admin/beginner-guides/sol-ring/publish');
+      expect(calledUrl.toString()).toContain('/api/v1/admin/beginner-guides/sol-ring/publish');
       expect((calledInit?.headers as Record<string, string>)?.Authorization).toBe('Bearer mock-jwt-token');
     });
   });
@@ -131,7 +131,7 @@ describe('Admin Beginner Guides BFF Route Handlers', () => {
       const json = await res.json();
       expect(json.data).toEqual(mockDraft);
       const [calledUrl, calledInit] = vi.mocked(fetch).mock.calls[0];
-      expect(calledUrl.toString()).toContain('/admin/beginner-guides/sol-ring/regenerate');
+      expect(calledUrl.toString()).toContain('/api/v1/admin/beginner-guides/sol-ring/regenerate');
       expect((calledInit?.headers as Record<string, string>)?.Authorization).toBe('Bearer mock-jwt-token');
     });
   });
@@ -151,7 +151,7 @@ describe('Admin Beginner Guides BFF Route Handlers', () => {
 
       expect(res.status).toBe(204);
       const [calledUrl, calledInit] = vi.mocked(fetch).mock.calls[0];
-      expect(calledUrl.toString()).toContain('/admin/beginner-guides/sol-ring/reject');
+      expect(calledUrl.toString()).toContain('/api/v1/admin/beginner-guides/sol-ring/reject');
       expect((calledInit?.headers as Record<string, string>)?.Authorization).toBe('Bearer mock-jwt-token');
     });
   });

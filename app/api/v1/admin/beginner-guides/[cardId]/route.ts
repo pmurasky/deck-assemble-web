@@ -12,7 +12,7 @@ export async function PUT(
     const token = await auth0.getAccessToken();
     const body = await req.json();
 
-    const url = new URL(`/admin/beginner-guides/${encodeURIComponent(cardId)}`, API_BASE_URL);
+    const url = new URL(`/api/v1/admin/beginner-guides/${encodeURIComponent(cardId)}`, API_BASE_URL);
     const res = await fetch(url, {
       method: 'PUT',
       headers: {

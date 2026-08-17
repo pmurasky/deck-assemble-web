@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   try {
     const token = await auth0.getAccessToken();
     const { searchParams } = req.nextUrl;
-    const url = new URL('/admin/beginner-guides', API_BASE_URL);
+    const url = new URL('/api/v1/admin/beginner-guides', API_BASE_URL);
     searchParams.forEach((value, key) => {
       url.searchParams.set(key, value);
     });
