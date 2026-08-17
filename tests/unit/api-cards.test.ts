@@ -52,6 +52,16 @@ describe('API Route: /api/v1/cards', () => {
     expect(data.data.cards).toEqual([]);
     expect(data.data.total).toBe(0);
   });
+
+  it('should support filtering by minOwnedQuantity and maxOwnedQuantity parameters', async () => {
+    const req = new NextRequest('http://localhost/api/v1/cards?minOwnedQuantity=1');
+    const res = await getCards(req);
+    expect(res.status).toBe(200);
+
+    const data = await res.json();
+    expect(data.data).toBeDefined();
+    expect(Array.isArray(data.data.cards)).toBe(true);
+  });
 });
 
 

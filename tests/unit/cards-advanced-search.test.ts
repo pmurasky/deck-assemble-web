@@ -111,4 +111,75 @@ describe('Advanced Card Search API', () => {
     expect(calledUrlString).toContain('maxCmc=2');
     expect(result.cards).toHaveLength(1);
   });
+
+  it('should forward minOwnedQuantity and maxOwnedQuantity parameters in getCards and fetchCards', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [
+          {
+            id: 102,
+            oracleId: 'orc-102',
+            name: 'Black Lotus',
+            typeLine: 'Artifact',
+            setCode: 'lea',
+            rarity: 'rare',
+            ownedQuantity: 3,
+          },
+        ],
+        totalElements: 1,
+      }),
+    });
+    global.fetch = mockFetch;
+
+    const result = await fetchCards({
+      minOwnedQuantity: 1,
+      maxOwnedQuantity: 4,
+    });
+
+    expect(mockFetch).toHaveBeenCalled();
+    const calledUrl = new URL(mockFetch.mock.calls[0][0]);
+    expect(calledUrl.searchParams.get('minOwnedQuantity')).toBe('1');
+    expect(calledUrl.searchParams.get('maxOwnedQuantity')).toBe('4');
+    expect(result.cards[0].ownedQuantity).toBe(3);
+  });
+
+  it('should forward minOwnedQuantity and maxOwnedQuantity in getCards client method', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: {
+          cards: [
+            {
+              id: '102',
+              oracleId: 'orc-102',
+              name: 'Black Lotus',
+              typeLine: 'Artifact',
+              manaValue: 0,
+              colors: [],
+              colorIdentity: [],
+              setCode: 'lea',
+              setName: 'Alpha',
+              rarity: 'rare',
+              legalities: {},
+              ownedQuantity: 2,
+            },
+          ],
+          total: 1,
+        },
+      }),
+    });
+    global.fetch = mockFetch;
+
+    const result = await getCards({
+      minOwnedQuantity: 1,
+      maxOwnedQuantity: 5,
+    });
+
+    expect(mockFetch).toHaveBeenCalled();
+    const calledUrlString = mockFetch.mock.calls[0][0] as string;
+    expect(calledUrlString).toContain('minOwnedQuantity=1');
+    expect(calledUrlString).toContain('maxOwnedQuantity=5');
+    expect(result.cards[0].ownedQuantity).toBe(2);
+  });
 });

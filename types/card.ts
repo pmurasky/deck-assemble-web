@@ -31,6 +31,9 @@ export interface Card {
   rarity: string;
   legalities: Record<string, string>;
   faces?: CardFace[];
+  ownedQuantity?: number;
+  regularOwnedQuantity?: number;
+  foilOwnedQuantity?: number;
 }
 
 export interface CollectionCard {

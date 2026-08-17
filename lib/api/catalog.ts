@@ -24,6 +24,9 @@ export interface ApiCard {
   flavorText?: string;
   faces?: CardFace[];
   legalities?: Record<string, string>;
+  ownedQuantity?: number;
+  regularOwnedQuantity?: number;
+  foilOwnedQuantity?: number;
 }
 
 export interface ApiCardPrinting {
@@ -64,6 +67,8 @@ export interface FetchCardsOptions {
   isReserved?: boolean;
   isFullArt?: boolean;
   isPromo?: boolean;
+  minOwnedQuantity?: number;
+  maxOwnedQuantity?: number;
 }
 
 export function toCard(api: ApiCard): Card {
@@ -91,6 +96,9 @@ export function toCard(api: ApiCard): Card {
     rarity: api.rarity ?? '',
     legalities: api.legalities ?? {},
     faces: api.faces ?? [],
+    ownedQuantity: api.ownedQuantity,
+    regularOwnedQuantity: api.regularOwnedQuantity,
+    foilOwnedQuantity: api.foilOwnedQuantity,
   };
 }
 
@@ -119,6 +127,8 @@ export async function fetchCards(options: FetchCardsOptions = {}) {
     isReserved,
     isFullArt,
     isPromo,
+    minOwnedQuantity,
+    maxOwnedQuantity,
   } = options;
 
   const url = new URL('/api/v1/cards', API_BASE_URL);
@@ -147,7 +157,8 @@ export async function fetchCards(options: FetchCardsOptions = {}) {
   if (isReserved !== undefined) url.searchParams.set('isReserved', String(isReserved));
   if (isFullArt !== undefined) url.searchParams.set('isFullArt', String(isFullArt));
   if (isPromo !== undefined) url.searchParams.set('isPromo', String(isPromo));
-
+  if (minOwnedQuantity !== undefined) url.searchParams.set('minOwnedQuantity', String(minOwnedQuantity));
+  if (maxOwnedQuantity !== undefined) url.searchParams.set('maxOwnedQuantity', String(maxOwnedQuantity));
 
   try {
     const res = await fetch(url, { next: { revalidate: 300 } });
@@ -159,6 +170,12 @@ export async function fetchCards(options: FetchCardsOptions = {}) {
     return { cards: apiPage.content.map(toCard), total: apiPage.totalElements };
   } catch {
     let filtered = MOCK_CARDS;
+    if (minOwnedQuantity !== undefined) {
+      filtered = filtered.filter((c) => (c.ownedQuantity ?? 0) >= minOwnedQuantity);
+    }
+    if (maxOwnedQuantity !== undefined) {
+      filtered = filtered.filter((c) => (c.ownedQuantity ?? 0) <= maxOwnedQuantity);
+    }
     if (commanderEligible) {
       filtered = filtered.filter(
         (c) =>

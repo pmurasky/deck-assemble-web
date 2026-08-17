@@ -105,8 +105,8 @@ export function CardTile({
 
         <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-3">
           {(() => {
-            const regCount = regularOwnedQuantity ?? (ownedQuantity ?? 0);
-            const foilCount = foilOwnedQuantity ?? 0;
+            const regCount = regularOwnedQuantity ?? (card.regularOwnedQuantity ?? (ownedQuantity ?? (card.ownedQuantity ?? 0)));
+            const foilCount = foilOwnedQuantity ?? (card.foilOwnedQuantity ?? 0);
             const hasReg = regCount > 0;
             const hasFoil = foilCount > 0;
 

@@ -19,6 +19,8 @@ export interface GetCardsParams extends AdvancedCardSearchParams {
   colorIdentity?: string;
   commanderEligible?: boolean;
   partnerForCardId?: string | number;
+  minOwnedQuantity?: number;
+  maxOwnedQuantity?: number;
 }
 
 export async function getCards(params: GetCardsParams = {}): Promise<{ cards: Card[]; total: number }> {
@@ -45,6 +47,8 @@ export async function getCards(params: GetCardsParams = {}): Promise<{ cards: Ca
     isReserved,
     isFullArt,
     isPromo,
+    minOwnedQuantity,
+    maxOwnedQuantity,
   } = params;
 
   const url = new URL('/api/v1/cards', typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
@@ -72,6 +76,8 @@ export async function getCards(params: GetCardsParams = {}): Promise<{ cards: Ca
   if (isReserved !== undefined) url.searchParams.append('isReserved', String(isReserved));
   if (isFullArt !== undefined) url.searchParams.append('isFullArt', String(isFullArt));
   if (isPromo !== undefined) url.searchParams.append('isPromo', String(isPromo));
+  if (minOwnedQuantity !== undefined) url.searchParams.append('minOwnedQuantity', String(minOwnedQuantity));
+  if (maxOwnedQuantity !== undefined) url.searchParams.append('maxOwnedQuantity', String(maxOwnedQuantity));
 
   const res = await fetch(url.pathname + url.search);
   if (!res.ok) {
