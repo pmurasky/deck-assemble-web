@@ -28,6 +28,8 @@ export async function GET(req: NextRequest) {
   const isReserved = searchParams.has('isReserved') ? searchParams.get('isReserved') === 'true' : undefined;
   const isFullArt = searchParams.has('isFullArt') ? searchParams.get('isFullArt') === 'true' : undefined;
   const isPromo = searchParams.has('isPromo') ? searchParams.get('isPromo') === 'true' : undefined;
+  const minOwnedQuantity = searchParams.has('minOwnedQuantity') ? parseInt(searchParams.get('minOwnedQuantity')!, 10) : undefined;
+  const maxOwnedQuantity = searchParams.has('maxOwnedQuantity') ? parseInt(searchParams.get('maxOwnedQuantity')!, 10) : undefined;
 
   try {
     const data = await fetchCards({
@@ -54,6 +56,8 @@ export async function GET(req: NextRequest) {
       isReserved,
       isFullArt,
       isPromo,
+      minOwnedQuantity,
+      maxOwnedQuantity,
     });
     return NextResponse.json({ data });
   } catch {
