@@ -12,6 +12,7 @@ export interface CardFilters {
   format?: string;
   power?: string;
   toughness?: string;
+  ownership?: 'all' | 'owned' | 'unowned';
 }
 
 interface CardFilterPanelProps {
@@ -42,6 +43,12 @@ const COLOR_OPTIONS = [
 
 const RARITIES = ['common', 'uncommon', 'rare', 'mythic'];
 
+const OWNERSHIP_OPTIONS: { id: 'all' | 'owned' | 'unowned'; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'owned', label: 'Owned' },
+  { id: 'unowned', label: 'Unowned' },
+];
+
 export function CardFilterPanel({ filters, onFilterChange, className = '' }: CardFilterPanelProps) {
   const handleColorToggle = (color: string) => {
     const newColors = filters.colors.includes(color)
@@ -71,6 +78,7 @@ export function CardFilterPanel({ filters, onFilterChange, className = '' }: Car
       format: undefined,
       power: undefined,
       toughness: undefined,
+      ownership: undefined,
     });
   };
 
@@ -84,7 +92,8 @@ export function CardFilterPanel({ filters, onFilterChange, className = '' }: Car
     !!filters.oracleText ||
     !!filters.format ||
     !!filters.power ||
-    !!filters.toughness;
+    !!filters.toughness ||
+    (!!filters.ownership && filters.ownership !== 'all');
 
   return (
     <div className={`p-5 rounded-2xl border border-zinc-800/80 bg-zinc-900/90 backdrop-blur-xl shadow-xl flex flex-col space-y-6 ${className}`}>
@@ -106,6 +115,29 @@ export function CardFilterPanel({ filters, onFilterChange, className = '' }: Car
       </div>
 
       <div className="space-y-6">
+        <div>
+          <h4 className="font-semibold text-xs text-zinc-400 uppercase tracking-wider mb-3">Ownership</h4>
+          <div className="grid grid-cols-3 gap-2">
+            {OWNERSHIP_OPTIONS.map(({ id, label }) => {
+              const isSelected = (filters.ownership || 'all') === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onFilterChange({ ...filters, ownership: id })}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
+                    isSelected
+                      ? 'bg-purple-600/30 border-purple-500 text-purple-300 shadow-md shadow-purple-950/40'
+                      : 'bg-zinc-950/40 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div>
           <h4 className="font-semibold text-xs text-zinc-400 uppercase tracking-wider mb-3">Color Identity</h4>
           <div className="grid grid-cols-5 gap-2">
