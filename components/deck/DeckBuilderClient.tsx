@@ -11,9 +11,23 @@ import { FormatValidator } from '@/components/deck/FormatValidator';
 import { CardTile } from '@/components/cards/CardTile';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { useDeckStore } from '@/lib/store/deck-store';
+import { getCards } from '@/lib/api/cards';
 import type { Card } from '@/types/card';
 
 type MobileTab = 'catalog' | 'workspace' | 'stats';
+
+function toGetCardsParams(searchQuery: string, filters: CardFilters) {
+  return {
+    q: searchQuery || undefined,
+    colorIdentity: filters.colors.length > 0 ? filters.colors.join(',') : undefined,
+    type: filters.types.length > 0 ? filters.types.join(',') : undefined,
+    minCmc: filters.minCmc,
+    maxCmc: filters.maxCmc,
+    rarity: filters.rarity,
+    minOwnedQuantity: filters.ownership === 'owned' ? 1 : undefined,
+    maxOwnedQuantity: filters.ownership === 'unowned' ? 0 : undefined,
+  };
+}
 
 export function DeckBuilderClient() {
   const searchParams = useSearchParams();
@@ -40,27 +54,32 @@ export function DeckBuilderClient() {
   }, [deckId, activeDeckId, activeCards.length, activeCommander, isDeckLoading, fetchDeckCards]);
 
   useEffect(() => {
-    // Simple fetch for the catalog side
-    const fetchCards = async () => {
+    let isCurrent = true;
+    const timeoutId = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/v1/cards?q=${searchQuery}`);
-        const data = await res.json();
-        setCards(data.data?.cards || []);
+        const params = toGetCardsParams(searchQuery, filters);
+        const data = await getCards(params);
+        if (isCurrent) {
+          setCards(data.cards || []);
+        }
       } catch (err) {
-        console.error(err);
+        if (isCurrent) {
+          console.error(err);
+          setCards([]);
+        }
       } finally {
-        setIsLoading(false);
+        if (isCurrent) {
+          setIsLoading(false);
+        }
       }
-    };
-
-    // Add a small debounce
-    const timeoutId = setTimeout(() => {
-      fetchCards();
     }, 300);
 
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+    return () => {
+      isCurrent = false;
+      clearTimeout(timeoutId);
+    };
+  }, [searchQuery, filters]);
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 py-4 md:py-6 lg:h-[calc(100vh-4rem)] flex flex-col gap-4">
@@ -154,7 +173,12 @@ export function DeckBuilderClient() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {cards.map((card) => (
                   <div key={card.printingId ?? card.id} className="relative group">
-                    <CardTile card={card} />
+                    <CardTile
+                      card={card}
+                      ownedQuantity={card.ownedQuantity}
+                      regularOwnedQuantity={card.regularOwnedQuantity}
+                      foilOwnedQuantity={card.foilOwnedQuantity}
+                    />
                     <div className="absolute inset-0 bg-black/85 opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 active:opacity-100 transition-opacity flex flex-col gap-2 items-center justify-center rounded-xl p-3 backdrop-blur-xs">
                       <button
                         type="button"

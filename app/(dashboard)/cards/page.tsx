@@ -22,7 +22,13 @@ export default function CardBrowserPage() {
     manaValue: 0,
   });
 
-  const activeFilterCount = filters.colors.length + filters.types.length + (filters.minCmc !== undefined ? 1 : 0) + (filters.maxCmc !== undefined ? 1 : 0) + (filters.rarity ? 1 : 0);
+  const activeFilterCount =
+    filters.colors.length +
+    filters.types.length +
+    (filters.minCmc !== undefined ? 1 : 0) +
+    (filters.maxCmc !== undefined ? 1 : 0) +
+    (filters.rarity ? 1 : 0) +
+    (filters.ownership && filters.ownership !== 'all' ? 1 : 0);
 
   const typeQuery = filters.types.join(' ');
 
