@@ -125,6 +125,8 @@ export interface DeckAnalysisData {
   colorDemand: Record<string, number>;
   colorProduction: Record<string, number>;
   landCount: number;
+  recommendedLandCount?: number | null;
+  recommendedLands?: number | null;
   averageManaValue: number;
   ownershipBreakdown: Record<string, number>;
   valueByCurrency: Record<string, number>;
