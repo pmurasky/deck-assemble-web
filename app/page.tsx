@@ -30,7 +30,7 @@ export default async function Home() {
 
             <div className="flex flex-wrap items-center gap-4 pt-2 justify-center sm:justify-start">
               <Link
-                href="/decks/create"
+                href="/decks?create=true"
                 className="rounded-xl bg-gradient-to-r from-green-600 to-purple-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-green-950/50 hover:brightness-110 transition-all"
               >
                 Build Commander Deck
