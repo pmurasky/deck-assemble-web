@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import type {
   MulliganStrategy,
   SampleHandsResponse,
@@ -319,8 +320,22 @@ export function DeckSimulationPanel({ deckId }: DeckSimulationPanelProps) {
                 </table>
               </div>
 
-              <p className="text-[11px] text-slate-500 italic">
-                * Note: castabilityByTurn is a mana-value heuristic, not a full rules-engine color check.
+              <p className="text-[11px] text-slate-400 italic flex items-center gap-1 flex-wrap">
+                <span>* Note: castabilityByTurn is a mana-value heuristic, not a full rules-engine color check. Learn about</span>
+                <Link
+                  href="/learn#glossary-the-stack"
+                  className="text-amber-400 hover:text-amber-300 underline font-medium not-italic"
+                >
+                  The Stack
+                </Link>
+                <span>and</span>
+                <Link
+                  href="/learn#glossary-priority"
+                  className="text-amber-400 hover:text-amber-300 underline font-medium not-italic"
+                >
+                  Priority
+                </Link>
+                <span>in the rules glossary.</span>
               </p>
             </div>
           )}

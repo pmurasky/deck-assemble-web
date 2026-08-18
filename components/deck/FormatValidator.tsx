@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import Link from 'next/link';
 import { useDeckStore, type DeckCard } from '@/lib/store/deck-store';
 import type { Card } from '@/types/card';
 
@@ -57,6 +58,17 @@ function validateConstructedRules(
   });
 }
 
+function getGlossaryLinkForError(error: string, format: string): { href: string; label: string } {
+  const err = error.toLowerCase();
+  if (err.includes('commander')) {
+    return { href: '/learn#commander', label: 'Commander Rules' };
+  }
+  if (err.includes('banned') || err.includes('legal')) {
+    return { href: '/learn#keywords', label: 'Legality Glossary' };
+  }
+  return { href: '/learn#keywords', label: `${format} Rules` };
+}
+
 export function FormatValidator() {
   const { cards, metadata, commander } = useDeckStore();
 
@@ -97,9 +109,20 @@ export function FormatValidator() {
         Deck Issues Found
       </div>
       <ul className="text-sm text-red-300/80 list-disc pl-5 space-y-1">
-        {validation.errors.map((error, idx) => (
-          <li key={idx}>{error}</li>
-        ))}
+        {validation.errors.map((error, idx) => {
+          const link = getGlossaryLinkForError(error, metadata.format);
+          return (
+            <li key={idx} className="flex items-center justify-between gap-2 flex-wrap">
+              <span>{error}</span>
+              <Link
+                href={link.href}
+                className="text-xs text-amber-400 hover:text-amber-300 underline font-medium shrink-0"
+              >
+                {link.label}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

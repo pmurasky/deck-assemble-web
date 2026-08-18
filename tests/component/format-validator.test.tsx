@@ -113,6 +113,22 @@ describe('FormatValidator Component', () => {
       render(<FormatValidator />);
       expect(screen.getByText(/Black Lotus is banned in Standard/i)).toBeDefined();
     });
+
+    it('renders working glossary cross-links alongside violation messages', () => {
+      vi.mocked(useDeckStore).mockReturnValue({
+        cards: [
+          { card: { id: '1', name: 'Sol Ring', typeLine: 'Artifact' } as Card, quantity: 2 },
+        ],
+        metadata: { format: 'Commander' },
+        commander: undefined,
+      } as ReturnType<typeof useDeckStore>);
+
+      render(<FormatValidator />);
+
+      const glossaryLinks = screen.getAllByRole('link', { name: /glossary|rules|commander/i });
+      expect(glossaryLinks.length).toBeGreaterThan(0);
+      expect(glossaryLinks[0]).toHaveAttribute('href', expect.stringMatching(/\/learn(#|\?|$)/));
+    });
   });
 });
 

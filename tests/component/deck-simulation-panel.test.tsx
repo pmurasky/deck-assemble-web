@@ -124,4 +124,42 @@ describe('DeckSimulationPanel Component', () => {
       expect(screen.getByText('Sol Ring')).toBeInTheDocument();
     });
   });
+
+  it('renders working glossary cross-links in simulation rules notes', async () => {
+    const mockSimResponse = {
+      seed: 'sim-seed-789',
+      landDropProbabilityByTurn: { 1: 0.95 },
+      colorAvailabilityByTurn: { W: { 1: 0.60 } },
+      cardsSeenByTurn: { 1: 8 },
+      castabilityByTurn: { 1: 0.75 },
+      playableSpellCountByTurn: { 1: 2 },
+      confidence: { marginOfErrorPercent95: 1.45 },
+    };
+
+    global.fetch = vi.fn().mockImplementation((url: string | URL) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/simulations')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ data: mockSimResponse }),
+        } as Response);
+      }
+      return Promise.reject(new Error('Unknown URL'));
+    });
+
+    render(<DeckSimulationPanel deckId={10} />);
+
+    const simTab = screen.getByRole('button', { name: /monte carlo simulation/i });
+    fireEvent.click(simTab);
+
+    const runButton = screen.getByRole('button', { name: /run simulation/i });
+    fireEvent.click(runButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/The Stack/i)).toBeInTheDocument();
+    });
+
+    const stackLink = screen.getByRole('link', { name: /The Stack/i });
+    expect(stackLink).toHaveAttribute('href', expect.stringContaining('/learn#glossary-the-stack'));
+  });
 });

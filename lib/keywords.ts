@@ -270,3 +270,12 @@ export function getGlossaryItem(name: string): GlossaryItem | undefined {
 export function getGlossaryNames(): string[] {
   return GLOSSARY_ITEMS.map((item) => item.name);
 }
+
+export function toGlossarySlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+export function getGlossaryHref(name: string): string {
+  return `/learn#glossary-${toGlossarySlug(name)}`;
+}
+
