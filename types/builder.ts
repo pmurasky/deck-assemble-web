@@ -7,6 +7,7 @@ export interface ScoreContribution {
   score: number;
   explanation?: string;
   description?: string;
+  sentence?: string;
 }
 
 export interface CardQuantityDiff {
@@ -208,6 +209,9 @@ export interface DeckCardAlternativeReason {
   code: string;
   points: number;
   evidence: Record<string, string>;
+  sentence?: string;
+  explanation?: string;
+  description?: string;
 }
 
 export interface DeckCardAlternativeResponse {

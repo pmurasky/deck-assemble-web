@@ -178,4 +178,39 @@ describe('TopUpgradeSuggestionsPanel Component', () => {
       addedPrintingId: 2001,
     }));
   });
+
+  it('renders plain-language sentence when sentence field is provided in reason', async () => {
+    const planWithSentences: DeckUpgradePlanResponse = {
+      ...mockPlanResponse,
+      substitutions: [
+        {
+          deckCardId: 101,
+          removedPrintingId: 1001,
+          removedName: 'Cancel',
+          removedOwnershipStatus: 'PROXY',
+          quantity: 1,
+          addedPrintingId: 2001,
+          addedName: 'Counterspell',
+          addedOwned: true,
+          cost: 0,
+          reasons: [
+            {
+              code: 'MANA_EFFICIENCY',
+              points: 30,
+              sentence: 'Saves 1 mana for identical hard counter effect.',
+              evidence: {},
+            },
+          ],
+        },
+      ],
+    };
+
+    vi.mocked(decksApi.requestDeckUpgradePlan).mockResolvedValue(planWithSentences);
+
+    render(<TopUpgradeSuggestionsPanel deckId={10} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Saves 1 mana for identical hard counter effect.')).toBeInTheDocument();
+    });
+  });
 });

@@ -51,8 +51,7 @@ const SubstitutionRow: React.FC<SubstitutionRowProps> = ({ sub, onSwap }) => {
           )}
           {topReason && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-950/80 border border-violet-500/30 text-violet-300 font-semibold">
-              {topReason.code}
-              {topReason.points ? ` (+${topReason.points})` : ''}
+              {topReason.sentence || topReason.explanation || topReason.description || (topReason.points ? `${topReason.code} (+${topReason.points})` : topReason.code)}
             </span>
           )}
         </div>

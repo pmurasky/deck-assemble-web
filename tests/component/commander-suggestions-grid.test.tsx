@@ -51,9 +51,36 @@ describe('CommanderSuggestionsGrid & Explanation Chips', () => {
     expect(screen.getByText(/1 unpriced/i)).toBeInTheDocument();
 
     // Explanation chips
-    expect(screen.getByText('coverage: 85')).toBeInTheDocument();
-    expect(screen.getByText('color support: 90')).toBeInTheDocument();
-    expect(screen.getByText('rank: 40')).toBeInTheDocument();
+    expect(screen.getByText('82% of core cards owned')).toBeInTheDocument();
+    expect(screen.getByText('Strong land base match')).toBeInTheDocument();
+    expect(screen.getByText('Niche pick')).toBeInTheDocument();
+  });
+
+  it('renders plain-language sentence when sentence field is provided in explanations', () => {
+    const handleSelect = vi.fn();
+    const commandersWithSentences: CommanderSuggestion[] = [
+      {
+        id: '300',
+        name: 'Atraxa, Praetors\' Voice',
+        imageUrl: 'https://example.com/atraxa.jpg',
+        colors: ['W', 'U', 'B', 'G'],
+        colorIdentity: ['W', 'U', 'B', 'G'],
+        ownershipCoverage: 95,
+        missingStaplesCount: 1,
+        unpricedMissingCardCount: 0,
+        estimatedCostToComplete: 15.0,
+        popularityRank: 1,
+        typeLine: 'Legendary Creature — Phyrexian Angel',
+        explanations: [
+          { category: 'coverage', score: 95, sentence: 'You own 95% of staples for this commander.' },
+          { category: 'synergy', score: 90, sentence: 'High proliferation synergy with your counters package.' },
+        ],
+      },
+    ];
+
+    render(<CommanderSuggestionsGrid commanders={commandersWithSentences} onSelectCommander={handleSelect} />);
+    expect(screen.getByText('You own 95% of staples for this commander.')).toBeInTheDocument();
+    expect(screen.getByText('High proliferation synergy with your counters package.')).toBeInTheDocument();
   });
 
   it('triggers build flow CTA when clicking Build Deck', () => {

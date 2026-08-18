@@ -306,15 +306,18 @@ const CommanderCardTile: React.FC<CommanderCardTileProps> = ({ commander, onSele
         {/* Explanation Chips */}
         {commander.explanations && commander.explanations.length > 0 && (
           <div className="flex flex-wrap gap-1.5 py-0.5">
-            {commander.explanations.map((exp, idx) => (
-              <span
-                key={idx}
-                title={exp.explanation || exp.description || `${exp.category}: ${exp.score}`}
-                className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-950/80 text-violet-300 border border-violet-500/30 backdrop-blur-xs"
-              >
-                {exp.category}: {exp.score}
-              </span>
-            ))}
+            {commander.explanations.map((exp, idx) => {
+              const label = exp.sentence || exp.explanation || exp.description || `${exp.category}: ${exp.score}`;
+              return (
+                <span
+                  key={idx}
+                  title={label}
+                  className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-950/80 text-violet-300 border border-violet-500/30 backdrop-blur-xs"
+                >
+                  {label}
+                </span>
+              );
+            })}
           </div>
         )}
 

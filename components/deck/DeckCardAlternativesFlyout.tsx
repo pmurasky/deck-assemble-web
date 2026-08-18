@@ -146,14 +146,17 @@ export function DeckCardAlternativesFlyout({
 
                   {alt.reasons && alt.reasons.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 pt-0.5">
-                      {alt.reasons.map((reason, rIdx) => (
-                        <span
-                          key={rIdx}
-                          className="text-[10px] bg-purple-950/50 border border-purple-800/50 text-purple-300 px-2 py-0.5 rounded font-semibold"
-                        >
-                          {reason.code} (+{reason.points})
-                        </span>
-                      ))}
+                      {alt.reasons.map((reason, rIdx) => {
+                        const label = reason.sentence || reason.explanation || reason.description || (reason.points ? `${reason.code} (+${reason.points})` : reason.code);
+                        return (
+                          <span
+                            key={rIdx}
+                            className="text-[10px] bg-purple-950/50 border border-purple-800/50 text-purple-300 px-2 py-0.5 rounded font-semibold"
+                          >
+                            {label}
+                          </span>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
