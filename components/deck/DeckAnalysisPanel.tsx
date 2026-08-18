@@ -28,6 +28,8 @@ import {
   type DeckAnalysisData,
 } from '@/lib/api/decks';
 import type { DeckLegalityResponse, DeckComboResponse } from '@/types/builder';
+import { BracketBadge } from './BracketBadge';
+import { GameChangersSection } from './GameChangersSection';
 
 interface DeckAnalysisPanelProps {
   deckId: number | string;
@@ -405,10 +407,11 @@ export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps
 
   return (
     <div className="space-y-8 text-zinc-100">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <OwnershipBadge ownership={ownership} />
         <MissingCardsBadge missingCount={ownership.missingCount} />
         <FormatLegalityBadge legality={legality} />
+        <BracketBadge bracket={data.bracket ?? data.bracketScore} />
         <DeckValueBadge valueByCurrency={data.valueByCurrency} />
       </div>
 
@@ -417,9 +420,10 @@ export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps
         <ColorDemandChart data={colorDemandData} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <CategoriesSection categories={categoriesData} />
         <CombosSection combos={combos} />
+        <GameChangersSection gameChangers={data.gameChangers} />
       </div>
     </div>
   );

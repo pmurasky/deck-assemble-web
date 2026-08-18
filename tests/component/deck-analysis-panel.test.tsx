@@ -218,4 +218,66 @@ describe('DeckAnalysisPanel Component', () => {
       expect(screen.getByText(/Nonland mana rocks produce >= 3 mana/i)).toBeInTheDocument();
     });
   });
+
+  it('renders Commander Bracket badge and flagged Game Changers breakdown panel', async () => {
+    vi.mocked(decksApi.getDeckAnalysis).mockResolvedValueOnce({
+      manaCurve: { '2': 10 },
+      typeDistribution: { Artifact: 5 },
+      colorDemand: { U: 10 },
+      colorProduction: { U: 10 },
+      landCount: 36,
+      averageManaValue: 2.5,
+      ownershipBreakdown: { OWNED: 100 },
+      valueByCurrency: { USD: 150 },
+      missingCostByCurrency: {},
+      unpricedCardCount: 0,
+      functionalCategories: { Ramp: 5 },
+      tokenProducers: [],
+      gameChangers: ['Mana Crypt', 'Rhystic Study', 'Demonic Tutor'],
+      bracket: 4,
+      legality: { legal: true, violations: [] },
+      combos: { available: false, count: 0, combos: [] },
+    });
+
+    render(<DeckAnalysisPanel deckId={42} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Bracket 4/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/Game Changers/i)).toBeInTheDocument();
+    expect(screen.getByText('Mana Crypt')).toBeInTheDocument();
+    expect(screen.getByText('Rhystic Study')).toBeInTheDocument();
+    expect(screen.getByText('Demonic Tutor')).toBeInTheDocument();
+  });
+
+  it('renders 0 Game Changers empty state when no game changers are flagged', async () => {
+    vi.mocked(decksApi.getDeckAnalysis).mockResolvedValueOnce({
+      manaCurve: { '2': 10 },
+      typeDistribution: { Creature: 10 },
+      colorDemand: { G: 10 },
+      colorProduction: { G: 10 },
+      landCount: 36,
+      averageManaValue: 3.0,
+      ownershipBreakdown: { OWNED: 100 },
+      valueByCurrency: { USD: 50 },
+      missingCostByCurrency: {},
+      unpricedCardCount: 0,
+      functionalCategories: {},
+      tokenProducers: [],
+      gameChangers: [],
+      bracket: 2,
+      legality: { legal: true, violations: [] },
+      combos: { available: false, count: 0, combos: [] },
+    });
+
+    render(<DeckAnalysisPanel deckId={43} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Bracket 2/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/No Game Changers flagged/i)).toBeInTheDocument();
+  });
 });
+
