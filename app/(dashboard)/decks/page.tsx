@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { DecksListClient } from '@/components/deck/DecksListClient';
 
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
 export default function DecksPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <DecksListClient />
+      <Suspense fallback={<div className="text-zinc-400 p-8">Loading Decks...</div>}>
+        <DecksListClient />
+      </Suspense>
     </div>
   );
 }

@@ -59,7 +59,7 @@ export function CommanderBasicsSection() {
           <p className="text-zinc-400 text-sm mt-1">Head over to the Deck Builder to start assembling your heroes.</p>
         </div>
         <Link 
-          href="/decks/create" 
+          href="/decks?create=true" 
           className="flex-shrink-0 px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl shadow-lg shadow-green-950/50 transition-all whitespace-nowrap"
         >
           Build a Deck

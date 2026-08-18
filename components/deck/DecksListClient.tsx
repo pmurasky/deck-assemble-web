@@ -6,7 +6,7 @@ import { useDecksListStore, type SavedDeck } from '@/lib/store/useDecksListStore
 import { useDeckStore } from '@/lib/store/deck-store';
 import { AuthGate } from '@/components/auth/AuthGate';
 import { BookOpen, Edit2, Trash2, Plus, Layers, Upload, Download, Copy, Archive } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ImportWizardModal } from '@/components/import/ImportWizardModal';
 import { ExportDeckModal } from '@/components/export/ExportDeckModal';
 
@@ -15,10 +15,12 @@ export function DecksListClient() {
   const { decks, deleteDeck, duplicateDeck, archiveDeck, fetchDecks, isLoading, error } = useDecksListStore();
   const { loadDeck, clearDeck, updateMetadata, fetchDeckCards } = useDeckStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const shouldCreate = searchParams?.get('create') === 'true' || searchParams?.get('new') === 'true';
 
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [exportDeckTarget, setExportDeckTarget] = useState<{ id: number | string; name: string } | null>(null);
-  const [isNamingNewDeck, setIsNamingNewDeck] = useState(false);
+  const [isNamingNewDeck, setIsNamingNewDeck] = useState(shouldCreate);
   const [newDeckName, setNewDeckName] = useState('New Deck');
 
   useEffect(() => {
