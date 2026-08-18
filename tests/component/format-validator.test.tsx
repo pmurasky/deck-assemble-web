@@ -57,5 +57,63 @@ describe('FormatValidator Component', () => {
     render(<FormatValidator />);
     expect(screen.getByText(/Deck is legal for Commander/i)).toBeDefined();
   });
+
+  describe('Non-Commander Format Validation', () => {
+    it('shows valid state for legal Standard deck of 60 cards and max 4 copies', () => {
+      vi.mocked(useDeckStore).mockReturnValue({
+        cards: [
+          { card: { id: '1', name: 'Lightning Bolt', typeLine: 'Instant', legalities: { standard: 'legal' } } as Card, quantity: 4 },
+          { card: { id: '2', name: 'Mountain', typeLine: 'Basic Land', legalities: { standard: 'legal' } } as Card, quantity: 56 },
+        ],
+        metadata: { format: 'Standard' },
+        commander: undefined,
+      } as ReturnType<typeof useDeckStore>);
+
+      render(<FormatValidator />);
+      expect(screen.getByText(/Deck is legal for Standard/i)).toBeDefined();
+    });
+
+    it('shows error for Standard deck with fewer than 60 cards', () => {
+      vi.mocked(useDeckStore).mockReturnValue({
+        cards: [
+          { card: { id: '1', name: 'Mountain', typeLine: 'Basic Land' } as Card, quantity: 59 },
+        ],
+        metadata: { format: 'Standard' },
+        commander: undefined,
+      } as ReturnType<typeof useDeckStore>);
+
+      render(<FormatValidator />);
+      expect(screen.getByText(/Standard decks must have at least 60 cards \(currently 59\)/i)).toBeDefined();
+    });
+
+    it('shows error for Standard deck with more than 4 copies of a non-basic card', () => {
+      vi.mocked(useDeckStore).mockReturnValue({
+        cards: [
+          { card: { id: '1', name: 'Lightning Bolt', typeLine: 'Instant' } as Card, quantity: 5 },
+          { card: { id: '2', name: 'Mountain', typeLine: 'Basic Land' } as Card, quantity: 55 },
+        ],
+        metadata: { format: 'Standard' },
+        commander: undefined,
+      } as ReturnType<typeof useDeckStore>);
+
+      render(<FormatValidator />);
+      expect(screen.getByText(/Maximum 4 copies of Lightning Bolt allowed in Standard/i)).toBeDefined();
+    });
+
+    it('shows error for cards banned or not legal in the chosen format', () => {
+      vi.mocked(useDeckStore).mockReturnValue({
+        cards: [
+          { card: { id: '1', name: 'Black Lotus', typeLine: 'Artifact', legalities: { standard: 'banned' } } as Card, quantity: 1 },
+          { card: { id: '2', name: 'Mountain', typeLine: 'Basic Land' } as Card, quantity: 59 },
+        ],
+        metadata: { format: 'Standard' },
+        commander: undefined,
+      } as ReturnType<typeof useDeckStore>);
+
+      render(<FormatValidator />);
+      expect(screen.getByText(/Black Lotus is banned in Standard/i)).toBeDefined();
+    });
+  });
 });
+
 

@@ -1,41 +1,78 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useDeckStore } from '@/lib/store/deck-store';
+import { useDeckStore, type DeckCard } from '@/lib/store/deck-store';
+import type { Card } from '@/types/card';
+
+interface ValidationResult {
+  isLegal: boolean;
+  errors: string[];
+}
+
+function validateCardLegality(card: Card, format: string, errors: string[]): void {
+  const formatKey = format.toLowerCase();
+  const status = card.legalities?.[formatKey];
+  if (!status || status === 'legal' || status === 'restricted') return;
+  if (status === 'banned') {
+    errors.push(`${card.name} is banned in ${format}.`);
+  } else {
+    errors.push(`${card.name} is not legal in ${format}.`);
+  }
+}
+
+function validateCommanderRules(
+  cards: DeckCard[],
+  activeCommander: Card | undefined,
+  totalCards: number,
+  errors: string[]
+): void {
+  if (totalCards !== 100) {
+    errors.push(`Deck must be exactly 100 cards (currently ${totalCards}).`);
+  }
+  if (!activeCommander) {
+    errors.push('Commander format requires a designated Commander.');
+  }
+  cards.forEach(({ card, quantity }) => {
+    if (!card.typeLine?.includes('Basic Land') && quantity > 1) {
+      errors.push(`Only 1 copy of ${card.name} is allowed in Commander.`);
+    }
+    validateCardLegality(card, 'Commander', errors);
+  });
+}
+
+function validateConstructedRules(
+  format: string,
+  cards: DeckCard[],
+  totalCards: number,
+  errors: string[]
+): void {
+  if (totalCards < 60) {
+    errors.push(`${format} decks must have at least 60 cards (currently ${totalCards}).`);
+  }
+  cards.forEach(({ card, quantity }) => {
+    if (!card.typeLine?.includes('Basic Land') && quantity > 4) {
+      errors.push(`Maximum 4 copies of ${card.name} allowed in ${format}.`);
+    }
+    validateCardLegality(card, format, errors);
+  });
+}
 
 export function FormatValidator() {
   const { cards, metadata, commander } = useDeckStore();
 
-  const validation = useMemo(() => {
+  const validation = useMemo<ValidationResult>(() => {
     const errors: string[] = [];
-    let isLegal = true;
-
     const activeCommander = commander || cards.find((c) => c.deckSection === 'COMMANDER')?.card;
-    const hasSeparateCommander = Boolean(
-      commander && !cards.some((c) => c.card.id === commander.id)
-    );
+    const hasSeparateCommander = Boolean(commander && !cards.some((c) => c.card.id === commander.id));
     const totalCards = cards.reduce((sum, c) => sum + c.quantity, 0) + (hasSeparateCommander ? 1 : 0);
 
     if (metadata.format === 'Commander') {
-      if (totalCards !== 100) {
-        errors.push(`Deck must be exactly 100 cards (currently ${totalCards}).`);
-        isLegal = false;
-      }
-
-      if (!activeCommander) {
-        errors.push('Commander format requires a designated Commander.');
-        isLegal = false;
-      }
-
-      cards.forEach(({ card, quantity }) => {
-        if (!card.typeLine?.includes('Basic Land') && quantity > 1) {
-          errors.push(`Only 1 copy of ${card.name} is allowed in Commander.`);
-          isLegal = false;
-        }
-      });
+      validateCommanderRules(cards, activeCommander, totalCards, errors);
+    } else {
+      validateConstructedRules(metadata.format, cards, totalCards, errors);
     }
 
-    return { isLegal, errors };
+    return { isLegal: errors.length === 0, errors };
   }, [cards, metadata.format, commander]);
 
   if (validation.isLegal) {
@@ -67,3 +104,4 @@ export function FormatValidator() {
     </div>
   );
 }
+

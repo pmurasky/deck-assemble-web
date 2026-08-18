@@ -65,6 +65,36 @@ describe('DeckWorkspace Component', () => {
     expect(screen.getByText(/x2/i)).toBeDefined();
   });
 
+  describe('Deck Format Picker', () => {
+    it('renders format selector with current format selected and changes format on user selection', () => {
+      const mockUpdateMetadata = vi.fn();
+      vi.mocked(useDeckStore).mockReturnValue({
+        id: 'uuid-123',
+        metadata: { name: 'Test Deck', format: 'Commander' },
+        cards: [
+          {
+            deckCardId: 1,
+            cardPrintingId: 1,
+            card: { id: '1', name: 'Sol Ring', typeLine: 'Artifact' },
+            quantity: 1,
+            deckSection: 'MAIN_DECK',
+          },
+        ],
+        removeCard: vi.fn(),
+        addCard: vi.fn(),
+        updateMetadata: mockUpdateMetadata,
+      });
+
+      render(<DeckWorkspace />);
+      const select = screen.getByRole('combobox', { name: /deck format/i });
+      expect(select).toBeDefined();
+      expect((select as HTMLSelectElement).value).toBe('Commander');
+
+      fireEvent.change(select, { target: { value: 'Standard' } });
+      expect(mockUpdateMetadata).toHaveBeenCalledWith({ format: 'Standard' });
+    });
+  });
+
   describe('Deck Name Editing', () => {
     it('renders deck name as clickable text by default', () => {
       const mockUpdateMetadata = vi.fn();

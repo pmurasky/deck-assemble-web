@@ -161,9 +161,17 @@ export function DeckWorkspace() {
             <span className="text-xs font-bold text-zinc-300 bg-zinc-800/80 px-2.5 py-0.5 rounded-lg border border-zinc-700/50">
               {totalCards} Cards
             </span>
-            <span className="text-xs font-semibold text-purple-400 bg-purple-950/40 px-2.5 py-0.5 rounded-lg border border-purple-900/40">
-              {metadata.format}
-            </span>
+            <select
+              aria-label="Deck format"
+              value={metadata.format}
+              onChange={(e) => updateMetadata({ format: e.target.value as 'Commander' | 'Standard' | 'Modern' | 'Legacy' })}
+              className="text-xs font-semibold text-purple-400 bg-purple-950/40 px-2.5 py-0.5 rounded-lg border border-purple-900/40 focus:outline-none focus:ring-1 focus:ring-purple-500 cursor-pointer"
+            >
+              <option value="Commander">Commander</option>
+              <option value="Standard">Standard</option>
+              <option value="Modern">Modern</option>
+              <option value="Legacy">Legacy</option>
+            </select>
           </div>
         </div>
 
