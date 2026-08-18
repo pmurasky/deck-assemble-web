@@ -110,4 +110,33 @@ describe('Profile API Client', () => {
     }));
     expect(res).toEqual(mockProfile);
   });
+
+  it('handles onboardingCompletedAt field in fetchProfile and saveProfile', async () => {
+    // Given
+    const now = '2026-08-18T12:00:00.000Z';
+    const mockProfile = {
+      id: 1,
+      displayName: 'Peter',
+      email: 'peter@example.com',
+      onboardingCompletedAt: now,
+      createdAt: '2026-08-01T00:00:00Z',
+      updatedAt: '2026-08-18T12:00:00Z',
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockProfile,
+    });
+
+    // When
+    const saved = await saveProfile({ onboardingCompletedAt: now });
+
+    // Then
+    expect(global.fetch).toHaveBeenCalledWith('/api/v1/profile', expect.objectContaining({
+      method: 'PATCH',
+      body: JSON.stringify({ onboardingCompletedAt: now }),
+    }));
+    expect(saved.onboardingCompletedAt).toBe(now);
+  });
 });
+

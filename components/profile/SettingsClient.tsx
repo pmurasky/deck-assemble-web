@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { User, Settings, Save, CheckCircle2, RefreshCw, Mail } from 'lucide-react';
+import { User, Settings, Save, CheckCircle2, RefreshCw, Mail, Compass } from 'lucide-react';
 import { fetchProfile, saveProfile } from '@/lib/api/profile';
+import { useOnboardingStore } from '@/lib/store/useOnboardingStore';
 import type { ProfileResponse } from '@/types/profile';
 
 export function SettingsClient() {
@@ -15,6 +16,8 @@ export function SettingsClient() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const openTour = useOnboardingStore((state) => state.openTour);
 
   useEffect(() => {
     let isMounted = true;
@@ -210,6 +213,32 @@ export function SettingsClient() {
           </button>
         </div>
       </form>
+
+      {/* Guided Tour & Onboarding Section */}
+      <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-4 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-purple-950/50 border border-purple-500/30 rounded-xl text-purple-400">
+              <Compass className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">Guided Onboarding Tour</h2>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Review the core workflows for deck building, collection management, and rules lookup.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => openTour({ isReplay: true })}
+            className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white font-bold rounded-xl text-xs transition-colors border border-zinc-700 flex items-center justify-center gap-2 shrink-0"
+          >
+            <Compass className="w-4 h-4 text-purple-400" />
+            <span>Replay Tour</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
+

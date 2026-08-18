@@ -57,4 +57,31 @@ describe('SettingsClient Component', () => {
       expect(screen.getByText(/Profile updated successfully/i)).toBeInTheDocument();
     });
   });
+
+  it('renders replay tour button and triggers tour when clicked', async () => {
+    // Given
+    vi.mocked(profileApi.fetchProfile).mockResolvedValue({
+      id: 1,
+      displayName: 'Peter M',
+      email: 'peter@example.com',
+      onboardingCompletedAt: '2026-08-18T10:00:00.000Z',
+      createdAt: '2026-08-01T00:00:00Z',
+      updatedAt: '2026-08-01T00:00:00Z',
+    });
+
+    render(<SettingsClient />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Replay Tour/i)).toBeInTheDocument();
+    });
+
+    // When
+    const replayBtn = screen.getByRole('button', { name: /Replay Tour/i });
+    fireEvent.click(replayBtn);
+
+    // Then
+    const { useOnboardingStore } = await import('@/lib/store/useOnboardingStore');
+    expect(useOnboardingStore.getState().isOpen).toBe(true);
+    expect(useOnboardingStore.getState().isReplay).toBe(true);
+  });
 });

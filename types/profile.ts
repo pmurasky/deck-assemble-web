@@ -4,6 +4,7 @@ export interface ProfileResponse {
   email: string;
   preferredFormat?: string | null;
   experienceLevel?: string | null;
+  onboardingCompletedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -13,4 +14,6 @@ export interface ProfileUpdateRequest {
   email?: string;
   preferredFormat?: string;
   experienceLevel?: string;
+  onboardingCompletedAt?: string | null;
 }
+

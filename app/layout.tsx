@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { Navbar } from '@/components/layout/Navbar';
+import { OnboardingTourTrigger } from '@/components/onboarding/OnboardingTourTrigger';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -36,8 +37,10 @@ export default function RootLayout({
         <QueryProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
+          <OnboardingTourTrigger />
         </QueryProvider>
       </body>
     </html>
   );
 }
+
