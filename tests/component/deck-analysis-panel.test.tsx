@@ -310,6 +310,35 @@ describe('DeckAnalysisPanel Component', () => {
     expect(screen.getByText('33')).toBeInTheDocument();
     expect(screen.getByText('37')).toBeInTheDocument();
   });
+
+  it('provides a Share Readiness Summary button that opens the publishing modal with summary data', async () => {
+    vi.mocked(decksApi.getDeckAnalysis).mockResolvedValueOnce({
+      manaCurve: { '2': 10 },
+      typeDistribution: { Land: 35, Creature: 20 },
+      colorDemand: { W: 15 },
+      colorProduction: { W: 15 },
+      landCount: 35,
+      recommendedLandCount: 36,
+      averageManaValue: 2.8,
+      ownershipBreakdown: { OWNED: 80, WISHLIST: 20 },
+      valueByCurrency: { USD: 250 },
+      missingCostByCurrency: {},
+      unpricedCardCount: 0,
+      functionalCategories: {},
+      tokenProducers: [],
+      gameChangers: ['Mana Crypt'],
+      bracket: 4,
+      legality: { legal: true, violations: [] },
+      combos: { available: false, count: 0, combos: [] },
+    });
+
+    render(<DeckAnalysisPanel deckId={77} format="Commander" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /share readiness summary/i })).toBeInTheDocument();
+    });
+  });
 });
+
 
 

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import type { DeckVisibility, PublishDeckResponse } from '@/types/m3';
+import { ReadinessSummaryView, type DeckReadinessSummary } from './ReadinessSummaryView';
 
 interface DeckPublishingModalProps {
   deckId: number | string;
@@ -11,6 +12,7 @@ interface DeckPublishingModalProps {
   initialPrimerContent?: string;
   isOpen: boolean;
   onClose: () => void;
+  readinessSummary?: DeckReadinessSummary;
 }
 
 export function DeckPublishingModal({
@@ -21,6 +23,7 @@ export function DeckPublishingModal({
   initialPrimerContent = '',
   isOpen,
   onClose,
+  readinessSummary,
 }: DeckPublishingModalProps) {
   const [visibility, setVisibility] = useState<DeckVisibility>(initialVisibility);
   const [slug, setSlug] = useState<string>(initialSlug);
@@ -159,6 +162,8 @@ export function DeckPublishingModal({
             {message.text}
           </div>
         )}
+
+        {readinessSummary && <ReadinessSummaryView summary={readinessSummary} />}
 
         {/* Section 1: Visibility Controls */}
         <div className="p-4 bg-slate-950 rounded-lg border border-slate-800 space-y-3">

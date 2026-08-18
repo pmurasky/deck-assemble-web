@@ -82,4 +82,28 @@ describe('DeckPublishingModal Component', () => {
       expect(screen.getByText(/primer saved successfully/i)).toBeInTheDocument();
     });
   });
+
+  it('renders shareable readiness summary view with bracket, format, ownership %, and deck value', () => {
+    render(
+      <DeckPublishingModal
+        deckId={10}
+        initialVisibility="UNLISTED"
+        isOpen={true}
+        onClose={vi.fn()}
+        readinessSummary={{
+          bracket: 3,
+          format: 'Commander',
+          ownershipPercentage: 92,
+          deckValue: { USD: 345.5 },
+        }}
+      />
+    );
+
+    expect(screen.getByText(/Readiness Summary/i)).toBeInTheDocument();
+    expect(screen.getByText(/Bracket 3/i)).toBeInTheDocument();
+    expect(screen.getByText(/Commander/i)).toBeInTheDocument();
+    expect(screen.getByText(/92% Owned/i)).toBeInTheDocument();
+    expect(screen.getByText(/\$345.50/i)).toBeInTheDocument();
+  });
 });
+
