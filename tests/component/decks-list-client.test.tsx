@@ -5,10 +5,14 @@ import { useDecksListStore, SavedDeck } from '@/lib/store/useDecksListStore';
 import { useDeckStore } from '@/lib/store/deck-store';
 
 const mockPush = vi.fn();
+const mockSearchParamsGet = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
+  }),
+  useSearchParams: () => ({
+    get: mockSearchParamsGet,
   }),
 }));
 
@@ -32,6 +36,7 @@ describe('DecksListClient Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSearchParamsGet.mockReturnValue(null);
     vi.mocked(useDeckStore).mockReturnValue({
       loadDeck: mockLoadDeck,
       clearDeck: mockClearDeck,
@@ -240,6 +245,40 @@ describe('DecksListClient Component', () => {
       expect(mockClearDeck).not.toHaveBeenCalled();
       expect(mockUpdateMetadata).not.toHaveBeenCalled();
       expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it('automatically opens naming modal when create query parameter is present', () => {
+      mockSearchParamsGet.mockImplementation((key: string) => (key === 'create' ? 'true' : null));
+
+      vi.mocked(useDecksListStore).mockReturnValue({
+        decks: [],
+        deleteDeck: vi.fn(),
+        fetchDecks: vi.fn(),
+        isLoading: false,
+        error: null,
+      } as unknown as ReturnType<typeof useDecksListStore>);
+
+      render(<DecksListClient />);
+
+      expect(screen.getByRole('heading', { name: /Name Your Deck/i })).toBeDefined();
+      expect(screen.getByDisplayValue('New Deck')).toBeDefined();
+    });
+
+    it('automatically opens naming modal when new query parameter is present', () => {
+      mockSearchParamsGet.mockImplementation((key: string) => (key === 'new' ? 'true' : null));
+
+      vi.mocked(useDecksListStore).mockReturnValue({
+        decks: [],
+        deleteDeck: vi.fn(),
+        fetchDecks: vi.fn(),
+        isLoading: false,
+        error: null,
+      } as unknown as ReturnType<typeof useDecksListStore>);
+
+      render(<DecksListClient />);
+
+      expect(screen.getByRole('heading', { name: /Name Your Deck/i })).toBeDefined();
+      expect(screen.getByDisplayValue('New Deck')).toBeDefined();
     });
   });
 });
