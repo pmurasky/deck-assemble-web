@@ -167,6 +167,7 @@ export interface PracticeCard {
   name: string;
   typeLine?: string;
   manaCost?: string;
+  oracleText?: string;
   imageUrl?: string;
   tapped?: boolean;
 }

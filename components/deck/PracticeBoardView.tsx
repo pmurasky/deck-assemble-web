@@ -12,6 +12,7 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react';
+import { KeywordHighlighter } from '@/components/ui/KeywordTooltip';
 import type { PracticeCard, PracticeSessionResponse } from '@/types/m3';
 
 interface PracticeBoardViewProps {
@@ -252,11 +253,18 @@ export function PracticeBoardView({ deckId }: PracticeBoardViewProps) {
         ) : (
           <div className="flex flex-wrap gap-2.5 pt-1">
             {session.battlefield.map((c) => (
-              <button
+              <div
                 key={c.id}
-                type="button"
+                role="button"
+                tabIndex={0}
                 onClick={() => handleToggleTap(c.id)}
-                className={`p-3 rounded-lg border text-left transition-all max-w-[170px] flex flex-col justify-between ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleToggleTap(c.id);
+                  }
+                }}
+                className={`p-3 rounded-lg border text-left transition-all max-w-[170px] flex flex-col justify-between cursor-pointer ${
                   c.tapped
                     ? 'bg-slate-900/40 border-slate-800 text-slate-500 rotate-6 opacity-75'
                     : 'bg-slate-900 border-emerald-500/40 text-slate-100 shadow-md'
@@ -264,12 +272,19 @@ export function PracticeBoardView({ deckId }: PracticeBoardViewProps) {
               >
                 <div>
                   <div className="text-xs font-bold truncate">{c.name}</div>
-                  <div className="text-[10px] text-slate-400 truncate">{c.typeLine}</div>
+                  <div className="text-[10px] text-slate-400 truncate">
+                    <KeywordHighlighter text={c.typeLine || ''} />
+                  </div>
+                  {c.oracleText && (
+                    <div className="text-[10px] text-slate-300 line-clamp-2 mt-1 font-normal">
+                      <KeywordHighlighter text={c.oracleText} />
+                    </div>
+                  )}
                 </div>
                 <div className="mt-2 text-[10px] font-mono font-semibold text-emerald-400">
                   {c.tapped ? 'Tapped' : 'Untapped'}
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         )}
@@ -303,7 +318,14 @@ export function PracticeBoardView({ deckId }: PracticeBoardViewProps) {
                     <span className="font-bold text-slate-100 truncate">{c.name}</span>
                     {c.manaCost && <span className="font-mono text-amber-400 text-[11px]">{c.manaCost}</span>}
                   </div>
-                  <p className="text-[10px] text-slate-400 truncate mt-0.5">{c.typeLine}</p>
+                  <div className="text-[10px] text-slate-400 truncate mt-0.5">
+                    <KeywordHighlighter text={c.typeLine || ''} />
+                  </div>
+                  {c.oracleText && (
+                    <div className="text-[10px] text-slate-300 line-clamp-2 mt-1 font-normal">
+                      <KeywordHighlighter text={c.oracleText} />
+                    </div>
+                  )}
                 </div>
                 <button
                   type="button"

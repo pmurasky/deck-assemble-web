@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { PracticeBoardView } from '@/components/deck/PracticeBoardView';
 import type { PracticeSessionResponse } from '@/types/m3';
@@ -148,5 +149,48 @@ describe('PracticeBoardView Component', () => {
     await waitFor(() => {
       expect(screen.getByTestId('battlefield-zone')).toHaveTextContent('Sol Ring');
     });
+  });
+
+  it('renders keyword tooltips inline for cards with keywords in practice mode', async () => {
+    const user = userEvent.setup();
+    const sessionWithKeywords: PracticeSessionResponse = {
+      sessionId: 'session-keywords',
+      turn: 1,
+      phase: 'MAIN_1',
+      hand: [
+        { id: 'c-vamp', name: 'Vampire Nighthawk', manaCost: '{1}{B}{B}', typeLine: 'Creature — Vampire', oracleText: 'Flying, Deathtouch, Lifelink' },
+      ],
+      battlefield: [],
+      graveyard: [],
+      libraryCount: 90,
+      manaPool: {},
+      logs: [],
+    };
+
+    global.fetch = vi.fn().mockImplementation((url: string | URL) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/practice')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ data: sessionWithKeywords }),
+        } as Response);
+      }
+      return Promise.reject(new Error('Unknown URL'));
+    });
+
+    render(<PracticeBoardView deckId={10} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Vampire Nighthawk')).toBeInTheDocument();
+    });
+
+    const flyingTrigger = screen.getByText('Flying');
+    expect(flyingTrigger).toBeInTheDocument();
+
+    await user.hover(flyingTrigger);
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    expect(
+      screen.getByText("This creature can't be blocked except by creatures with flying and/or reach.")
+    ).toBeInTheDocument();
   });
 });
