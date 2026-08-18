@@ -11,6 +11,7 @@ import {
   Sparkles,
   PlusCircle,
   RefreshCw,
+  Share2,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -31,10 +32,13 @@ import type { DeckLegalityResponse, DeckComboResponse } from '@/types/builder';
 import { BracketBadge } from './BracketBadge';
 import { GameChangersSection } from './GameChangersSection';
 import { LandGuidanceCallout } from './LandGuidanceCallout';
+import { DeckPublishingModal } from './DeckPublishingModal';
 
 interface DeckAnalysisPanelProps {
   deckId: number | string;
   onAddCards?: () => void;
+  format?: string;
+  formatCode?: string;
 }
 
 export interface DerivedOwnership {
@@ -336,12 +340,13 @@ function CombosSection({ combos }: { combos: DeckComboResponse | null }) {
   );
 }
 
-export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps) {
+export function DeckAnalysisPanel({ deckId, onAddCards, format, formatCode }: DeckAnalysisPanelProps) {
   const [data, setData] = useState<DeckAnalysisData | null>(null);
   const [legality, setLegality] = useState<DeckLegalityResponse | null>(null);
   const [combos, setCombos] = useState<DeckComboResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const fetchAnalysis = async () => {
     setIsLoading(true);
@@ -426,6 +431,17 @@ export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps
 
   return (
     <div className="space-y-8 text-zinc-100">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setIsShareModalOpen(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/40 rounded-xl text-xs font-semibold transition-colors"
+        >
+          <Share2 className="w-4 h-4 text-purple-400" />
+          Share Readiness Summary
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <OwnershipBadge ownership={ownership} />
         <MissingCardsBadge missingCount={ownership.missingCount} />
@@ -448,6 +464,18 @@ export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps
         <CombosSection combos={combos} />
         <GameChangersSection gameChangers={data.gameChangers} />
       </div>
+
+      <DeckPublishingModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        deckId={deckId}
+        readinessSummary={{
+          bracket: data.bracket ?? data.bracketScore,
+          format: format || formatCode || 'Commander',
+          ownershipPercentage: ownership.ownedPercentage,
+          deckValue: data.valueByCurrency,
+        }}
+      />
     </div>
   );
 }
