@@ -42,4 +42,24 @@ describe('DeckStats Component', () => {
     // Test that average CMC is rendered correctly. (2*1 + 4*1 + 4*2) / 10 = 14 / 10 = 1.4
     expect(screen.getByText('1.4')).toBeDefined();
   });
+
+  it('renders land guidance callout with current land count and recommended count', () => {
+    vi.mocked(useDeckStore).mockReturnValue({
+      cards: [
+        {
+          card: { id: '1', name: 'Lightning Bolt', manaValue: 1, colorIdentity: ['R'], typeLine: 'Instant' },
+          quantity: 20,
+        },
+        {
+          card: { id: '2', name: 'Mountain', manaValue: 0, colorIdentity: ['R'], typeLine: 'Basic Land — Mountain' },
+          quantity: 35,
+        },
+      ],
+    } as ReturnType<typeof useDeckStore>);
+
+    render(<DeckStats />);
+    expect(screen.getByText(/Land Guidance/i)).toBeInTheDocument();
+    expect(screen.getByText(/35/)).toBeInTheDocument();
+  });
 });
+

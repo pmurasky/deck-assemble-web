@@ -3,19 +3,22 @@
 import React, { useMemo } from 'react';
 import { useDeckStore } from '@/lib/store/deck-store';
 import { BarChart3, Palette } from 'lucide-react';
+import { LandGuidanceCallout } from './LandGuidanceCallout';
 
 export function DeckStats() {
   const { cards } = useDeckStore();
 
-  const { totalMana, totalCardsWithCost, colorCounts, manaCurveBars } = useMemo(() => {
+  const { totalMana, totalCardsWithCost, colorCounts, manaCurveBars, landCount } = useMemo(() => {
     let manaSum = 0;
     let cardCount = 0;
+    let lands = 0;
     const colors: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
     const curveCounts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
 
     cards.forEach(({ card, quantity }) => {
-      // Exclude lands from average mana value (roughly via typeLine)
-      if (!card.typeLine.includes('Land')) {
+      if (card.typeLine.includes('Land')) {
+        lands += quantity;
+      } else {
         const mv = card.manaValue || 0;
         manaSum += mv * quantity;
         cardCount += quantity;
@@ -41,10 +44,13 @@ export function DeckStats() {
       totalCardsWithCost: cardCount,
       colorCounts: colors,
       manaCurveBars: curveCounts,
+      landCount: lands,
     };
   }, [cards]);
 
   const avgManaValue = totalCardsWithCost > 0 ? (totalMana / totalCardsWithCost).toFixed(1) : '0.0';
+  const avgCmcNum = totalCardsWithCost > 0 ? totalMana / totalCardsWithCost : 3.0;
+  const recommendedLandCount = Math.max(30, Math.min(42, Math.round(31 + avgCmcNum * 1.8)));
 
   const maxColorCount = Math.max(...Object.values(colorCounts), 1);
   const maxCurveCount = Math.max(...Object.values(manaCurveBars), 1);
@@ -90,6 +96,7 @@ export function DeckStats() {
             })}
           </div>
         </div>
+        <LandGuidanceCallout currentCount={landCount} recommendedCount={recommendedLandCount} />
       </div>
 
       {/* Color Distribution */}

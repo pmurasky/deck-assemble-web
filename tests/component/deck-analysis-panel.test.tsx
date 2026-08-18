@@ -279,5 +279,37 @@ describe('DeckAnalysisPanel Component', () => {
 
     expect(screen.getByText(/No Game Changers flagged/i)).toBeInTheDocument();
   });
+
+  it('renders land guidance callout next to mana curve showing current vs recommended land count', async () => {
+    vi.mocked(decksApi.getDeckAnalysis).mockResolvedValueOnce({
+      manaCurve: { '2': 10 },
+      typeDistribution: { Land: 33, Creature: 20 },
+      colorDemand: { W: 15 },
+      colorProduction: { W: 15 },
+      landCount: 33,
+      recommendedLandCount: 37,
+      averageManaValue: 3.2,
+      ownershipBreakdown: { OWNED: 100 },
+      valueByCurrency: { USD: 120 },
+      missingCostByCurrency: {},
+      unpricedCardCount: 0,
+      functionalCategories: {},
+      tokenProducers: [],
+      gameChangers: [],
+      bracket: 2,
+      legality: { legal: true, violations: [] },
+      combos: { available: false, count: 0, combos: [] },
+    });
+
+    render(<DeckAnalysisPanel deckId={55} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Land Guidance/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('33')).toBeInTheDocument();
+    expect(screen.getByText('37')).toBeInTheDocument();
+  });
 });
+
 

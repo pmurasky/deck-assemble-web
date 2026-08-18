@@ -30,6 +30,7 @@ import {
 import type { DeckLegalityResponse, DeckComboResponse } from '@/types/builder';
 import { BracketBadge } from './BracketBadge';
 import { GameChangersSection } from './GameChangersSection';
+import { LandGuidanceCallout } from './LandGuidanceCallout';
 
 interface DeckAnalysisPanelProps {
   deckId: number | string;
@@ -188,27 +189,45 @@ function DeckValueBadge({ valueByCurrency }: { valueByCurrency?: Record<string, 
   );
 }
 
-function ManaCurveChart({ data }: { data: Array<{ cmc: string; count: number }> }) {
+function ManaCurveChart({
+  data,
+  landCount,
+  recommendedLandCount,
+}: {
+  data: Array<{ cmc: string; count: number }>;
+  landCount?: number;
+  recommendedLandCount?: number | null;
+}) {
   return (
-    <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <BarChart2 className="w-5 h-5 text-purple-400" />
-          <h4 className="text-base font-bold text-white">Mana Curve (CMC)</h4>
+    <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between">
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <BarChart2 className="w-5 h-5 text-purple-400" />
+            <h4 className="text-base font-bold text-white">Mana Curve (CMC)</h4>
+          </div>
+        </div>
+        <div className="h-60">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data}>
+              <XAxis dataKey="cmc" stroke="#71717a" fontSize={12} tickLine={false} />
+              <YAxis stroke="#71717a" fontSize={12} tickLine={false} allowDecimals={false} />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '0.75rem', fontSize: '12px' }}
+              />
+              <Bar dataKey="count" fill="#a855f7" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
-      <div className="h-60">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <XAxis dataKey="cmc" stroke="#71717a" fontSize={12} tickLine={false} />
-            <YAxis stroke="#71717a" fontSize={12} tickLine={false} allowDecimals={false} />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '0.75rem', fontSize: '12px' }}
-            />
-            <Bar dataKey="count" fill="#a855f7" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {recommendedLandCount !== undefined && recommendedLandCount !== null && (
+        <div className="mt-4 pt-3 border-t border-zinc-800/80">
+          <LandGuidanceCallout
+            currentCount={landCount ?? 0}
+            recommendedCount={recommendedLandCount}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -416,7 +435,11 @@ export function DeckAnalysisPanel({ deckId, onAddCards }: DeckAnalysisPanelProps
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ManaCurveChart data={manaCurveData} />
+        <ManaCurveChart
+          data={manaCurveData}
+          landCount={data.landCount}
+          recommendedLandCount={data.recommendedLandCount ?? data.recommendedLands}
+        />
         <ColorDemandChart data={colorDemandData} />
       </div>
 
