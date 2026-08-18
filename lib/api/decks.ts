@@ -133,6 +133,8 @@ export interface DeckAnalysisData {
   functionalCategories: Record<string, number>;
   tokenProducers: string[];
   gameChangers: string[];
+  bracket?: number | null;
+  bracketScore?: number | null;
   legality: DeckLegalityResponse;
   combos: {
     available: boolean;
