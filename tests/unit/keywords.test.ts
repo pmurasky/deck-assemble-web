@@ -2,10 +2,15 @@ import { describe, it, expect } from 'vitest';
 import {
   KEYWORDS,
   KEYWORDS_BY_NAME,
+  RULES_ENTRIES,
+  GLOSSARY_ITEMS,
+  GLOSSARY_CATEGORIES,
   getKeyword,
   getKeywordNames,
+  getGlossaryItem,
   type KeywordItem,
   type KeywordCategory,
+  type GlossaryItem,
 } from '@/lib/keywords';
 
 describe('lib/keywords', () => {
@@ -81,5 +86,68 @@ describe('lib/keywords', () => {
     expect(names).toContain('Haste');
     expect(names).toContain('Ward');
     expect(names).toContain('Enchant');
+  });
+
+  it('exports RULES_ENTRIES containing stack, priority, and combat steps', () => {
+    // Given & When
+    const rules = RULES_ENTRIES;
+
+    // Then
+    expect(Array.isArray(rules)).toBe(true);
+    expect(rules.length).toBeGreaterThanOrEqual(10);
+
+    const ruleNames = rules.map((r: GlossaryItem) => r.name);
+    expect(ruleNames).toContain('The Stack');
+    expect(ruleNames).toContain('Priority');
+    expect(ruleNames).toContain('State-Based Actions');
+    expect(ruleNames).toContain('Beginning of Combat Step');
+    expect(ruleNames).toContain('Declare Attackers Step');
+    expect(ruleNames).toContain('Declare Blockers Step');
+    expect(ruleNames).toContain('Combat Damage Step');
+    expect(ruleNames).toContain('End of Combat Step');
+  });
+
+  it('exports GLOSSARY_ITEMS combining keywords and rules', () => {
+    // Given & When
+    const glossary = GLOSSARY_ITEMS;
+
+    // Then
+    expect(glossary.length).toBe(KEYWORDS.length + RULES_ENTRIES.length);
+    expect(glossary.some((item) => item.name === 'Flying')).toBe(true);
+    expect(glossary.some((item) => item.name === 'The Stack')).toBe(true);
+    expect(glossary.some((item) => item.name === 'Priority')).toBe(true);
+  });
+
+  it('exports GLOSSARY_CATEGORIES array with unique categories', () => {
+    // Given & When
+    const categories = GLOSSARY_CATEGORIES;
+
+    // Then
+    expect(categories).toContain('Combat');
+    expect(categories).toContain('Evergreen');
+    expect(categories).toContain('Rules & Timing');
+    expect(categories).toContain('Combat Steps');
+  });
+
+  it('retrieves rules and keyword entries via getGlossaryItem case-insensitively', () => {
+    // Given & When
+    const stackExact = getGlossaryItem('The Stack');
+    const stackShort = getGlossaryItem('stack');
+    const priority = getGlossaryItem('Priority');
+    const combatDamage = getGlossaryItem('Combat Damage Step');
+
+    // Then
+    expect(stackExact).toBeDefined();
+    expect(stackExact?.name).toBe('The Stack');
+    expect(stackExact?.description).toContain('Last-In, First-Out');
+
+    expect(stackShort).toBeDefined();
+    expect(stackShort?.name).toBe('The Stack');
+
+    expect(priority).toBeDefined();
+    expect(priority?.name).toBe('Priority');
+
+    expect(combatDamage).toBeDefined();
+    expect(combatDamage?.name).toBe('Combat Damage Step');
   });
 });

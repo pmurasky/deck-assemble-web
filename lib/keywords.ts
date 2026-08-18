@@ -1,3 +1,5 @@
+import { RULES_ENTRIES, type RulesCategory, type RulesItem } from './rules-entries';
+
 export type KeywordCategory =
   | 'Combat'
   | 'Evergreen'
@@ -5,11 +7,16 @@ export type KeywordCategory =
   | 'Graveyard & Zones'
   | 'Triggers & Utility';
 
+export type GlossaryCategory = KeywordCategory | RulesCategory;
+
 export interface KeywordItem {
   name: string;
   category: KeywordCategory;
   description: string;
 }
+
+export type GlossaryItem = KeywordItem | RulesItem;
+export { RULES_ENTRIES, type RulesCategory, type RulesItem };
 
 export const KEYWORDS: KeywordItem[] = [
   {
@@ -229,4 +236,37 @@ export function getKeyword(name: string): KeywordItem | undefined {
 
 export function getKeywordNames(): string[] {
   return KEYWORDS.map((k) => k.name);
+}
+
+export const GLOSSARY_ITEMS: GlossaryItem[] = [...KEYWORDS, ...RULES_ENTRIES];
+
+export const GLOSSARY_CATEGORIES: string[] = [
+  'Combat',
+  'Evergreen',
+  'Casting & Costs',
+  'Graveyard & Zones',
+  'Triggers & Utility',
+  'Rules & Timing',
+  'Combat Steps',
+];
+
+export const GLOSSARY_BY_NAME: Record<string, GlossaryItem> = GLOSSARY_ITEMS.reduce(
+  (acc, item) => {
+    acc[item.name.toLowerCase()] = item;
+    const lower = item.name.toLowerCase();
+    if (lower.startsWith('the ')) {
+      acc[lower.slice(4)] = item;
+    }
+    return acc;
+  },
+  {} as Record<string, GlossaryItem>
+);
+
+export function getGlossaryItem(name: string): GlossaryItem | undefined {
+  if (!name) return undefined;
+  return GLOSSARY_BY_NAME[name.trim().toLowerCase()];
+}
+
+export function getGlossaryNames(): string[] {
+  return GLOSSARY_ITEMS.map((item) => item.name);
 }
