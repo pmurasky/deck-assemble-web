@@ -12,6 +12,7 @@ import { DeckWishlistPanel } from '@/components/deck/DeckWishlistPanel';
 import { DeckCardAlternativesFlyout } from '@/components/deck/DeckCardAlternativesFlyout';
 import { DeckUpgradePlanModal } from '@/components/deck/DeckUpgradePlanModal';
 import { TopUpgradeSuggestionsPanel } from '@/components/deck/TopUpgradeSuggestionsPanel';
+import { KeywordHighlighter } from '@/components/ui/KeywordTooltip';
 import { getCardById } from '@/lib/api/cards';
 import type { Card } from '@/types/card';
 import type { UpgradeSubstitutionResponse } from '@/types/builder';
@@ -262,6 +263,11 @@ export function DeckWorkspace() {
               <div className="overflow-hidden">
                 <p className="text-sm font-extrabold text-emerald-200 truncate">{commander.name}</p>
                 <p className="text-xs text-zinc-400 truncate">{commander.typeLine}</p>
+                {commander.oracleText && (
+                  <div className="text-[11px] text-zinc-300 line-clamp-2 mt-0.5 font-normal">
+                    <KeywordHighlighter text={commander.oracleText} />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -288,11 +294,18 @@ export function DeckWorkspace() {
                     key={deckCardId}
                     className="flex items-center justify-between group hover:bg-zinc-800/60 px-2.5 py-1.5 rounded-lg transition-colors"
                   >
-                    <div className="flex items-center gap-2.5 overflow-hidden">
-                      <span className="text-zinc-500 font-mono text-xs w-5 text-right font-bold">x{quantity}</span>
-                      <span className="text-zinc-200 text-xs font-medium truncate group-hover:text-purple-300 transition-colors">
-                        {card.name}
-                      </span>
+                    <div className="flex flex-col min-w-0 max-w-[65%]">
+                      <div className="flex items-center gap-2.5 overflow-hidden">
+                        <span className="text-zinc-500 font-mono text-xs w-5 text-right font-bold shrink-0">x{quantity}</span>
+                        <span className="text-zinc-200 text-xs font-medium truncate group-hover:text-purple-300 transition-colors">
+                          {card.name}
+                        </span>
+                      </div>
+                      {card.oracleText && (
+                        <div className="text-[10px] text-zinc-400 line-clamp-1 pl-7 font-normal">
+                          <KeywordHighlighter text={card.oracleText} />
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 opacity-100 sm:opacity-70 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
                       <button

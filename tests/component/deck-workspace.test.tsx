@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { DeckWorkspace } from '@/components/deck/DeckWorkspace';
 import { useDeckStore } from '@/lib/store/deck-store';
 import * as decksApi from '@/lib/api/decks';
@@ -63,6 +64,41 @@ describe('DeckWorkspace Component', () => {
     expect(screen.getByText(/Creature/i)).toBeDefined();
     expect(screen.getByText('Goblin Guide')).toBeDefined();
     expect(screen.getByText(/x2/i)).toBeDefined();
+  });
+
+  it('renders keyword tooltips in card oracle text within the deck workspace', async () => {
+    const user = userEvent.setup();
+    vi.mocked(useDeckStore).mockReturnValue({
+      id: 'uuid-123',
+      metadata: { name: 'Test Deck', format: 'Commander' },
+      cards: [
+        {
+          deckCardId: 1,
+          cardPrintingId: 1,
+          card: {
+            id: '1',
+            name: 'Vampire Nighthawk',
+            typeLine: 'Creature — Vampire Shaman',
+            oracleText: 'Flying, Deathtouch, Lifelink',
+          },
+          quantity: 1,
+          deckSection: 'MAIN_DECK',
+        },
+      ],
+      removeCard: vi.fn(),
+      addCard: vi.fn(),
+      updateMetadata: vi.fn(),
+    });
+
+    render(<DeckWorkspace />);
+    const flyingKeyword = screen.getByText('Flying');
+    expect(flyingKeyword).toBeInTheDocument();
+
+    await user.hover(flyingKeyword);
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    expect(
+      screen.getByText("This creature can't be blocked except by creatures with flying and/or reach.")
+    ).toBeInTheDocument();
   });
 
   describe('Deck Format Picker', () => {

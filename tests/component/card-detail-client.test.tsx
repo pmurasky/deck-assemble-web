@@ -60,7 +60,8 @@ describe('CardDetailClient', () => {
     
     // Then
     expect(screen.getByText('Spider-Man, Neighborhood Hero')).toBeDefined();
-    expect(screen.getByText('Reach, Haste')).toBeDefined();
+    expect(screen.getByText('Reach')).toBeDefined();
+    expect(screen.getByText('Haste')).toBeDefined();
     expect(screen.getByText('3/3')).toBeDefined();
     expect(screen.getByRole('img', { name: 'Spider-Man, Neighborhood Hero' })).toHaveAttribute(
       'src',
@@ -71,6 +72,20 @@ describe('CardDetailClient', () => {
     expect(guideMock).toBeDefined();
     expect(guideMock.getAttribute('data-card-id')).toBe('spidey-hero');
     expect(guideMock.getAttribute('data-face-index')).toBe('0');
+  });
+
+  it('renders keyword tooltips in oracle text and shows reminder text on hover', async () => {
+    const user = userEvent.setup();
+    render(<CardDetailClient cardId="spidey-hero" />);
+
+    const reachTrigger = screen.getByText('Reach');
+    expect(reachTrigger).toBeInTheDocument();
+
+    await user.hover(reachTrigger);
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    expect(
+      screen.getByText('This creature can block creatures with flying.')
+    ).toBeInTheDocument();
   });
 
   it('updates faceIndex passed to beginner guide when flipping multi-face card', async () => {

@@ -12,6 +12,7 @@ import { ManaCost } from './ManaCost';
 import { ColorIdentityBadge } from './ColorIdentityBadge';
 import { LegalityBadge } from './LegalityBadge';
 import { BeginnerGuideSection } from './BeginnerGuideSection';
+import { KeywordHighlighter } from '@/components/ui/KeywordTooltip';
 import { RefreshCw } from 'lucide-react';
 
 export function CardDetailClient({ cardId }: { cardId: string }) {
@@ -123,7 +124,7 @@ export function CardDetailClient({ cardId }: { cardId: string }) {
           <div className="space-y-4 bg-zinc-900/50 p-6 rounded-xl border border-zinc-800/50">
             {activeOracleText && (
               <div className="whitespace-pre-line text-zinc-300 text-lg leading-relaxed">
-                {activeOracleText}
+                <KeywordHighlighter text={activeOracleText} />
               </div>
             )}
             
