@@ -161,3 +161,34 @@ export interface ForkDeckResponse {
   newDeckId: number;
   newDeck: ApiDeck;
 }
+
+export interface PracticeCard {
+  id: number | string;
+  name: string;
+  typeLine?: string;
+  manaCost?: string;
+  imageUrl?: string;
+  tapped?: boolean;
+}
+
+export type PracticePhase =
+  | 'UNTAP'
+  | 'UPKEEP'
+  | 'DRAW'
+  | 'MAIN_1'
+  | 'COMBAT'
+  | 'MAIN_2'
+  | 'END';
+
+export interface PracticeSessionResponse {
+  sessionId: string;
+  turn: number;
+  phase: PracticePhase;
+  hand: PracticeCard[];
+  battlefield: PracticeCard[];
+  graveyard: PracticeCard[];
+  libraryCount: number;
+  manaPool: Record<string, number>;
+  logs?: string[];
+}
+

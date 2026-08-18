@@ -88,4 +88,40 @@ describe('DeckSimulationPanel Component', () => {
       expect(screen.getByText(/mana-value heuristic/i)).toBeInTheDocument();
     });
   });
+
+  it('switches to Practice Mode tab and renders board view', async () => {
+    global.fetch = vi.fn().mockImplementation((url: string | URL) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/practice')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            data: {
+              sessionId: 's-123',
+              turn: 1,
+              phase: 'MAIN_1',
+              hand: [{ id: '1', name: 'Sol Ring', manaCost: '{1}' }],
+              battlefield: [],
+              graveyard: [],
+              libraryCount: 92,
+              manaPool: {},
+              logs: [],
+            },
+          }),
+        } as Response);
+      }
+      return Promise.reject(new Error('Unknown URL'));
+    });
+
+    render(<DeckSimulationPanel deckId={10} />);
+
+    const practiceTab = screen.getByRole('button', { name: /Practice Board|Practice Mode/i });
+    expect(practiceTab).toBeInTheDocument();
+    fireEvent.click(practiceTab);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Turn 1/i)).toBeInTheDocument();
+      expect(screen.getByText('Sol Ring')).toBeInTheDocument();
+    });
+  });
 });

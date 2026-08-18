@@ -6,13 +6,14 @@ import type {
   SampleHandsResponse,
   SimulationResponse,
 } from '@/types/m3';
+import { PracticeBoardView } from './PracticeBoardView';
 
 interface DeckSimulationPanelProps {
   deckId: number | string;
 }
 
 export function DeckSimulationPanel({ deckId }: DeckSimulationPanelProps) {
-  const [activeTab, setActiveTab] = useState<'sample-hands' | 'monte-carlo'>('sample-hands');
+  const [activeTab, setActiveTab] = useState<'sample-hands' | 'practice' | 'monte-carlo'>('sample-hands');
 
   // Mulligan Config state
   const [mulliganStrategy, setMulliganStrategy] = useState<MulliganStrategy>('NONE');
@@ -90,6 +91,16 @@ export function DeckSimulationPanel({ deckId }: DeckSimulationPanelProps) {
 
         <div className="flex rounded-md bg-slate-950 p-1 border border-slate-800 text-xs">
           <button
+            onClick={() => setActiveTab('practice')}
+            className={`px-3 py-1.5 rounded transition-all font-medium ${
+              activeTab === 'practice'
+                ? 'bg-amber-500 text-slate-950 font-bold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Practice Board
+          </button>
+          <button
             onClick={() => setActiveTab('sample-hands')}
             className={`px-3 py-1.5 rounded transition-all font-medium ${
               activeTab === 'sample-hands'
@@ -118,52 +129,56 @@ export function DeckSimulationPanel({ deckId }: DeckSimulationPanelProps) {
         </div>
       )}
 
-      {/* Shared Mulligan Config Controls */}
-      <div className="p-4 rounded-lg bg-slate-950/80 border border-slate-800/80 space-y-3 text-xs">
-        <h4 className="font-semibold text-slate-300 uppercase tracking-wider text-[11px]">
-          Mulligan Rule Settings
-        </h4>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-slate-400 mb-1">Mulligan Strategy</label>
-            <select
-              value={mulliganStrategy}
-              onChange={(e) => setMulliganStrategy(e.target.value as MulliganStrategy)}
-              className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500"
-            >
-              <option value="NONE">None (Keep 7)</option>
-              <option value="LONDON_LAND_RANGE">London Mulligan (Land Range)</option>
-            </select>
-          </div>
+      {activeTab === 'practice' && <PracticeBoardView deckId={deckId} />}
 
-          {mulliganStrategy === 'LONDON_LAND_RANGE' && (
-            <>
-              <div>
-                <label className="block text-slate-400 mb-1">Min Acceptable Lands</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={7}
-                  value={minimumLands}
-                  onChange={(e) => setMinimumLands(Number(e.target.value))}
-                  className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-400 mb-1">Max Acceptable Lands</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={7}
-                  value={maximumLands}
-                  onChange={(e) => setMaximumLands(Number(e.target.value))}
-                  className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500"
-                />
-              </div>
-            </>
-          )}
+      {/* Shared Mulligan Config Controls for Sample Hands / Monte Carlo */}
+      {activeTab !== 'practice' && (
+        <div className="p-4 rounded-lg bg-slate-950/80 border border-slate-800/80 space-y-3 text-xs">
+          <h4 className="font-semibold text-slate-300 uppercase tracking-wider text-[11px]">
+            Mulligan Rule Settings
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-slate-400 mb-1">Mulligan Strategy</label>
+              <select
+                value={mulliganStrategy}
+                onChange={(e) => setMulliganStrategy(e.target.value as MulliganStrategy)}
+                className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500"
+              >
+                <option value="NONE">None (Keep 7)</option>
+                <option value="LONDON_LAND_RANGE">London Mulligan (Land Range)</option>
+              </select>
+            </div>
+
+            {mulliganStrategy === 'LONDON_LAND_RANGE' && (
+              <>
+                <div>
+                  <label className="block text-slate-400 mb-1">Min Acceptable Lands</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={7}
+                    value={minimumLands}
+                    onChange={(e) => setMinimumLands(Number(e.target.value))}
+                    className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Max Acceptable Lands</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={7}
+                    value={maximumLands}
+                    onChange={(e) => setMaximumLands(Number(e.target.value))}
+                    className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {activeTab === 'sample-hands' && (
         <div className="space-y-4">
