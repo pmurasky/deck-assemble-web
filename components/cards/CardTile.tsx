@@ -6,6 +6,7 @@ import { ColorIdentityBadge } from './ColorIdentityBadge';
 import { LegalityBadge } from './LegalityBadge';
 import { AddToCollectionModal } from '@/components/collection/AddToCollectionModal';
 import { useCollectionStore } from '@/lib/store/useCollectionStore';
+import { KeywordHighlighter } from '@/components/ui/KeywordTooltip';
 import type { Card } from '@/types/card';
 
 interface CardTileProps {
@@ -92,7 +93,7 @@ export function CardTile({
 
             {card.oracleText && (
               <p className="text-xs text-zinc-300 line-clamp-3 bg-zinc-950/50 p-2 rounded-md border border-zinc-800/80">
-                {card.oracleText}
+                <KeywordHighlighter text={card.oracleText} />
               </p>
             )}
 

@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect } from 'vitest';
 import { CardTile } from '@/components/cards/CardTile';
 import { Card } from '@/types/card';
@@ -40,4 +41,19 @@ describe('CardTile Component', () => {
     render(<CardTile card={{ ...sampleCard, ownedQuantity: 4 }} />);
     expect(screen.getByText('Owned: 4')).toBeInTheDocument();
   });
+
+  it('renders keyword tooltips in card oracle text displaying reminder text on hover', async () => {
+    const user = userEvent.setup();
+    render(<CardTile card={sampleCard} />);
+
+    const reachKeyword = screen.getByText('Reach');
+    expect(reachKeyword).toBeInTheDocument();
+
+    await user.hover(reachKeyword);
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    expect(
+      screen.getByText("This creature can block creatures with flying.")
+    ).toBeInTheDocument();
+  });
 });
+
