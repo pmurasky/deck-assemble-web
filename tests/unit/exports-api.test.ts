@@ -8,8 +8,8 @@ describe('Exports API Client', () => {
       expect(url).toBe('/api/v1/decks/42/export?format=mtgo');
     });
 
-    it('should support all 6 valid export formats', () => {
-      expect(DECK_EXPORT_FORMATS).toEqual(['txt', 'csv', 'json', 'mtgo', 'arena', 'cod']);
+    it('should support all valid export formats', () => {
+      expect(DECK_EXPORT_FORMATS).toEqual(['txt', 'csv', 'json', 'mtgo', 'arena', 'cod', 'proxy-sheet']);
       DECK_EXPORT_FORMATS.forEach((fmt) => {
         const url = getDeckExportUrl(1, fmt);
         expect(url).toBe(`/api/v1/decks/1/export?format=${fmt}`);

@@ -1,6 +1,6 @@
-export type DeckExportFormat = 'txt' | 'csv' | 'json' | 'mtgo' | 'arena' | 'cod';
+export type DeckExportFormat = 'txt' | 'csv' | 'json' | 'mtgo' | 'arena' | 'cod' | 'proxy-sheet';
 
-export const DECK_EXPORT_FORMATS: DeckExportFormat[] = ['txt', 'csv', 'json', 'mtgo', 'arena', 'cod'];
+export const DECK_EXPORT_FORMATS: DeckExportFormat[] = ['txt', 'csv', 'json', 'mtgo', 'arena', 'cod', 'proxy-sheet'];
 
 export function getDeckExportUrl(deckId: number, format: DeckExportFormat): string {
   return `/api/v1/decks/${deckId}/export?format=${encodeURIComponent(format)}`;

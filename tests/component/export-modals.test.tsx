@@ -31,6 +31,7 @@ describe('Export Components', () => {
       expect(screen.getByText(/MTGO \(.dek\)/i)).toBeInTheDocument();
       expect(screen.getByText('MTG Arena')).toBeInTheDocument();
       expect(screen.getByText(/Cockatrice \(.cod\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/Proxy Sheet/i)).toBeInTheDocument();
 
       // Click MTGO format option
       const mtgoBtn = screen.getByRole('button', { name: /MTGO \(.dek\)/i });
@@ -44,6 +45,19 @@ describe('Export Components', () => {
         '/api/v1/decks/10/export?format=mtgo',
         'Test Brew.dek'
       );
+    });
+
+    it('opens ProxyPrintView when selecting Proxy Sheet and clicking Print / Preview', () => {
+      const onClose = vi.fn();
+      render(<ExportDeckModal isOpen={true} onClose={onClose} deckId={10} deckName="Test Brew" />);
+
+      const proxyBtn = screen.getByRole('button', { name: /Proxy Sheet/i });
+      fireEvent.click(proxyBtn);
+
+      const printPreviewBtn = screen.getByRole('button', { name: /Print \/ Preview Proxy Sheet|Download Export/i });
+      fireEvent.click(printPreviewBtn);
+
+      expect(screen.getByTestId('proxy-print-view')).toBeInTheDocument();
     });
   });
 
