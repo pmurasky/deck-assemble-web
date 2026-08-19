@@ -15,6 +15,7 @@ import {
   syncDeckOwnershipClient,
   acquireDeckCardClient,
 } from '@/lib/api/decks';
+import { CardHoverPreview } from '@/components/ui/CardHoverPreview';
 import type { DeckWishlistResponse } from '@/types/builder';
 
 interface DeckWishlistPanelProps {
@@ -252,9 +253,10 @@ export function DeckWishlistPanel({ deckId, onBackToDeck }: DeckWishlistPanelPro
                     {item.quantity}x
                   </span>
                   <div className="min-w-0">
-                    <span className="text-sm font-bold text-zinc-100 group-hover:text-amber-300 transition-colors truncate block">
-                      {item.cardName}
-                    </span>
+                    <CardHoverPreview
+                      cardName={item.cardName}
+                      className="text-sm font-bold text-zinc-100 group-hover:text-amber-300 transition-colors truncate block"
+                    />
                     {item.unitPriceUsd !== null && item.unitPriceUsd !== undefined && (
                       <span className="text-xs text-zinc-500 font-mono">
                         ${item.unitPriceUsd.toFixed(2)} each
@@ -296,9 +298,12 @@ export function DeckWishlistPanel({ deckId, onBackToDeck }: DeckWishlistPanelPro
                     key={item.deckCardId}
                     className="flex items-center justify-between p-3 opacity-60 text-xs"
                   >
-                    <span className="font-medium text-zinc-300 line-through">
+                    <CardHoverPreview
+                      cardName={item.cardName}
+                      className="font-medium text-zinc-300 line-through truncate"
+                    >
                       {item.quantity}x {item.cardName}
-                    </span>
+                    </CardHoverPreview>
                     <span className="text-emerald-400 font-semibold flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" />
                       Acquired

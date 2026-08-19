@@ -13,6 +13,7 @@ import { DeckCardAlternativesFlyout } from '@/components/deck/DeckCardAlternativ
 import { DeckUpgradePlanModal } from '@/components/deck/DeckUpgradePlanModal';
 import { TopUpgradeSuggestionsPanel } from '@/components/deck/TopUpgradeSuggestionsPanel';
 import { KeywordHighlighter } from '@/components/ui/KeywordTooltip';
+import { CardHoverPreview } from '@/components/ui/CardHoverPreview';
 import { getCardById } from '@/lib/api/cards';
 import type { Card } from '@/types/card';
 import type { UpgradeSubstitutionResponse } from '@/types/builder';
@@ -297,9 +298,12 @@ export function DeckWorkspace() {
                     <div className="flex flex-col min-w-0 max-w-[65%]">
                       <div className="flex items-center gap-2.5 overflow-hidden">
                         <span className="text-zinc-500 font-mono text-xs w-5 text-right font-bold shrink-0">x{quantity}</span>
-                        <span className="text-zinc-200 text-xs font-medium truncate group-hover:text-purple-300 transition-colors">
-                          {card.name}
-                        </span>
+                        <CardHoverPreview
+                          cardName={card.name}
+                          imageUrl={card.imageUrl}
+                          manaCost={card.manaCost}
+                          className="text-zinc-200 text-xs font-medium truncate group-hover:text-purple-300 transition-colors"
+                        />
                       </div>
                       {card.oracleText && (
                         <div className="text-[10px] text-zinc-400 line-clamp-1 pl-7 font-normal">

@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Sparkles, RefreshCw, ArrowLeftRight } from 'lucide-react';
 import { requestDeckUpgradePlan } from '@/lib/api/decks';
+import { CardHoverPreview } from '@/components/ui/CardHoverPreview';
 import type {
   DeckUpgradePlanResponse,
   UpgradeSubstitutionResponse,
@@ -27,14 +28,20 @@ const SubstitutionRow: React.FC<SubstitutionRowProps> = ({ sub, onSwap }) => {
       <div className="space-y-1 min-w-0 flex-1">
         <div className="flex items-center gap-2 text-xs">
           <span className="text-rose-400 font-mono">-</span>
-          <span className="font-mono text-rose-400 line-through truncate">{sub.removedName}</span>
+          <CardHoverPreview
+            cardName={sub.removedName}
+            className="font-mono text-rose-400 line-through hover:text-rose-300 transition-colors truncate"
+          />
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-medium shrink-0">
             {sub.removedOwnershipStatus}
           </span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-emerald-400 font-bold">+</span>
-          <span className="text-sm font-bold text-emerald-400 truncate">{sub.addedName}</span>
+          <CardHoverPreview
+            cardName={sub.addedName}
+            className="text-sm font-bold text-emerald-400 hover:text-emerald-300 transition-colors truncate"
+          />
           {sub.addedOwned ? (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-bold">
               Owned

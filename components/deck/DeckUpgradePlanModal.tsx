@@ -8,6 +8,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { requestDeckUpgradePlan } from '@/lib/api/decks';
+import { CardHoverPreview } from '@/components/ui/CardHoverPreview';
 import type {
   DeckUpgradeObjective,
   DeckUpgradeRequest,
@@ -267,17 +268,23 @@ export function DeckUpgradePlanModal({
                     <div key={idx} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1">
                         <div className="space-y-0.5">
-                          <span className="text-xs font-mono text-red-400 line-through block">
+                          <CardHoverPreview
+                            cardName={sub.removedName}
+                            className="text-xs font-mono text-red-400 line-through hover:text-red-300 transition-colors block"
+                          >
                             - {sub.removedName} ({sub.removedOwnershipStatus})
-                          </span>
-                          <span className="text-sm font-bold text-emerald-400 flex items-center gap-1.5">
+                          </CardHoverPreview>
+                          <CardHoverPreview
+                            cardName={sub.addedName}
+                            className="text-sm font-bold text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1.5"
+                          >
                             + {sub.addedName}
                             {sub.addedOwned && (
                               <span className="text-[9px] bg-emerald-950 border border-emerald-500/40 text-emerald-300 px-1.5 py-0.2 rounded font-bold">
                                 Owned
                               </span>
                             )}
-                          </span>
+                          </CardHoverPreview>
                         </div>
                       </div>
 

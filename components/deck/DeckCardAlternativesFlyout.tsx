@@ -8,6 +8,7 @@ import {
   ArrowRightLeft,
 } from 'lucide-react';
 import { fetchDeckCardAlternatives } from '@/lib/api/decks';
+import { CardHoverPreview } from '@/components/ui/CardHoverPreview';
 import type { DeckCardAlternativeResponse } from '@/types/builder';
 
 interface DeckCardAlternativesFlyoutProps {
@@ -127,7 +128,10 @@ export function DeckCardAlternativesFlyout({
               >
                 <div className="min-w-0 space-y-1.5 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-extrabold text-white truncate">{alt.name}</span>
+                    <CardHoverPreview
+                      cardName={alt.name}
+                      className="text-sm font-extrabold text-white hover:text-purple-300 transition-colors truncate"
+                    />
                     {alt.owned ? (
                       <span className="text-[10px] bg-emerald-950 border border-emerald-500/40 text-emerald-300 px-2 py-0.5 rounded font-bold">
                         Owned

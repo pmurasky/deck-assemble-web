@@ -101,6 +101,41 @@ describe('DeckWorkspace Component', () => {
     ).toBeInTheDocument();
   });
 
+  it('renders card hover preview for card names in deck list rows', async () => {
+    const user = userEvent.setup();
+    vi.mocked(useDeckStore).mockReturnValue({
+      id: 'uuid-123',
+      metadata: { name: 'Test Deck', format: 'Commander' },
+      cards: [
+        {
+          deckCardId: 1,
+          cardPrintingId: 1,
+          card: {
+            id: '1',
+            name: 'Sol Ring',
+            typeLine: 'Artifact',
+            imageUrl: 'https://cards.scryfall.io/normal/front/sol-ring.jpg',
+          },
+          quantity: 1,
+          deckSection: 'MAIN_DECK',
+        },
+      ],
+      removeCard: vi.fn(),
+      addCard: vi.fn(),
+      updateMetadata: vi.fn(),
+    });
+
+    render(<DeckWorkspace />);
+    const cardTrigger = screen.getByRole('button', { name: 'Sol Ring' });
+    expect(cardTrigger).toBeInTheDocument();
+
+    await user.hover(cardTrigger);
+    const tooltip = screen.getByRole('tooltip');
+    expect(tooltip).toBeInTheDocument();
+    const img = screen.getByRole('img', { name: 'Sol Ring' });
+    expect(img).toHaveAttribute('src', 'https://cards.scryfall.io/normal/front/sol-ring.jpg');
+  });
+
   describe('Deck Format Picker', () => {
     it('renders format selector with current format selected and changes format on user selection', () => {
       const mockUpdateMetadata = vi.fn();
