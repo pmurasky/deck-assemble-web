@@ -62,8 +62,8 @@ describe('FormatValidator Component', () => {
     it('shows valid state for legal Standard deck of 60 cards and max 4 copies', () => {
       vi.mocked(useDeckStore).mockReturnValue({
         cards: [
-          { card: { id: '1', name: 'Lightning Bolt', typeLine: 'Instant', legalities: { standard: 'legal' } } as Card, quantity: 4 },
-          { card: { id: '2', name: 'Mountain', typeLine: 'Basic Land', legalities: { standard: 'legal' } } as Card, quantity: 56 },
+          { card: { id: '1', name: 'Lightning Bolt', typeLine: 'Instant', legalities: { standard: 'legal' } } as unknown as Card, quantity: 4 },
+          { card: { id: '2', name: 'Mountain', typeLine: 'Basic Land', legalities: { standard: 'legal' } } as unknown as Card, quantity: 56 },
         ],
         metadata: { format: 'Standard' },
         commander: undefined,
@@ -103,7 +103,7 @@ describe('FormatValidator Component', () => {
     it('shows error for cards banned or not legal in the chosen format', () => {
       vi.mocked(useDeckStore).mockReturnValue({
         cards: [
-          { card: { id: '1', name: 'Black Lotus', typeLine: 'Artifact', legalities: { standard: 'banned' } } as Card, quantity: 1 },
+          { card: { id: '1', name: 'Black Lotus', typeLine: 'Artifact', legalities: { standard: 'banned' } } as unknown as Card, quantity: 1 },
           { card: { id: '2', name: 'Mountain', typeLine: 'Basic Land' } as Card, quantity: 59 },
         ],
         metadata: { format: 'Standard' },
