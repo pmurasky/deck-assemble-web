@@ -1,18 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import {
-  Play,
-  RotateCcw,
-  BookOpen,
-  Layers,
-  Archive,
-  Sparkles,
-  Loader2,
-  AlertCircle,
-} from 'lucide-react';
-import { KeywordHighlighter } from '@/components/ui/KeywordTooltip';
+import { Play, RotateCcw, Sparkles, Loader2, AlertCircle, Layers } from 'lucide-react';
+import { PhaseStepper } from './practice/PhaseStepper';
+import { ManaPoolDisplay } from './practice/ManaPoolDisplay';
+import { DeckPileStatus } from './practice/DeckPileStatus';
+import { PracticeHandCard } from './practice/PracticeHandCard';
+import { PracticeBattlefieldCard } from './practice/PracticeBattlefieldCard';
 import type { PracticeCard, PracticeSessionResponse } from '@/types/m3';
 
 interface PracticeBoardViewProps {
@@ -24,6 +18,20 @@ const FALLBACK_HAND: PracticeCard[] = [
   { id: '2', name: 'Arcane Signet', manaCost: '{2}', typeLine: 'Artifact' },
   { id: '3', name: 'Command Tower', manaCost: '', typeLine: 'Land' },
 ];
+
+function createFallbackSession(deckId: number | string): PracticeSessionResponse {
+  return {
+    sessionId: `local-${deckId}`,
+    turn: 1,
+    phase: 'MAIN_1',
+    hand: FALLBACK_HAND,
+    battlefield: [],
+    graveyard: [],
+    libraryCount: 92,
+    manaPool: {},
+    logs: ['Game started. Opening hand drawn.'],
+  };
+}
 
 export function PracticeBoardView({ deckId }: PracticeBoardViewProps) {
   const [session, setSession] = useState<PracticeSessionResponse | null>(null);
@@ -42,18 +50,7 @@ export function PracticeBoardView({ deckId }: PracticeBoardViewProps) {
       if (!res.ok) throw new Error(json.error?.message || 'Failed to start practice session');
       setSession(json.data ?? json);
     } catch {
-      // Graceful fallback for mocked/offline scenarios
-      setSession({
-        sessionId: `local-${deckId}`,
-        turn: 1,
-        phase: 'MAIN_1',
-        hand: FALLBACK_HAND,
-        battlefield: [],
-        graveyard: [],
-        libraryCount: 92,
-        manaPool: {},
-        logs: ['Game started. Opening hand drawn.'],
-      });
+      setSession(createFallbackSession(deckId));
     } finally {
       setIsLoading(false);
     }
@@ -74,17 +71,7 @@ export function PracticeBoardView({ deckId }: PracticeBoardViewProps) {
       })
       .catch(() => {
         if (isCurrent) {
-          setSession({
-            sessionId: `local-${deckId}`,
-            turn: 1,
-            phase: 'MAIN_1',
-            hand: FALLBACK_HAND,
-            battlefield: [],
-            graveyard: [],
-            libraryCount: 92,
-            manaPool: {},
-            logs: ['Game started. Opening hand drawn.'],
-          });
+          setSession(createFallbackSession(deckId));
           setIsLoading(false);
         }
       });
@@ -111,7 +98,6 @@ export function PracticeBoardView({ deckId }: PracticeBoardViewProps) {
       // Fallback
     }
 
-    // Local advance fallback
     setSession((prev) => {
       if (!prev) return null;
       const nextTurn = prev.turn + 1;
@@ -187,37 +173,20 @@ export function PracticeBoardView({ deckId }: PracticeBoardViewProps) {
     <div className="space-y-4" data-testid="practice-mode-board">
       {/* Board Controls & Turn Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-slate-950 rounded-xl border border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-sm">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-sm shadow-xs">
             Turn {session.turn}
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-300">
-            <span>Phase: {session.phase}</span>
-            <Link
-              href="/learn/turn-structure"
-              className="text-amber-400 hover:text-amber-300 ml-1"
-              title="Learn MTG Turn Phases"
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-          <div className="flex items-center gap-3 text-xs text-slate-400 font-mono">
-            <span className="flex items-center gap-1">
-              <Layers className="w-3.5 h-3.5 text-amber-400" />
-              {session.libraryCount} in library
-            </span>
-            <span className="flex items-center gap-1">
-              <Archive className="w-3.5 h-3.5 text-slate-500" />
-              {session.graveyard.length} in graveyard
-            </span>
-          </div>
+          <PhaseStepper currentPhase={session.phase} />
+          <ManaPoolDisplay manaPool={session.manaPool || {}} />
+          <DeckPileStatus libraryCount={session.libraryCount} graveyardCount={session.graveyard.length} />
         </div>
 
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleNextTurn}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs transition-all shadow-md active:scale-95"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs transition-all shadow-md active:scale-95 cursor-pointer"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             <span>Next Turn</span>
@@ -225,7 +194,7 @@ export function PracticeBoardView({ deckId }: PracticeBoardViewProps) {
           <button
             type="button"
             onClick={handleReset}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-all border border-slate-700"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-all border border-slate-700 cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset</span>
@@ -253,38 +222,7 @@ export function PracticeBoardView({ deckId }: PracticeBoardViewProps) {
         ) : (
           <div className="flex flex-wrap gap-2.5 pt-1">
             {session.battlefield.map((c) => (
-              <div
-                key={c.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => handleToggleTap(c.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleToggleTap(c.id);
-                  }
-                }}
-                className={`p-3 rounded-lg border text-left transition-all max-w-[170px] flex flex-col justify-between cursor-pointer ${
-                  c.tapped
-                    ? 'bg-slate-900/40 border-slate-800 text-slate-500 rotate-6 opacity-75'
-                    : 'bg-slate-900 border-emerald-500/40 text-slate-100 shadow-md'
-                }`}
-              >
-                <div>
-                  <div className="text-xs font-bold truncate">{c.name}</div>
-                  <div className="text-[10px] text-slate-400 truncate">
-                    <KeywordHighlighter text={c.typeLine || ''} />
-                  </div>
-                  {c.oracleText && (
-                    <div className="text-[10px] text-slate-300 line-clamp-2 mt-1 font-normal">
-                      <KeywordHighlighter text={c.oracleText} />
-                    </div>
-                  )}
-                </div>
-                <div className="mt-2 text-[10px] font-mono font-semibold text-emerald-400">
-                  {c.tapped ? 'Tapped' : 'Untapped'}
-                </div>
-              </div>
+              <PracticeBattlefieldCard key={c.id} card={c} onToggleTap={handleToggleTap} />
             ))}
           </div>
         )}
@@ -309,33 +247,7 @@ export function PracticeBoardView({ deckId }: PracticeBoardViewProps) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 pt-1">
             {session.hand.map((c) => (
-              <div
-                key={c.id}
-                className="p-3 rounded-lg bg-slate-900 border border-slate-800 hover:border-violet-500/50 transition-colors flex flex-col justify-between gap-2"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-1 text-xs">
-                    <span className="font-bold text-slate-100 truncate">{c.name}</span>
-                    {c.manaCost && <span className="font-mono text-amber-400 text-[11px]">{c.manaCost}</span>}
-                  </div>
-                  <div className="text-[10px] text-slate-400 truncate mt-0.5">
-                    <KeywordHighlighter text={c.typeLine || ''} />
-                  </div>
-                  {c.oracleText && (
-                    <div className="text-[10px] text-slate-300 line-clamp-2 mt-1 font-normal">
-                      <KeywordHighlighter text={c.oracleText} />
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handlePlayCard(c)}
-                  aria-label={`Play ${c.name}`}
-                  className="w-full py-1 rounded bg-violet-600/80 hover:bg-violet-500 text-white font-bold text-[11px] transition-all"
-                >
-                  Play to Board
-                </button>
-              </div>
+              <PracticeHandCard key={c.id} card={c} onPlay={handlePlayCard} />
             ))}
           </div>
         )}
