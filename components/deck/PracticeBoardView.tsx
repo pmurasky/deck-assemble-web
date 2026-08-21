@@ -5,10 +5,15 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { BoardControls } from './practice/BoardControls';
 import { BattlefieldZone } from './practice/BattlefieldZone';
 import { HandZone } from './practice/HandZone';
-import type { PracticeCard, PracticeSessionResponse } from '@/types/m3';
+import type { MulliganStrategy, PracticeCard, PracticeSessionResponse } from '@/types/m3';
 
 interface PracticeBoardViewProps {
   deckId: number | string;
+  revision?: number;
+  onThePlay?: boolean;
+  mulliganStrategy?: MulliganStrategy;
+  minimumLands?: number;
+  maximumLands?: number;
 }
 
 async function extractErrorMessage(res: Response, fallback: string): Promise<string> {
@@ -20,71 +25,92 @@ async function extractErrorMessage(res: Response, fallback: string): Promise<str
   }
 }
 
-export function PracticeBoardView({ deckId }: PracticeBoardViewProps) {
+function buildPracticePayload(props: {
+  revision?: number;
+  onThePlay?: boolean;
+  mulliganStrategy?: MulliganStrategy;
+  minimumLands?: number;
+  maximumLands?: number;
+}): Record<string, unknown> {
+  const { revision = 1, onThePlay = true, mulliganStrategy = 'NONE', minimumLands, maximumLands } = props;
+  const payload: Record<string, unknown> = { revision, onThePlay, mulliganStrategy };
+  if (mulliganStrategy === 'LONDON_LAND_RANGE' && minimumLands !== undefined) {
+    payload.minimumLands = minimumLands;
+  }
+  if (mulliganStrategy === 'LONDON_LAND_RANGE' && maximumLands !== undefined) {
+    payload.maximumLands = maximumLands;
+  }
+  return payload;
+}
+
+async function fetchPracticeSession(
+  deckId: number | string,
+  payload: Record<string, unknown>
+): Promise<{ data?: PracticeSessionResponse; error?: string }> {
+  try {
+    const res = await fetch(`/api/v1/decks/${deckId}/practice-sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const msg = await extractErrorMessage(res, 'Failed to start practice session');
+      return { error: msg };
+    }
+    const json = await res.json();
+    return { data: json.data ?? json };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to start practice session' };
+  }
+}
+
+export function PracticeBoardView({
+  deckId,
+  revision,
+  onThePlay,
+  mulliganStrategy,
+  minimumLands,
+  maximumLands,
+}: PracticeBoardViewProps) {
   const [session, setSession] = useState<PracticeSessionResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const startSession = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/v1/decks/${deckId}/practice-sessions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!res.ok) {
-        const msg = await extractErrorMessage(res, 'Failed to start practice session');
-        setError(msg);
-        setSession(null);
-        return;
-      }
-      const json = await res.json();
-      setSession(json.data ?? json);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start practice session');
-      setSession(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [deckId]);
-
-  const handleRetry = () => {
     setIsLoading(true);
     setError(null);
-    startSession();
-  };
+    const payload = buildPracticePayload({ revision, onThePlay, mulliganStrategy, minimumLands, maximumLands });
+    const { data, error: err } = await fetchPracticeSession(deckId, payload);
+    if (err) {
+      setError(err);
+      setSession(null);
+    } else if (data) {
+      setSession(data);
+    }
+    setIsLoading(false);
+  }, [deckId, revision, onThePlay, mulliganStrategy, minimumLands, maximumLands]);
 
   useEffect(() => {
     let isMounted = true;
-    const init = async () => {
-      try {
-        const res = await fetch(`/api/v1/decks/${deckId}/practice-sessions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        if (!res.ok) {
-          const msg = await extractErrorMessage(res, 'Failed to start practice session');
-          if (isMounted) {
-            setError(msg);
-            setSession(null);
-          }
-          return;
-        }
-        const json = await res.json();
-        if (isMounted) setSession(json.data ?? json);
-      } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Failed to start practice session');
-          setSession(null);
-        }
-      } finally {
-        if (isMounted) setIsLoading(false);
+    const payload = buildPracticePayload({ revision, onThePlay, mulliganStrategy, minimumLands, maximumLands });
+    fetchPracticeSession(deckId, payload).then(({ data, error: err }) => {
+      if (!isMounted) return;
+      if (err) {
+        setError(err);
+        setSession(null);
+      } else if (data) {
+        setSession(data);
       }
-    };
-    init();
+      setIsLoading(false);
+    });
     return () => {
       isMounted = false;
     };
-  }, [deckId]);
+  }, [deckId, revision, onThePlay, mulliganStrategy, minimumLands, maximumLands]);
+
+  const handleRetry = () => {
+    startSession();
+  };
 
   const handlePlayCard = async (card: PracticeCard) => {
     if (!session) return;

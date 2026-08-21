@@ -67,8 +67,64 @@ describe('PracticeBoardView Component', () => {
       expect(screen.getByTestId('land-drop-status')).toHaveTextContent(/Land Drop Available/i);
     });
 
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/decks/10/practice-sessions'),
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          revision: 1,
+          onThePlay: true,
+          mulliganStrategy: 'NONE',
+        }),
+      })
+    );
+
     expect(screen.getByRole('button', { name: /Next Turn/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Reset/i })).toBeInTheDocument();
+  });
+
+  it('starts session with custom revision and mulligan strategy props', async () => {
+    global.fetch = vi.fn().mockImplementation((url: string | URL) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/practice-sessions')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ data: mockInitialSession }),
+        } as Response);
+      }
+      return Promise.reject(new Error('Unknown URL'));
+    });
+
+    render(
+      <PracticeBoardView
+        deckId={10}
+        revision={3}
+        onThePlay={false}
+        mulliganStrategy="LONDON_LAND_RANGE"
+        minimumLands={2}
+        maximumLands={4}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Turn 1/i)).toBeInTheDocument();
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/decks/10/practice-sessions'),
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          revision: 3,
+          onThePlay: false,
+          mulliganStrategy: 'LONDON_LAND_RANGE',
+          minimumLands: 2,
+          maximumLands: 4,
+        }),
+      })
+    );
   });
 
   it('steps to next turn and updates board and hand state', async () => {
