@@ -72,3 +72,19 @@ export async function restoreDeckRevision(
     'Failed to restore revision'
   );
 }
+
+export async function getLatestDeckRevisionNumber(deckId: number): Promise<number> {
+  try {
+    const res = await fetchRevisions(`/decks/${deckId}/revisions?size=1`);
+    if (res.ok) {
+      const data = await res.json();
+      const item = data?.content?.[0] ?? data?.items?.[0];
+      if (item && typeof item.revisionNumber === 'number') {
+        return item.revisionNumber;
+      }
+    }
+  } catch {
+    // Fall back to 1 if revision cannot be resolved
+  }
+  return 1;
+}

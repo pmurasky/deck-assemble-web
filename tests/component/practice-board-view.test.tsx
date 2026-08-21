@@ -73,7 +73,6 @@ describe('PracticeBoardView Component', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          revision: 1,
           onThePlay: true,
           mulliganStrategy: 'NONE',
         }),

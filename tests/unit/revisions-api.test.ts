@@ -97,4 +97,30 @@ describe('revisions-api', () => {
       })
     );
   });
+
+  it('should resolve latest revision number from Spring Page content array', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [{ revisionNumber: 15 }] }),
+    } as Response);
+
+    const { getLatestDeckRevisionNumber } = await import('@/lib/api/revisions');
+    const rev = await getLatestDeckRevisionNumber(10);
+    expect(rev).toBe(15);
+  });
+
+  it('should resolve latest revision number from items array or fallback to 1', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: [{ revisionNumber: 8 }] }),
+    } as Response);
+
+    const { getLatestDeckRevisionNumber } = await import('@/lib/api/revisions');
+    const rev = await getLatestDeckRevisionNumber(10);
+    expect(rev).toBe(8);
+
+    global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+    const fallbackRev = await getLatestDeckRevisionNumber(10);
+    expect(fallbackRev).toBe(1);
+  });
 });
