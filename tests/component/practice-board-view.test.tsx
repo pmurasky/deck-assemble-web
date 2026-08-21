@@ -8,34 +8,38 @@ import type { PracticeSessionResponse } from '@/types/m3';
 describe('PracticeBoardView Component', () => {
   const mockInitialSession: PracticeSessionResponse = {
     sessionId: 'session-456',
+    seed: 12345,
     turn: 1,
-    phase: 'MAIN_1',
+    mulliganCount: 0,
     hand: [
-      { id: 'c1', name: 'Sol Ring', manaCost: '{1}', typeLine: 'Artifact' },
-      { id: 'c2', name: 'Command Tower', manaCost: '', typeLine: 'Land' },
+      { printingId: 101, name: 'Sol Ring', manaCost: '{1}', typeLine: 'Artifact' },
+      { printingId: 102, name: 'Command Tower', manaCost: '', typeLine: 'Land' },
     ],
     battlefield: [],
-    graveyard: [],
-    libraryCount: 91,
-    manaPool: { colorless: 0, any: 0 },
-    logs: ['Game started. Opening hand drawn (7 cards).'],
+    drawnCard: null,
+    landsInPlay: 0,
+    landPlayedThisTurn: false,
+    castableSpells: [{ printingId: 101, name: 'Sol Ring' }],
+    finished: false,
   };
 
   const mockTurn2Session: PracticeSessionResponse = {
     sessionId: 'session-456',
+    seed: 12345,
     turn: 2,
-    phase: 'MAIN_1',
+    mulliganCount: 0,
     hand: [
-      { id: 'c1', name: 'Sol Ring', manaCost: '{1}', typeLine: 'Artifact' },
-      { id: 'c3', name: 'Arcane Signet', manaCost: '{2}', typeLine: 'Artifact' },
+      { printingId: 101, name: 'Sol Ring', manaCost: '{1}', typeLine: 'Artifact' },
+      { printingId: 103, name: 'Arcane Signet', manaCost: '{2}', typeLine: 'Artifact' },
     ],
     battlefield: [
-      { id: 'c2', name: 'Command Tower', manaCost: '', typeLine: 'Land' },
+      { card: { printingId: 102, name: 'Command Tower', manaCost: '', typeLine: 'Land' }, tapped: false },
     ],
-    graveyard: [],
-    libraryCount: 90,
-    manaPool: { colorless: 0, any: 1 },
-    logs: ['Turn 2 started.', 'Played Command Tower.'],
+    drawnCard: { printingId: 103, name: 'Arcane Signet' },
+    landsInPlay: 1,
+    landPlayedThisTurn: false,
+    castableSpells: [{ printingId: 101, name: 'Sol Ring' }],
+    finished: false,
   };
 
   beforeEach(() => {
@@ -45,7 +49,7 @@ describe('PracticeBoardView Component', () => {
   it('renders initial practice session with hand, battlefield, and turn controls', async () => {
     global.fetch = vi.fn().mockImplementation((url: string | URL) => {
       const urlStr = url.toString();
-      if (urlStr.includes('/practice')) {
+      if (urlStr.includes('/practice-sessions')) {
         return Promise.resolve({
           ok: true,
           json: async () => ({ data: mockInitialSession }),
@@ -60,7 +64,7 @@ describe('PracticeBoardView Component', () => {
       expect(screen.getByText(/Turn 1/i)).toBeInTheDocument();
       expect(screen.getByText('Sol Ring')).toBeInTheDocument();
       expect(screen.getByText('Command Tower')).toBeInTheDocument();
-      expect(screen.getByText(/91 in library/i)).toBeInTheDocument();
+      expect(screen.getByTestId('land-drop-status')).toHaveTextContent(/Land Drop Available/i);
     });
 
     expect(screen.getByRole('button', { name: /Next Turn/i })).toBeInTheDocument();
@@ -71,7 +75,7 @@ describe('PracticeBoardView Component', () => {
     let callCount = 0;
     global.fetch = vi.fn().mockImplementation((url: string | URL) => {
       const urlStr = url.toString();
-      if (urlStr.includes('/practice')) {
+      if (urlStr.includes('/practice-sessions')) {
         callCount++;
         return Promise.resolve({
           ok: true,
@@ -94,12 +98,17 @@ describe('PracticeBoardView Component', () => {
       expect(screen.getByText(/Turn 2/i)).toBeInTheDocument();
       expect(screen.getByText('Arcane Signet')).toBeInTheDocument();
     });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/practice-sessions/session-456/steps'),
+      expect.objectContaining({ method: 'POST' })
+    );
   });
 
   it('resets practice session back to turn 1', async () => {
     global.fetch = vi.fn().mockImplementation((url: string | URL) => {
       const urlStr = url.toString();
-      if (urlStr.includes('/practice')) {
+      if (urlStr.includes('/practice-sessions')) {
         return Promise.resolve({
           ok: true,
           json: async () => ({ data: mockInitialSession }),
@@ -119,19 +128,27 @@ describe('PracticeBoardView Component', () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/practice'),
+        expect.stringContaining('/practice-sessions/session-456/reset'),
         expect.objectContaining({ method: 'POST' })
       );
     });
   });
 
-  it('allows playing a card from hand to the battlefield', async () => {
+  it('allows playing a card from hand to the battlefield calling play endpoint', async () => {
+    const afterPlaySession: PracticeSessionResponse = {
+      ...mockInitialSession,
+      hand: [{ printingId: 102, name: 'Command Tower', manaCost: '', typeLine: 'Land' }],
+      battlefield: [{ card: { printingId: 101, name: 'Sol Ring', manaCost: '{1}', typeLine: 'Artifact' }, tapped: false }],
+    };
+
+    let callCount = 0;
     global.fetch = vi.fn().mockImplementation((url: string | URL) => {
       const urlStr = url.toString();
-      if (urlStr.includes('/practice')) {
+      if (urlStr.includes('/practice-sessions')) {
+        callCount++;
         return Promise.resolve({
           ok: true,
-          json: async () => ({ data: mockInitialSession }),
+          json: async () => ({ data: callCount === 1 ? mockInitialSession : afterPlaySession }),
         } as Response);
       }
       return Promise.reject(new Error('Unknown URL'));
@@ -149,27 +166,115 @@ describe('PracticeBoardView Component', () => {
     await waitFor(() => {
       expect(screen.getByTestId('battlefield-zone')).toHaveTextContent('Sol Ring');
     });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/practice-sessions/session-456/play'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ printingId: 101 }),
+      })
+    );
+  });
+
+  it('rotates battlefield card image and calls tap endpoint on toggle', async () => {
+    const sessionWithBf: PracticeSessionResponse = {
+      sessionId: 'session-tap',
+      seed: 123,
+      turn: 1,
+      mulliganCount: 0,
+      hand: [],
+      battlefield: [
+        {
+          card: {
+            printingId: 102,
+            name: 'Command Tower',
+            typeLine: 'Land',
+            imageUrl: 'https://cards.scryfall.io/normal/front/command-tower.jpg',
+          },
+          tapped: false,
+        },
+      ],
+      drawnCard: null,
+      landsInPlay: 1,
+      landPlayedThisTurn: true,
+      castableSpells: [],
+      finished: false,
+    };
+
+    const sessionTapped: PracticeSessionResponse = {
+      ...sessionWithBf,
+      battlefield: [
+        {
+          card: sessionWithBf.battlefield[0].card,
+          tapped: true,
+        },
+      ],
+    };
+
+    let callCount = 0;
+    global.fetch = vi.fn().mockImplementation((url: string | URL) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/practice-sessions')) {
+        callCount++;
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ data: callCount === 1 ? sessionWithBf : sessionTapped }),
+        } as Response);
+      }
+      return Promise.reject(new Error('Unknown URL'));
+    });
+
+    render(<PracticeBoardView deckId={10} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('img', { name: 'Command Tower' })).toBeInTheDocument();
+    });
+
+    const bfCard = screen.getByRole('button', { name: /Command Tower/i });
+    expect(bfCard).toHaveTextContent(/Untapped/i);
+
+    fireEvent.click(bfCard);
+
+    await waitFor(() => {
+      expect(bfCard).toHaveTextContent(/Tapped/i);
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/practice-sessions/session-tap/tap'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ printingId: 102 }),
+      })
+    );
   });
 
   it('renders keyword tooltips inline for cards with keywords in practice mode', async () => {
     const user = userEvent.setup();
     const sessionWithKeywords: PracticeSessionResponse = {
       sessionId: 'session-keywords',
+      seed: 99,
       turn: 1,
-      phase: 'MAIN_1',
+      mulliganCount: 0,
       hand: [
-        { id: 'c-vamp', name: 'Vampire Nighthawk', manaCost: '{1}{B}{B}', typeLine: 'Creature — Vampire', oracleText: 'Flying, Deathtouch, Lifelink' },
+        {
+          printingId: 201,
+          name: 'Vampire Nighthawk',
+          manaCost: '{1}{B}{B}',
+          typeLine: 'Creature — Vampire',
+          oracleText: 'Flying, Deathtouch, Lifelink',
+        },
       ],
       battlefield: [],
-      graveyard: [],
-      libraryCount: 90,
-      manaPool: {},
-      logs: [],
+      drawnCard: null,
+      landsInPlay: 0,
+      landPlayedThisTurn: false,
+      castableSpells: [],
+      finished: false,
     };
 
     global.fetch = vi.fn().mockImplementation((url: string | URL) => {
       const urlStr = url.toString();
-      if (urlStr.includes('/practice')) {
+      if (urlStr.includes('/practice-sessions')) {
         return Promise.resolve({
           ok: true,
           json: async () => ({ data: sessionWithKeywords }),
@@ -197,11 +302,12 @@ describe('PracticeBoardView Component', () => {
   it('renders card images for hand and battlefield cards when imageUrl is provided', async () => {
     const sessionWithImages: PracticeSessionResponse = {
       sessionId: 'session-images',
+      seed: 777,
       turn: 1,
-      phase: 'MAIN_1',
+      mulliganCount: 0,
       hand: [
         {
-          id: 'c-sol',
+          printingId: 101,
           name: 'Sol Ring',
           manaCost: '{1}',
           typeLine: 'Artifact',
@@ -210,22 +316,25 @@ describe('PracticeBoardView Component', () => {
       ],
       battlefield: [
         {
-          id: 'c-tower',
-          name: 'Command Tower',
-          typeLine: 'Land',
-          imageUrl: 'https://cards.scryfall.io/normal/front/command-tower.jpg',
+          card: {
+            printingId: 102,
+            name: 'Command Tower',
+            typeLine: 'Land',
+            imageUrl: 'https://cards.scryfall.io/normal/front/command-tower.jpg',
+          },
           tapped: false,
         },
       ],
-      graveyard: [],
-      libraryCount: 91,
-      manaPool: { colorless: 0, any: 0 },
-      logs: [],
+      drawnCard: null,
+      landsInPlay: 1,
+      landPlayedThisTurn: true,
+      castableSpells: [],
+      finished: false,
     };
 
     global.fetch = vi.fn().mockImplementation((url: string | URL) => {
       const urlStr = url.toString();
-      if (urlStr.includes('/practice')) {
+      if (urlStr.includes('/practice-sessions')) {
         return Promise.resolve({
           ok: true,
           json: async () => ({ data: sessionWithImages }),
@@ -248,72 +357,26 @@ describe('PracticeBoardView Component', () => {
     expect(bfImg).toHaveAttribute('src', 'https://cards.scryfall.io/normal/front/command-tower.jpg');
   });
 
-  it('rotates battlefield card image on tap toggle', async () => {
-    const sessionWithBf: PracticeSessionResponse = {
-      sessionId: 'session-tap',
-      turn: 1,
-      phase: 'MAIN_1',
-      hand: [],
-      battlefield: [
-        {
-          id: 'c-tower',
-          name: 'Command Tower',
-          typeLine: 'Land',
-          imageUrl: 'https://cards.scryfall.io/normal/front/command-tower.jpg',
-          tapped: false,
-        },
-      ],
-      graveyard: [],
-      libraryCount: 92,
-      manaPool: {},
-      logs: [],
-    };
-
-    global.fetch = vi.fn().mockImplementation((url: string | URL) => {
-      const urlStr = url.toString();
-      if (urlStr.includes('/practice')) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ data: sessionWithBf }),
-        } as Response);
-      }
-      return Promise.reject(new Error('Unknown URL'));
-    });
-
-    render(<PracticeBoardView deckId={10} />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('img', { name: 'Command Tower' })).toBeInTheDocument();
-    });
-
-    const bfCard = screen.getByRole('button', { name: /Command Tower/i });
-    expect(bfCard).toHaveTextContent(/Untapped/i);
-
-    fireEvent.click(bfCard);
-
-    await waitFor(() => {
-      expect(bfCard).toHaveTextContent(/Tapped/i);
-    });
-  });
-
   it('falls back gracefully to text rendering when card has no imageUrl', async () => {
     const sessionNoImages: PracticeSessionResponse = {
       sessionId: 'session-no-img',
+      seed: 55,
       turn: 1,
-      phase: 'COMBAT',
+      mulliganCount: 0,
       hand: [
-        { id: 'c-plain', name: 'Plains', typeLine: 'Basic Land — Plains', manaCost: '' },
+        { printingId: 301, name: 'Plains', typeLine: 'Basic Land — Plains', manaCost: '' },
       ],
       battlefield: [],
-      graveyard: [],
-      libraryCount: 92,
-      manaPool: {},
-      logs: [],
+      drawnCard: null,
+      landsInPlay: 0,
+      landPlayedThisTurn: false,
+      castableSpells: [],
+      finished: false,
     };
 
     global.fetch = vi.fn().mockImplementation((url: string | URL) => {
       const urlStr = url.toString();
-      if (urlStr.includes('/practice')) {
+      if (urlStr.includes('/practice-sessions')) {
         return Promise.resolve({
           ok: true,
           json: async () => ({ data: sessionNoImages }),
@@ -332,25 +395,13 @@ describe('PracticeBoardView Component', () => {
     expect(screen.queryByRole('img', { name: 'Plains' })).not.toBeInTheDocument();
   });
 
-  it('renders horizontal phase stepper highlighting current phase and link to turn structure', async () => {
-    const sessionCombat: PracticeSessionResponse = {
-      sessionId: 'session-stepper',
-      turn: 3,
-      phase: 'COMBAT',
-      hand: [],
-      battlefield: [],
-      graveyard: [],
-      libraryCount: 88,
-      manaPool: {},
-      logs: [],
-    };
-
+  it('highlights castable spells in hand with advisory badge', async () => {
     global.fetch = vi.fn().mockImplementation((url: string | URL) => {
       const urlStr = url.toString();
-      if (urlStr.includes('/practice')) {
+      if (urlStr.includes('/practice-sessions')) {
         return Promise.resolve({
           ok: true,
-          json: async () => ({ data: sessionCombat }),
+          json: async () => ({ data: mockInitialSession }),
         } as Response);
       }
       return Promise.reject(new Error('Unknown URL'));
@@ -359,44 +410,47 @@ describe('PracticeBoardView Component', () => {
     render(<PracticeBoardView deckId={10} />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('phase-stepper')).toBeInTheDocument();
+      expect(screen.getByText('Sol Ring')).toBeInTheDocument();
+      expect(screen.getByText('Castable')).toBeInTheDocument();
     });
-
-    const stepper = screen.getByTestId('phase-stepper');
-    expect(stepper).toHaveTextContent('Untap');
-    expect(stepper).toHaveTextContent('Upkeep');
-    expect(stepper).toHaveTextContent('Draw');
-    expect(stepper).toHaveTextContent('Main 1');
-    expect(stepper).toHaveTextContent('Combat');
-    expect(stepper).toHaveTextContent('Main 2');
-    expect(stepper).toHaveTextContent('End');
-
-    const activePhase = screen.getByTestId('phase-step-COMBAT');
-    expect(activePhase).toHaveAttribute('data-active', 'true');
-
-    const guideLink = screen.getByRole('link', { name: /Learn MTG Turn Phases/i });
-    expect(guideLink).toHaveAttribute('href', '/learn/turn-structure');
   });
 
-  it('renders mana pool pips when manaPool has non-zero values', async () => {
-    const sessionWithMana: PracticeSessionResponse = {
-      sessionId: 'session-mana',
-      turn: 2,
-      phase: 'MAIN_1',
-      hand: [],
-      battlefield: [],
-      graveyard: [],
-      libraryCount: 89,
-      manaPool: { W: 2, U: 1, colorless: 0 },
-      logs: [],
-    };
+  it('surfaces error banner on initial load failure without falling back to fake data', async () => {
+    global.fetch = vi.fn().mockImplementation(() =>
+      Promise.resolve({
+        ok: false,
+        status: 500,
+        json: async () => ({ error: { message: 'Server unreachable' } }),
+      } as Response)
+    );
 
+    render(<PracticeBoardView deckId={10} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Server unreachable')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Retry/i })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId('battlefield-zone')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('hand-zone')).not.toBeInTheDocument();
+  });
+
+  it('surfaces inline error banner on action failure', async () => {
+    let callCount = 0;
     global.fetch = vi.fn().mockImplementation((url: string | URL) => {
       const urlStr = url.toString();
-      if (urlStr.includes('/practice')) {
+      callCount++;
+      if (callCount === 1) {
         return Promise.resolve({
           ok: true,
-          json: async () => ({ data: sessionWithMana }),
+          json: async () => ({ data: mockInitialSession }),
+        } as Response);
+      }
+      if (urlStr.includes('/play')) {
+        return Promise.resolve({
+          ok: false,
+          status: 400,
+          json: async () => ({ error: { message: 'Land already played this turn' } }),
         } as Response);
       }
       return Promise.reject(new Error('Unknown URL'));
@@ -405,13 +459,14 @@ describe('PracticeBoardView Component', () => {
     render(<PracticeBoardView deckId={10} />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('mana-pool')).toBeInTheDocument();
+      expect(screen.getByText('Command Tower')).toBeInTheDocument();
     });
 
-    const manaPoolEl = screen.getByTestId('mana-pool');
-    expect(manaPoolEl).toHaveTextContent('W');
-    expect(manaPoolEl).toHaveTextContent('2');
-    expect(manaPoolEl).toHaveTextContent('U');
-    expect(manaPoolEl).toHaveTextContent('1');
+    const playBtn = screen.getByRole('button', { name: /Play Command Tower/i });
+    fireEvent.click(playBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('Land already played this turn')).toBeInTheDocument();
+    });
   });
 });
