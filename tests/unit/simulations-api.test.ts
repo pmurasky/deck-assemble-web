@@ -21,7 +21,7 @@ describe('simulations-api', () => {
     vi.restoreAllMocks();
   });
 
-  it('should generate sample hands with mulligan config', async () => {
+  it('should generate sample hands with mulligan config and revision', async () => {
     const mockHands = {
       seed: 'seed123',
       hands: [{ id: 'h1', handNumber: 1, cards: [], mulliganCount: 0 }],
@@ -38,7 +38,7 @@ describe('simulations-api', () => {
       maximumLands: 5,
     };
 
-    const res = await generateSampleHands(10, 7, config);
+    const res = await generateSampleHands(10, 7, config, 2);
     expect(res).toEqual(mockHands);
     expect(global.fetch).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -46,12 +46,18 @@ describe('simulations-api', () => {
       }),
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ count: 7, mulliganConfig: config }),
+        body: JSON.stringify({
+          revision: 2,
+          handCount: 7,
+          mulliganStrategy: 'LONDON_LAND_RANGE',
+          minimumLands: 2,
+          maximumLands: 5,
+        }),
       })
     );
   });
 
-  it('should run deck simulation and return Monte Carlo stats', async () => {
+  it('should run deck simulation and return Monte Carlo stats with required fields', async () => {
     const mockSim = {
       seed: 'sim-seed',
       landDropProbabilityByTurn: { 1: 0.95, 2: 0.88 },
@@ -75,12 +81,18 @@ describe('simulations-api', () => {
       }),
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ iterations: 1000, turns: 5 }),
+        body: JSON.stringify({
+          revision: 1,
+          iterations: 1000,
+          turns: 5,
+          onThePlay: true,
+          mulliganStrategy: 'NONE',
+        }),
       })
     );
   });
 
-  it('should start a practice session', async () => {
+  it('should start a practice session with default session config', async () => {
     const mockSession: PracticeSessionResponse = {
       sessionId: 'sess-123',
       seed: 42,
@@ -108,6 +120,58 @@ describe('simulations-api', () => {
       }),
       expect.objectContaining({
         method: 'POST',
+        body: JSON.stringify({
+          revision: 1,
+          onThePlay: true,
+          mulliganStrategy: 'NONE',
+        }),
+      })
+    );
+  });
+
+  it('should start a practice session with custom config', async () => {
+    const mockSession: PracticeSessionResponse = {
+      sessionId: 'sess-custom',
+      seed: 999,
+      turn: 1,
+      mulliganCount: 0,
+      hand: [],
+      battlefield: [],
+      drawnCard: null,
+      landsInPlay: 0,
+      landPlayedThisTurn: false,
+      castableSpells: [],
+      finished: false,
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockSession,
+    } as Response);
+
+    const res = await startPracticeSession(10, {
+      revision: 3,
+      onThePlay: false,
+      mulliganStrategy: 'LONDON_LAND_RANGE',
+      minimumLands: 2,
+      maximumLands: 4,
+      seed: 999,
+    });
+    expect(res).toEqual(mockSession);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        href: expect.stringContaining('/api/v1/decks/10/practice-sessions'),
+      }),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          revision: 3,
+          onThePlay: false,
+          mulliganStrategy: 'LONDON_LAND_RANGE',
+          minimumLands: 2,
+          maximumLands: 4,
+          seed: 999,
+        }),
       })
     );
   });
