@@ -94,24 +94,34 @@ describe('M3 BFF Proxy Routes', () => {
     expect(json.data.revisionNumber).toBe(4);
   });
 
-  it('POST /api/v1/decks/:deckId/sample-hands calls sample hands API', async () => {
-    vi.spyOn(simulationsApi, 'generateSampleHands').mockResolvedValue({
+  it('POST /api/v1/decks/:deckId/sample-hands calls sample hands API with body', async () => {
+    const sampleHandsSpy = vi.spyOn(simulationsApi, 'generateSampleHands').mockResolvedValue({
       seed: '123', hands: [],
     });
 
     const req = new NextRequest('http://localhost/api/v1/decks/10/sample-hands', {
       method: 'POST',
-      body: JSON.stringify({ count: 7 }),
+      body: JSON.stringify({
+        count: 7,
+        revision: 2,
+        mulliganConfig: { mulliganStrategy: 'LONDON_LAND_RANGE', minimumLands: 2, maximumLands: 5 },
+      }),
     });
     const res = await sampleHandsRoute(req, { params: Promise.resolve({ deckId: '10' }) });
     const json = await res.json();
 
     expect(res.status).toBe(200);
     expect(json.data.seed).toBe('123');
+    expect(sampleHandsSpy).toHaveBeenCalledWith(
+      10,
+      7,
+      { mulliganStrategy: 'LONDON_LAND_RANGE', minimumLands: 2, maximumLands: 5 },
+      2
+    );
   });
 
-  it('POST /api/v1/decks/:deckId/simulations runs Monte Carlo simulation', async () => {
-    vi.spyOn(simulationsApi, 'runDeckSimulation').mockResolvedValue({
+  it('POST /api/v1/decks/:deckId/simulations runs Monte Carlo simulation with forwarded options', async () => {
+    const simSpy = vi.spyOn(simulationsApi, 'runDeckSimulation').mockResolvedValue({
       seed: '456',
       landDropProbabilityByTurn: {},
       colorAvailabilityByTurn: {},
@@ -123,17 +133,33 @@ describe('M3 BFF Proxy Routes', () => {
 
     const req = new NextRequest('http://localhost/api/v1/decks/10/simulations', {
       method: 'POST',
-      body: JSON.stringify({ iterations: 1000, turns: 5 }),
+      body: JSON.stringify({
+        iterations: 1000,
+        turns: 5,
+        onThePlay: false,
+        revision: 3,
+        mulliganConfig: { mulliganStrategy: 'NONE' },
+      }),
     });
     const res = await simulationsRoute(req, { params: Promise.resolve({ deckId: '10' }) });
     const json = await res.json();
 
     expect(res.status).toBe(200);
     expect(json.data.confidence.marginOfErrorPercent95).toBe(1.2);
+    expect(simSpy).toHaveBeenCalledWith(
+      10,
+      1000,
+      5,
+      {
+        mulliganConfig: { mulliganStrategy: 'NONE' },
+        onThePlay: false,
+        revision: 3,
+      }
+    );
   });
 
-  it('POST /api/v1/decks/:deckId/practice-sessions starts a session', async () => {
-    vi.spyOn(simulationsApi, 'startPracticeSession').mockResolvedValue({
+  it('POST /api/v1/decks/:deckId/practice-sessions starts a session forwarding request body', async () => {
+    const startPracticeSpy = vi.spyOn(simulationsApi, 'startPracticeSession').mockResolvedValue({
       sessionId: 'sess-123',
       seed: 42,
       turn: 1,
@@ -147,12 +173,28 @@ describe('M3 BFF Proxy Routes', () => {
       finished: false,
     });
 
-    const req = new NextRequest('http://localhost/api/v1/decks/10/practice-sessions', { method: 'POST' });
+    const req = new NextRequest('http://localhost/api/v1/decks/10/practice-sessions', {
+      method: 'POST',
+      body: JSON.stringify({
+        revision: 2,
+        onThePlay: false,
+        mulliganStrategy: 'LONDON_LAND_RANGE',
+        minimumLands: 2,
+        maximumLands: 5,
+      }),
+    });
     const res = await startPracticeSessionRoute(req, { params: Promise.resolve({ deckId: '10' }) });
     const json = await res.json();
 
     expect(res.status).toBe(200);
     expect(json.data.sessionId).toBe('sess-123');
+    expect(startPracticeSpy).toHaveBeenCalledWith(10, {
+      revision: 2,
+      onThePlay: false,
+      mulliganStrategy: 'LONDON_LAND_RANGE',
+      minimumLands: 2,
+      maximumLands: 5,
+    });
   });
 
   it('POST /api/v1/decks/:deckId/practice-sessions/:sessionId/play plays a card', async () => {
