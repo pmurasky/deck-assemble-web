@@ -16,12 +16,28 @@ interface PracticeBoardViewProps {
   maximumLands?: number;
 }
 
+function fallbackByStatus(res: Response, fallback: string): string {
+  if (res.status === 401) {
+    return 'Session expired (401). Please refresh or sign in again.';
+  }
+  if (res.status === 403) {
+    return 'Access denied (403). You do not have permission for this deck.';
+  }
+  if (res.status >= 500) {
+    return `${fallback} (Server error ${res.status}). Please try again.`;
+  }
+  if (res.status >= 400) {
+    return `${fallback} (${res.status})`;
+  }
+  return fallback;
+}
+
 async function extractErrorMessage(res: Response, fallback: string): Promise<string> {
   try {
     const json = await res.json();
-    return json.error?.message || json.message || fallback;
+    return json.error?.message || json.message || fallbackByStatus(res, fallback);
   } catch {
-    return fallback;
+    return fallbackByStatus(res, fallback);
   }
 }
 
