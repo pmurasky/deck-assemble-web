@@ -491,6 +491,61 @@ describe('PracticeBoardView Component', () => {
     expect(screen.queryByTestId('hand-zone')).not.toBeInTheDocument();
   });
 
+  it('surfaces informative error banner on 502 Bad Gateway non-JSON failure', async () => {
+    global.fetch = vi.fn().mockImplementation(() =>
+      Promise.resolve({
+        ok: false,
+        status: 502,
+        json: async () => {
+          throw new Error('Unexpected token < in JSON');
+        },
+      } as Response)
+    );
+
+    render(<PracticeBoardView deckId={10} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Server error 502/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Retry/i })).toBeInTheDocument();
+    });
+  });
+
+  it('surfaces session expired error banner on 401 Unauthorized non-JSON failure', async () => {
+    global.fetch = vi.fn().mockImplementation(() =>
+      Promise.resolve({
+        ok: false,
+        status: 401,
+        json: async () => {
+          throw new Error('Unexpected token < in JSON');
+        },
+      } as Response)
+    );
+
+    render(<PracticeBoardView deckId={10} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Session expired.*401/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Retry/i })).toBeInTheDocument();
+    });
+  });
+
+  it('surfaces status code when API returns JSON without a message field', async () => {
+    global.fetch = vi.fn().mockImplementation(() =>
+      Promise.resolve({
+        ok: false,
+        status: 400,
+        json: async () => ({ status: 400, error: 'Bad Request' }),
+      } as Response)
+    );
+
+    render(<PracticeBoardView deckId={10} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Failed to start practice session \(400\)/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Retry/i })).toBeInTheDocument();
+    });
+  });
+
   it('surfaces inline error banner on action failure', async () => {
     let callCount = 0;
     global.fetch = vi.fn().mockImplementation((url: string | URL) => {
