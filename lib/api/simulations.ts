@@ -1,6 +1,8 @@
 import { auth0 } from '@/lib/auth0';
 import type {
   MulliganConfig,
+  MulliganStrategy,
+  PracticeSessionRequest,
   PracticeSessionResponse,
   SampleHandsResponse,
   SimulationResponse,
@@ -28,15 +30,45 @@ async function json<T>(res: Promise<Response>, fallbackMessage: string): Promise
   return response.json() as Promise<T>;
 }
 
+function buildMulliganBody(
+  config?: MulliganConfig,
+  overrides?: { minimumLands?: number; maximumLands?: number; seed?: number | string; mulliganStrategy?: MulliganStrategy }
+): Record<string, unknown> {
+  const mulliganStrategy = overrides?.mulliganStrategy ?? config?.mulliganStrategy ?? 'NONE';
+  const minimumLands = overrides?.minimumLands ?? config?.minimumLands;
+  const maximumLands = overrides?.maximumLands ?? config?.maximumLands;
+  const rawSeed = overrides?.seed ?? config?.seed;
+  const body: Record<string, unknown> = { mulliganStrategy };
+  if (minimumLands !== undefined) body.minimumLands = minimumLands;
+  if (maximumLands !== undefined) body.maximumLands = maximumLands;
+  if (rawSeed !== undefined) {
+    const num = Number(rawSeed);
+    if (!Number.isNaN(num)) body.seed = num;
+  }
+  return body;
+}
+
+export interface RunSimulationOptions {
+  mulliganConfig?: MulliganConfig;
+  onThePlay?: boolean;
+  revision?: number;
+}
+
 export async function generateSampleHands(
   deckId: number,
   count: number,
-  mulliganConfig?: MulliganConfig
+  mulliganConfig?: MulliganConfig,
+  revision = 1
 ): Promise<SampleHandsResponse> {
+  const body = {
+    revision,
+    handCount: count,
+    ...buildMulliganBody(mulliganConfig),
+  };
   return json(
     fetchSimulations(`/decks/${deckId}/sample-hands`, {
       method: 'POST',
-      body: JSON.stringify({ count, mulliganConfig }),
+      body: JSON.stringify(body),
     }),
     'Failed to generate sample hands'
   );
@@ -46,20 +78,45 @@ export async function runDeckSimulation(
   deckId: number,
   iterations: number,
   turns: number,
-  mulliganConfig?: MulliganConfig
+  options?: MulliganConfig | RunSimulationOptions,
+  revision = 1
 ): Promise<SimulationResponse> {
+  const isOptionsObj = Boolean(options && ('onThePlay' in options || 'revision' in options));
+  const optionsObj = isOptionsObj ? (options as RunSimulationOptions) : undefined;
+  const mulliganConfig = isOptionsObj ? optionsObj?.mulliganConfig : (options as MulliganConfig | undefined);
+  const onThePlay = optionsObj?.onThePlay ?? true;
+  const effectiveRevision = optionsObj?.revision ?? revision;
+
+  const body = {
+    revision: effectiveRevision,
+    iterations,
+    turns,
+    onThePlay,
+    ...buildMulliganBody(mulliganConfig),
+  };
   return json(
     fetchSimulations(`/decks/${deckId}/simulations`, {
       method: 'POST',
-      body: JSON.stringify({ iterations, turns, mulliganConfig }),
+      body: JSON.stringify(body),
     }),
     'Failed to run deck simulation'
   );
 }
 
-export async function startPracticeSession(deckId: number): Promise<PracticeSessionResponse> {
+export async function startPracticeSession(
+  deckId: number,
+  config?: PracticeSessionRequest
+): Promise<PracticeSessionResponse> {
+  const body = {
+    revision: config?.revision ?? 1,
+    onThePlay: config?.onThePlay ?? true,
+    ...buildMulliganBody(undefined, config),
+  };
   return json(
-    fetchSimulations(`/decks/${deckId}/practice-sessions`, { method: 'POST' }),
+    fetchSimulations(`/decks/${deckId}/practice-sessions`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
     'Failed to start practice session'
   );
 }

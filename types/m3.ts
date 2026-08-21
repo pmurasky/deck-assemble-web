@@ -80,6 +80,16 @@ export interface MulliganConfig {
 export interface SampleHandRequest {
   count: number;
   mulliganConfig?: MulliganConfig;
+  revision?: number;
+}
+
+export interface PracticeSessionRequest {
+  revision?: number;
+  onThePlay?: boolean;
+  mulliganStrategy?: MulliganStrategy;
+  minimumLands?: number;
+  maximumLands?: number;
+  seed?: number | string;
 }
 
 export interface SampleHand {
