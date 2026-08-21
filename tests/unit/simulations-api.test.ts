@@ -92,7 +92,7 @@ describe('simulations-api', () => {
     );
   });
 
-  it('should start a practice session with default session config', async () => {
+  it('should start a practice session with default session config using latest revision', async () => {
     const mockSession: PracticeSessionResponse = {
       sessionId: 'sess-123',
       seed: 42,
@@ -107,10 +107,22 @@ describe('simulations-api', () => {
       finished: false,
     };
 
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => mockSession,
-    } as Response);
+    global.fetch = vi.fn().mockImplementation((url: string | URL) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/revisions')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ content: [{ revisionNumber: 12 }] }),
+        } as Response);
+      }
+      if (urlStr.includes('/practice-sessions')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => mockSession,
+        } as Response);
+      }
+      return Promise.reject(new Error('Unknown URL'));
+    });
 
     const res = await startPracticeSession(10);
     expect(res).toEqual(mockSession);
@@ -121,7 +133,7 @@ describe('simulations-api', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
-          revision: 1,
+          revision: 12,
           onThePlay: true,
           mulliganStrategy: 'NONE',
         }),

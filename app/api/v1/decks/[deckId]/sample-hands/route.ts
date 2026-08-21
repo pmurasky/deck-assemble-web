@@ -28,9 +28,11 @@ export async function POST(
     const data = await generateSampleHands(id, count, body.mulliganConfig, body.revision);
     return NextResponse.json({ data });
   } catch (error: unknown) {
+    const status = (error as { status?: number })?.status;
+    const httpStatus = typeof status === 'number' && status >= 400 && status < 600 ? status : 502;
     return NextResponse.json(
       { error: { code: 'UPSTREAM_ERROR', message: errorMessage(error) } },
-      { status: 502 }
+      { status: httpStatus }
     );
   }
 }

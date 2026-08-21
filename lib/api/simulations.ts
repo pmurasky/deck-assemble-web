@@ -1,4 +1,5 @@
 import { auth0 } from '@/lib/auth0';
+import { getLatestDeckRevisionNumber } from '@/lib/api/revisions';
 import type {
   MulliganConfig,
   MulliganStrategy,
@@ -58,10 +59,11 @@ export async function generateSampleHands(
   deckId: number,
   count: number,
   mulliganConfig?: MulliganConfig,
-  revision = 1
+  revision?: number
 ): Promise<SampleHandsResponse> {
+  const effectiveRevision = revision ?? (await getLatestDeckRevisionNumber(deckId));
   const body = {
-    revision,
+    revision: effectiveRevision,
     handCount: count,
     ...buildMulliganBody(mulliganConfig),
   };
@@ -79,13 +81,13 @@ export async function runDeckSimulation(
   iterations: number,
   turns: number,
   options?: MulliganConfig | RunSimulationOptions,
-  revision = 1
+  revision?: number
 ): Promise<SimulationResponse> {
   const isOptionsObj = Boolean(options && ('onThePlay' in options || 'revision' in options));
   const optionsObj = isOptionsObj ? (options as RunSimulationOptions) : undefined;
   const mulliganConfig = isOptionsObj ? optionsObj?.mulliganConfig : (options as MulliganConfig | undefined);
   const onThePlay = optionsObj?.onThePlay ?? true;
-  const effectiveRevision = optionsObj?.revision ?? revision;
+  const effectiveRevision = optionsObj?.revision ?? revision ?? (await getLatestDeckRevisionNumber(deckId));
 
   const body = {
     revision: effectiveRevision,
@@ -107,8 +109,9 @@ export async function startPracticeSession(
   deckId: number,
   config?: PracticeSessionRequest
 ): Promise<PracticeSessionResponse> {
+  const effectiveRevision = config?.revision ?? (await getLatestDeckRevisionNumber(deckId));
   const body = {
-    revision: config?.revision ?? 1,
+    revision: effectiveRevision,
     onThePlay: config?.onThePlay ?? true,
     ...buildMulliganBody(undefined, config),
   };

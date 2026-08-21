@@ -48,8 +48,13 @@ function buildPracticePayload(props: {
   minimumLands?: number;
   maximumLands?: number;
 }): Record<string, unknown> {
-  const { revision = 1, onThePlay = true, mulliganStrategy = 'NONE', minimumLands, maximumLands } = props;
-  const payload: Record<string, unknown> = { revision, onThePlay, mulliganStrategy };
+  const { revision, onThePlay = true, mulliganStrategy = 'NONE', minimumLands, maximumLands } = props;
+  const payload: Record<string, unknown> = {};
+  if (revision !== undefined) {
+    payload.revision = revision;
+  }
+  payload.onThePlay = onThePlay;
+  payload.mulliganStrategy = mulliganStrategy;
   if (mulliganStrategy === 'LONDON_LAND_RANGE' && minimumLands !== undefined) {
     payload.minimumLands = minimumLands;
   }
