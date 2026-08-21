@@ -17,10 +17,15 @@ export async function POST(
       return NextResponse.json({ error: { code: 'VALIDATION_ERROR', message: 'Invalid deck ID' } }, { status: 400 });
     }
 
-    const body = (await req.json().catch(() => ({}))) as { count?: number; mulliganConfig?: MulliganConfig };
-    const count = Number(body.count ?? 7);
+    const body = (await req.json().catch(() => ({}))) as {
+      count?: number;
+      handCount?: number;
+      mulliganConfig?: MulliganConfig;
+      revision?: number;
+    };
+    const count = Number(body.handCount ?? body.count ?? 7);
 
-    const data = await generateSampleHands(id, count, body.mulliganConfig);
+    const data = await generateSampleHands(id, count, body.mulliganConfig, body.revision);
     return NextResponse.json({ data });
   } catch (error: unknown) {
     return NextResponse.json(

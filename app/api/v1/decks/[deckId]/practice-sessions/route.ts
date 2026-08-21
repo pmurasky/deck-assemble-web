@@ -1,12 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { startPracticeSession } from '@/lib/api/simulations';
+import type { PracticeSessionRequest } from '@/types/m3';
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Failed to start practice session';
 }
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ deckId: string }> }
 ) {
   try {
@@ -19,7 +20,8 @@ export async function POST(
       );
     }
 
-    const data = await startPracticeSession(id);
+    const body = (await req.json().catch(() => ({}))) as PracticeSessionRequest;
+    const data = await startPracticeSession(id, Object.keys(body).length > 0 ? body : undefined);
     return NextResponse.json({ data });
   } catch (error: unknown) {
     return NextResponse.json(
