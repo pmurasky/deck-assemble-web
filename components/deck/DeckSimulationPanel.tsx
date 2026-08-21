@@ -11,9 +11,10 @@ import { PracticeBoardView } from './PracticeBoardView';
 
 interface DeckSimulationPanelProps {
   deckId: number | string;
+  revision?: number;
 }
 
-export function DeckSimulationPanel({ deckId }: DeckSimulationPanelProps) {
+export function DeckSimulationPanel({ deckId, revision }: DeckSimulationPanelProps) {
   const [activeTab, setActiveTab] = useState<'sample-hands' | 'practice' | 'monte-carlo'>('sample-hands');
 
   // Mulligan Config state
@@ -43,6 +44,7 @@ export function DeckSimulationPanel({ deckId }: DeckSimulationPanelProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           count: handCount,
+          revision,
           mulliganConfig: {
             mulliganStrategy,
             ...(mulliganStrategy === 'LONDON_LAND_RANGE' ? { minimumLands, maximumLands } : {}),
@@ -69,6 +71,7 @@ export function DeckSimulationPanel({ deckId }: DeckSimulationPanelProps) {
         body: JSON.stringify({
           iterations,
           turns,
+          revision,
           mulliganConfig: {
             mulliganStrategy,
             ...(mulliganStrategy === 'LONDON_LAND_RANGE' ? { minimumLands, maximumLands } : {}),
@@ -130,7 +133,15 @@ export function DeckSimulationPanel({ deckId }: DeckSimulationPanelProps) {
         </div>
       )}
 
-      {activeTab === 'practice' && <PracticeBoardView deckId={deckId} />}
+      {activeTab === 'practice' && (
+        <PracticeBoardView
+          deckId={deckId}
+          revision={revision}
+          mulliganStrategy={mulliganStrategy}
+          minimumLands={minimumLands}
+          maximumLands={maximumLands}
+        />
+      )}
 
       {/* Shared Mulligan Config Controls for Sample Hands / Monte Carlo */}
       {activeTab !== 'practice' && (
