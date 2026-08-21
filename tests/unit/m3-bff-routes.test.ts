@@ -20,6 +20,12 @@ import { PUT as primerRoute } from '@/app/api/v1/decks/[deckId]/primer/route';
 import { GET as sharedDeckRoute } from '@/app/api/v1/shared/decks/[slug]/route';
 import { POST as forkSharedDeckRoute } from '@/app/api/v1/shared/decks/[slug]/fork/route';
 
+import { POST as startPracticeSessionRoute } from '@/app/api/v1/decks/[deckId]/practice-sessions/route';
+import { POST as playPracticeCardRoute } from '@/app/api/v1/decks/[deckId]/practice-sessions/[sessionId]/play/route';
+import { POST as tapPracticeCardRoute } from '@/app/api/v1/decks/[deckId]/practice-sessions/[sessionId]/tap/route';
+import { POST as stepPracticeSessionRoute } from '@/app/api/v1/decks/[deckId]/practice-sessions/[sessionId]/steps/route';
+import { POST as resetPracticeSessionRoute } from '@/app/api/v1/decks/[deckId]/practice-sessions/[sessionId]/reset/route';
+
 vi.mock('@/lib/api/revisions');
 vi.mock('@/lib/api/simulations');
 vi.mock('@/lib/api/publishing');
@@ -126,6 +132,139 @@ describe('M3 BFF Proxy Routes', () => {
     expect(json.data.confidence.marginOfErrorPercent95).toBe(1.2);
   });
 
+  it('POST /api/v1/decks/:deckId/practice-sessions starts a session', async () => {
+    vi.spyOn(simulationsApi, 'startPracticeSession').mockResolvedValue({
+      sessionId: 'sess-123',
+      seed: 42,
+      turn: 1,
+      mulliganCount: 0,
+      hand: [],
+      battlefield: [],
+      drawnCard: null,
+      landsInPlay: 0,
+      landPlayedThisTurn: false,
+      castableSpells: [],
+      finished: false,
+    });
+
+    const req = new NextRequest('http://localhost/api/v1/decks/10/practice-sessions', { method: 'POST' });
+    const res = await startPracticeSessionRoute(req, { params: Promise.resolve({ deckId: '10' }) });
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.data.sessionId).toBe('sess-123');
+  });
+
+  it('POST /api/v1/decks/:deckId/practice-sessions/:sessionId/play plays a card', async () => {
+    vi.spyOn(simulationsApi, 'playPracticeCard').mockResolvedValue({
+      sessionId: 'sess-123',
+      seed: 42,
+      turn: 1,
+      mulliganCount: 0,
+      hand: [],
+      battlefield: [{ card: { printingId: 101, name: 'Forest' }, tapped: false }],
+      drawnCard: null,
+      landsInPlay: 1,
+      landPlayedThisTurn: true,
+      castableSpells: [],
+      finished: false,
+    });
+
+    const req = new NextRequest('http://localhost/api/v1/decks/10/practice-sessions/sess-123/play', {
+      method: 'POST',
+      body: JSON.stringify({ printingId: 101 }),
+    });
+    const res = await playPracticeCardRoute(req, {
+      params: Promise.resolve({ deckId: '10', sessionId: 'sess-123' }),
+    });
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.data.landsInPlay).toBe(1);
+  });
+
+  it('POST /api/v1/decks/:deckId/practice-sessions/:sessionId/tap taps a permanent', async () => {
+    vi.spyOn(simulationsApi, 'tapPracticeCard').mockResolvedValue({
+      sessionId: 'sess-123',
+      seed: 42,
+      turn: 1,
+      mulliganCount: 0,
+      hand: [],
+      battlefield: [{ card: { printingId: 101, name: 'Forest' }, tapped: true }],
+      drawnCard: null,
+      landsInPlay: 1,
+      landPlayedThisTurn: true,
+      castableSpells: [],
+      finished: false,
+    });
+
+    const req = new NextRequest('http://localhost/api/v1/decks/10/practice-sessions/sess-123/tap', {
+      method: 'POST',
+      body: JSON.stringify({ printingId: 101 }),
+    });
+    const res = await tapPracticeCardRoute(req, {
+      params: Promise.resolve({ deckId: '10', sessionId: 'sess-123' }),
+    });
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.data.battlefield[0].tapped).toBe(true);
+  });
+
+  it('POST /api/v1/decks/:deckId/practice-sessions/:sessionId/steps advances turn', async () => {
+    vi.spyOn(simulationsApi, 'stepPracticeSession').mockResolvedValue({
+      sessionId: 'sess-123',
+      seed: 42,
+      turn: 2,
+      mulliganCount: 0,
+      hand: [],
+      battlefield: [],
+      drawnCard: null,
+      landsInPlay: 0,
+      landPlayedThisTurn: false,
+      castableSpells: [],
+      finished: false,
+    });
+
+    const req = new NextRequest('http://localhost/api/v1/decks/10/practice-sessions/sess-123/steps', {
+      method: 'POST',
+    });
+    const res = await stepPracticeSessionRoute(req, {
+      params: Promise.resolve({ deckId: '10', sessionId: 'sess-123' }),
+    });
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.data.turn).toBe(2);
+  });
+
+  it('POST /api/v1/decks/:deckId/practice-sessions/:sessionId/reset resets session', async () => {
+    vi.spyOn(simulationsApi, 'resetPracticeSession').mockResolvedValue({
+      sessionId: 'sess-123',
+      seed: 42,
+      turn: 1,
+      mulliganCount: 0,
+      hand: [],
+      battlefield: [],
+      drawnCard: null,
+      landsInPlay: 0,
+      landPlayedThisTurn: false,
+      castableSpells: [],
+      finished: false,
+    });
+
+    const req = new NextRequest('http://localhost/api/v1/decks/10/practice-sessions/sess-123/reset', {
+      method: 'POST',
+    });
+    const res = await resetPracticeSessionRoute(req, {
+      params: Promise.resolve({ deckId: '10', sessionId: 'sess-123' }),
+    });
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.data.turn).toBe(1);
+  });
+
   it('PATCH /api/v1/decks/:deckId/publishing updates visibility', async () => {
     vi.spyOn(publishingApi, 'updateDeckVisibility').mockResolvedValue({ visibility: 'PUBLIC' });
 
@@ -195,3 +334,4 @@ describe('M3 BFF Proxy Routes', () => {
     expect(json.data.newDeckId).toBe(100);
   });
 });
+
