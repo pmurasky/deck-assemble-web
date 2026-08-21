@@ -1,6 +1,7 @@
 import { auth0 } from '@/lib/auth0';
 import type {
   MulliganConfig,
+  PracticeSessionResponse,
   SampleHandsResponse,
   SimulationResponse,
 } from '@/types/m3';
@@ -55,3 +56,63 @@ export async function runDeckSimulation(
     'Failed to run deck simulation'
   );
 }
+
+export async function startPracticeSession(deckId: number): Promise<PracticeSessionResponse> {
+  return json(
+    fetchSimulations(`/decks/${deckId}/practice-sessions`, { method: 'POST' }),
+    'Failed to start practice session'
+  );
+}
+
+export async function playPracticeCard(
+  deckId: number,
+  sessionId: string,
+  printingId: number
+): Promise<PracticeSessionResponse> {
+  return json(
+    fetchSimulations(`/decks/${deckId}/practice-sessions/${sessionId}/play`, {
+      method: 'POST',
+      body: JSON.stringify({ printingId }),
+    }),
+    'Failed to play card'
+  );
+}
+
+export async function tapPracticeCard(
+  deckId: number,
+  sessionId: string,
+  printingId: number
+): Promise<PracticeSessionResponse> {
+  return json(
+    fetchSimulations(`/decks/${deckId}/practice-sessions/${sessionId}/tap`, {
+      method: 'POST',
+      body: JSON.stringify({ printingId }),
+    }),
+    'Failed to tap card'
+  );
+}
+
+export async function stepPracticeSession(
+  deckId: number,
+  sessionId: string
+): Promise<PracticeSessionResponse> {
+  return json(
+    fetchSimulations(`/decks/${deckId}/practice-sessions/${sessionId}/steps`, {
+      method: 'POST',
+    }),
+    'Failed to step practice session'
+  );
+}
+
+export async function resetPracticeSession(
+  deckId: number,
+  sessionId: string
+): Promise<PracticeSessionResponse> {
+  return json(
+    fetchSimulations(`/decks/${deckId}/practice-sessions/${sessionId}/reset`, {
+      method: 'POST',
+    }),
+    'Failed to reset practice session'
+  );
+}
+

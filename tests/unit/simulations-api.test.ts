@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateSampleHands, runDeckSimulation } from '@/lib/api/simulations';
-import type { MulliganConfig } from '@/types/m3';
+import {
+  generateSampleHands,
+  runDeckSimulation,
+  startPracticeSession,
+  playPracticeCard,
+  tapPracticeCard,
+  stepPracticeSession,
+  resetPracticeSession,
+} from '@/lib/api/simulations';
+import type { MulliganConfig, PracticeSessionResponse } from '@/types/m3';
 
 vi.mock('@/lib/auth0', () => ({
   auth0: {
@@ -71,4 +79,167 @@ describe('simulations-api', () => {
       })
     );
   });
+
+  it('should start a practice session', async () => {
+    const mockSession: PracticeSessionResponse = {
+      sessionId: 'sess-123',
+      seed: 42,
+      turn: 1,
+      mulliganCount: 0,
+      hand: [{ printingId: 101, name: 'Forest' }],
+      battlefield: [],
+      drawnCard: null,
+      landsInPlay: 0,
+      landPlayedThisTurn: false,
+      castableSpells: [],
+      finished: false,
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockSession,
+    } as Response);
+
+    const res = await startPracticeSession(10);
+    expect(res).toEqual(mockSession);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        href: expect.stringContaining('/api/v1/decks/10/practice-sessions'),
+      }),
+      expect.objectContaining({
+        method: 'POST',
+      })
+    );
+  });
+
+  it('should play a card in a practice session', async () => {
+    const mockSession: PracticeSessionResponse = {
+      sessionId: 'sess-123',
+      seed: 42,
+      turn: 1,
+      mulliganCount: 0,
+      hand: [],
+      battlefield: [{ card: { printingId: 101, name: 'Forest' }, tapped: false }],
+      drawnCard: null,
+      landsInPlay: 1,
+      landPlayedThisTurn: true,
+      castableSpells: [],
+      finished: false,
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockSession,
+    } as Response);
+
+    const res = await playPracticeCard(10, 'sess-123', 101);
+    expect(res).toEqual(mockSession);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        href: expect.stringContaining('/api/v1/decks/10/practice-sessions/sess-123/play'),
+      }),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ printingId: 101 }),
+      })
+    );
+  });
+
+  it('should tap a card in a practice session', async () => {
+    const mockSession: PracticeSessionResponse = {
+      sessionId: 'sess-123',
+      seed: 42,
+      turn: 1,
+      mulliganCount: 0,
+      hand: [],
+      battlefield: [{ card: { printingId: 101, name: 'Forest' }, tapped: true }],
+      drawnCard: null,
+      landsInPlay: 1,
+      landPlayedThisTurn: true,
+      castableSpells: [],
+      finished: false,
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockSession,
+    } as Response);
+
+    const res = await tapPracticeCard(10, 'sess-123', 101);
+    expect(res).toEqual(mockSession);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        href: expect.stringContaining('/api/v1/decks/10/practice-sessions/sess-123/tap'),
+      }),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ printingId: 101 }),
+      })
+    );
+  });
+
+  it('should step a practice session to next turn', async () => {
+    const mockSession: PracticeSessionResponse = {
+      sessionId: 'sess-123',
+      seed: 42,
+      turn: 2,
+      mulliganCount: 0,
+      hand: [{ printingId: 102, name: 'Llanowar Elves' }],
+      battlefield: [{ card: { printingId: 101, name: 'Forest' }, tapped: false }],
+      drawnCard: { printingId: 102, name: 'Llanowar Elves' },
+      landsInPlay: 1,
+      landPlayedThisTurn: false,
+      castableSpells: [{ printingId: 102, name: 'Llanowar Elves' }],
+      finished: false,
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockSession,
+    } as Response);
+
+    const res = await stepPracticeSession(10, 'sess-123');
+    expect(res).toEqual(mockSession);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        href: expect.stringContaining('/api/v1/decks/10/practice-sessions/sess-123/steps'),
+      }),
+      expect.objectContaining({
+        method: 'POST',
+      })
+    );
+  });
+
+  it('should reset a practice session', async () => {
+    const mockSession: PracticeSessionResponse = {
+      sessionId: 'sess-123',
+      seed: 42,
+      turn: 1,
+      mulliganCount: 0,
+      hand: [{ printingId: 101, name: 'Forest' }],
+      battlefield: [],
+      drawnCard: null,
+      landsInPlay: 0,
+      landPlayedThisTurn: false,
+      castableSpells: [],
+      finished: false,
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockSession,
+    } as Response);
+
+    const res = await resetPracticeSession(10, 'sess-123');
+    expect(res).toEqual(mockSession);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        href: expect.stringContaining('/api/v1/decks/10/practice-sessions/sess-123/reset'),
+      }),
+      expect.objectContaining({
+        method: 'POST',
+      })
+    );
+  });
 });
+

@@ -163,33 +163,30 @@ export interface ForkDeckResponse {
 }
 
 export interface PracticeCard {
-  id: number | string;
+  printingId?: number;
   name: string;
-  typeLine?: string;
-  manaCost?: string;
-  oracleText?: string;
-  imageUrl?: string;
-  tapped?: boolean;
+  imageUrl?: string | null;
+  manaCost?: string | null;
+  typeLine?: string | null;
+  oracleText?: string | null;
 }
 
-export type PracticePhase =
-  | 'UNTAP'
-  | 'UPKEEP'
-  | 'DRAW'
-  | 'MAIN_1'
-  | 'COMBAT'
-  | 'MAIN_2'
-  | 'END';
+export interface PracticeBattlefieldEntry {
+  card: PracticeCard;
+  tapped: boolean;
+}
 
 export interface PracticeSessionResponse {
   sessionId: string;
+  seed: number;
   turn: number;
-  phase: PracticePhase;
+  mulliganCount: number;
   hand: PracticeCard[];
-  battlefield: PracticeCard[];
-  graveyard: PracticeCard[];
-  libraryCount: number;
-  manaPool: Record<string, number>;
-  logs?: string[];
+  battlefield: PracticeBattlefieldEntry[];
+  drawnCard?: PracticeCard | null;
+  landsInPlay: number;
+  landPlayedThisTurn: boolean;
+  castableSpells?: PracticeCard[];
+  finished?: boolean;
 }
 
